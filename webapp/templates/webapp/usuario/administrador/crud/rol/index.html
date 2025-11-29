@@ -1,0 +1,272 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#f2f2f2 !important;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Roles</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearRol()">
+            <i class="bi bi-plus-lg"></i> Agregar Rol
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaRoles">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Rol</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+</div>
+
+{# MODALES #}
+{% include "webapp/usuario/administrador/crud/rol/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/rol/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+// ================== Constantes ==================
+const URL_LIST_ROL   = "/admin/rol/list/";
+const URL_CREATE_ROL = "/admin/rol/create/";
+const URL_GET_ROL    = id => `/admin/rol/get/${id}/`;
+const URL_UPDATE_ROL = id => `/admin/rol/update/${id}/`;
+const URL_DELETE_ROL = id => `/admin/rol/delete/${id}/`;
+
+const TABLA_SELECTOR_ROL = "#tablaRoles";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarRoles(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarRoles(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarRoles(page = 1){
+
+    const url_with_page = `${URL_LIST_ROL}?page=${page}`;
+
+    $.ajax({
+        url: url_with_page,
+        method: "GET",
+        success: function(resp){
+
+            const tbody = document.querySelector(TABLA_SELECTOR_ROL + " tbody");
+            if(!tbody){
+                console.error("No se encontró tbody para la tabla de Roles.");
+                return;
+            }
+            tbody.innerHTML = "";
+
+            (resp.data || []).forEach(r => {
+
+                const estado = !!r.EstadoRol;
+                const rowClass = estado ? "" : "table-secondary";
+
+                const estadoBadge = estado
+                    ? '<span class="badge bg-success badge-estado">Activo</span>'
+                    : '<span class="badge bg-secondary badge-estado">Inactivo</span>';
+
+                const btnEliminar = estado
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarRol(${r.IdRol})">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                const rowHtml = `
+                    <tr class="${rowClass}">
+                        <td class="fw-bold">${r.IdRol}</td>
+                        <td>${r.NombreRol || ""}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarRol(${r.IdRol})">
+                                Editar
+                            </button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `;
+
+                tbody.insertAdjacentHTML("beforeend", rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la información de roles."
+            );
+        }
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearRol(){
+
+    if(typeof crudGenerateNewId === "function"){
+        crudGenerateNewId(URL_LIST_ROL, "#crear_IdRol", "IdRol");
+    }else{
+        $("#crear_IdRol").val("");
+    }
+
+    $("#crear_NombreRol").val("");
+    $("#crear_EstadoRol").prop("checked", true);
+
+    $("#modalCrearRol").modal("show");
+}
+
+function crearRol(){
+
+    const idRol   = $("#crear_IdRol").val().trim();
+    const nombre  = $("#crear_NombreRol").val().trim();
+
+    if(!idRol || !nombre){
+        crudNotify("warning","ID Rol y Nombre son obligatorios.");
+        return;
+    }
+
+    if(isNaN(parseInt(idRol))){
+        crudNotify("error","El ID Rol debe ser numérico.");
+        return;
+    }
+
+    crudCreate(
+        URL_CREATE_ROL,
+        {
+            IdRol: parseInt(idRol),
+            NombreRol: nombre,
+            EstadoRol: $("#crear_EstadoRol").is(":checked")
+        },
+        () => {
+            $("#modalCrearRol").modal("hide");
+            cargarRoles(currentPage);
+        }
+    );
+}
+
+// ================== Editar ==================
+function abrirModalEditarRol(id){
+
+    $.get(URL_GET_ROL(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar el rol.");
+        }
+
+        const r = resp.data || {};
+
+        $("#editar_IdRol").val(r.IdRol);
+        $("#editar_NombreRol").val(r.NombreRol || "");
+        $("#editar_EstadoRol").prop("checked", !!r.EstadoRol);
+
+        $("#modalEditarRol").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarRol(){
+
+    const idRol  = $("#editar_IdRol").val();
+    const nombre = $("#editar_NombreRol").val().trim();
+
+    if(!nombre){
+        crudNotify("warning","El nombre del rol es obligatorio.");
+        return;
+    }
+
+    crudUpdate(
+        URL_UPDATE_ROL(idRol),
+        {
+            NombreRol: nombre,
+            EstadoRol: $("#editar_EstadoRol").is(":checked")
+        },
+        () => {
+            $("#modalEditarRol").modal("hide");
+            cargarRoles(currentPage);
+        }
+    );
+}
+
+// ================== Eliminar ==================
+function eliminarRol(id){
+    crudConfirm("¿Está seguro de eliminar este rol? Esto lo marcará como inactivo o lo eliminará lógicamente.")
+        .then(ok => {
+            if(!ok) return;
+
+            crudDelete(URL_DELETE_ROL(id), () => {
+                cargarRoles(currentPage);
+            });
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarRoles(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+});
+</script>
+{% endblock %}

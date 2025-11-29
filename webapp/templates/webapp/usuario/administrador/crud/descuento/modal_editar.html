@@ -1,0 +1,88 @@
+<div class="modal fade" id="modalEditarDescuento" tabindex="-1" aria-hidden="true">
+
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content shadow">
+
+<!-- HEADER -->
+<div class="modal-header bg-warning text-dark">
+<h5 class="modal-title">
+<i class="bi bi-pencil-square me-2"></i> Editar Descuento
+</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<!-- BODY -->
+<div class="modal-body">
+
+<div class="row g-3">
+
+<div class="col-md-4">
+<label class="form-label">ID</label>
+<input type="number"
+       id="editar_IdDescuento"
+       class="form-control readonly-input"
+       readonly>
+</div>
+
+<div class="col-md-8">
+<label class="form-label">Nombre del descuento</label>
+<input type="text"
+       id="editar_NombreDescuento"
+       class="form-control"
+       maxlength="150"
+       required>
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Valor (%)</label>
+<input type="number"
+       id="editar_ValorDescuento"
+       class="form-control"
+       min="0.01"
+       max="100"
+       step="0.01"
+       placeholder="Ej: 10.00"
+       oninput="if(this.value<=0)this.value='';"
+       required>
+<small class="text-muted">Solo valores positivos</small>
+</div>
+
+<div class="col-md-8">
+<label class="form-label">Periodo de vigencia</label>
+<input type="text"
+       id="editar_rangoFechas"
+       class="form-control"
+       readonly>
+</div>
+
+<!-- FECHAS OCULTAS -->
+<input type="hidden" id="editar_fechaEntrada">
+<input type="hidden" id="editar_fechaSalida">
+
+<div class="col-12">
+<div class="form-check mt-2">
+<input type="checkbox"
+       id="editar_EstadoDescuento"
+       class="form-check-input">
+<label class="form-check-label">
+Descuento activo
+</label>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+Cancelar
+</button>
+<button type="button" class="btn btn-primary" onclick="actualizarDescuento()">
+<i class="bi bi-save me-1"></i> Guardar Cambios
+</button>
+</div>
+
+</div>
+</div>
+</div>

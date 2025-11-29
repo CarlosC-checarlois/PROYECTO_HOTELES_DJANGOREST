@@ -1,0 +1,43 @@
+<div class="modal fade" id="modalCrearAmexHab" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Crear Relación Amenidad por Habitación</h5>
+                <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+<!-- HABITACIÓN -->
+<label class="form-label">Habitación</label>
+<div class="position-relative">
+<select id="crear_IdHabitacion" class="form-select"></select>
+
+
+    <!-- Aquí aparecerán los resultados -->
+    <div id="listarHabitaciones" class="autocomplete-list d-none"></div>
+</div>
+
+
+                <!-- AMENIDAD -->
+                <label class="form-label">Amenidad</label>
+                <select id="crear_IdAmenidad" class="form-select mb-3">
+                    <option value="">Seleccione...</option>
+                </select>
+
+                <!-- ESTADO -->
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="crear_EstadoAmexHab" checked>
+                    <label class="form-check-label">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="crearAmexHab()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

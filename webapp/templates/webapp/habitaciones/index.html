@@ -1,0 +1,428 @@
+{% extends "cabezal.html" %}
+{% load static %}
+
+{% block titulo_pagina %}
+    <title>Buscar habitaciones | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+    <!-- Litepicker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css"/>
+
+    <style>
+        :root {
+            --color-principal: #2563eb;
+            --color-secundario: #4f46e5;
+            --color-fondo: #f5f7fb;
+        }
+
+        body {
+            background: var(--color-fondo);
+        }
+
+        .buscador-section {
+            padding: 3rem 0 1rem 0;
+        }
+
+        .buscador-form {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .buscador-form .form-control {
+            box-shadow: none !important;
+        }
+
+        .buscador-form input[readonly] {
+            background-color: transparent;
+            cursor: pointer;
+        }
+
+        .resultado-card {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .resultado-card:hover {
+            box-shadow: 0 14px 30px rgba(15, 23, 42, .15);
+            transform: translateY(-2px);
+            transition: 0.2s ease;
+        }
+
+        .badge-amenidad {
+            border-radius: 999px;
+            font-size: .8rem;
+        }
+
+        @media (max-width: 768px) {
+            .buscador-form {
+                border-radius: 1.5rem !important;
+            }
+
+            .buscador-form > div {
+                border-right: none !important;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .buscador-form > div:last-child {
+                border-bottom: none !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+    <section class="buscador-section d-flex align-items-center justify-content-center">
+        <div class="container text-center">
+
+            <form id="formBuscador"
+                  class="buscador-form bg-white rounded-pill p-2 shadow d-flex flex-wrap justify-content-between align-items-center">
+
+                <!-- Tipo habitación -->
+                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
+                    <i class="bi bi-building me-2 text-secondary"></i>
+
+                    <select name="tipo_habitacion" class="form-control border-0">
+                        <option value="">Tipo de habitación / Destino</option>
+                        {% for t in tipos_habitacion %}
+                            {% if t.EstadoTipoHabitacion %}
+                                <option value="{{ t.NombreHabitacion }}">{{ t.NombreHabitacion }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Fechas (Litepicker rango) -->
+                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
+                    <i class="bi bi-calendar-event me-2 text-secondary"></i>
+
+                    <!-- Input visible que controla el calendar -->
+                    <input type="text"
+                           id="rangoFechas"
+                           class="form-control border-0"
+                           placeholder="Fecha de entrada — Fecha de salida"
+                           autocomplete="off"
+                           readonly>
+
+                    <!-- Inputs ocultos que se mandan al backend -->
+                    <input type="hidden" name="fecha_entrada" id="fechaEntrada">
+                    <input type="hidden" name="fecha_salida" id="fechaSalida">
+                </div>
+
+                <!-- Capacidad -->
+                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
+                    <i class="bi bi-people-fill me-2 text-secondary"></i>
+                    <input type="number" name="capacidad" min="1" class="form-control border-0"
+                           placeholder="Capacidad">
+                </div>
+
+                <!-- Precios -->
+                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
+                    <i class="bi bi-cash me-2 text-secondary"></i>
+                    <input type="number"
+                           name="precio_min"
+                           min="0"
+                           step="0.01"
+                           class="form-control border-0"
+                           placeholder="Precio mínimo">
+                    <span class="mx-2 text-secondary">—</span>
+                    <input type="number"
+                           name="precio_max"
+                           min="0"
+                           step="0.01"
+                           class="form-control border-0"
+                           placeholder="Precio máximo">
+                </div>
+
+                <!-- Botón -->
+                <div class="d-flex align-items-center px-3 py-2">
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold rounded-pill">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </section>
+
+    <section class="container py-5">
+        <h3 class="fw-bold mb-4">Resultados encontrados</h3>
+
+        <div id="resultados"></div>
+
+        <div id="loader" class="text-center my-3 d-none">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Cargando más habitaciones...</p>
+        </div>
+
+        <div id="finResultados" class="text-muted text-center d-none">
+            No hay más resultados.
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+    <!-- Litepicker JS -->
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+
+    <script>
+        let pagina = 1;
+        let cargando = false;
+        let fin = false;
+        let filtros = {};
+
+        // -------------------------
+        // RENDER DE LOS CARDS
+        // -------------------------
+        function renderHabitacion(h) {
+            // Amenidades
+            let serviciosArray = [];
+
+            if (Array.isArray(h.amenidades)) {
+                serviciosArray = h.amenidades;
+            } else if (typeof h.amenidades === "string" && h.amenidades.trim() !== "") {
+                serviciosArray = h.amenidades.split(",").map(s => s.trim());
+            }
+
+            const servicios = serviciosArray
+                .map(s => `<span class="badge badge-amenidad bg-primary-subtle text-primary px-3 py-2 me-1 mb-1">${s}</span>`)
+                .join('');
+
+            return `
+                <div class="card mb-4 shadow-sm resultado-card">
+                    <div class="row g-0">
+
+                        <!-- Imagen -->
+                        <div class="col-md-4">
+                            <img src="${h.imagen || 'https://via.placeholder.com/400x250?text=Hotel'}"
+                                 class="img-fluid rounded-start h-100"
+                                 style="object-fit: cover;">
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="col-md-8 p-4">
+
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h4 class="fw-bold mb-1">${h.nombre}</h4>
+                                    <p class="text-muted mb-1">
+                                        <i class="bi bi-building"></i> ${h.hotel}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <i class="bi bi-geo-alt"></i> ${h.ubicacion}
+                                    </p>
+
+                                    <p class="mb-1">
+                                        <strong>Tipo:</strong> ${h.tipo_nombre || '—'}
+                                    </p>
+                                    <p class="mb-2">
+                                        <strong>Capacidad:</strong> ${h.capacidad || '—'} personas
+                                    </p>
+                                </div>
+
+                                <div class="text-end">
+                                    <span class="text-muted small d-block">Precio por noche</span>
+                                    <span class="fw-bold text-success fs-4">$${h.precio}</span>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-2">
+                                ${servicios || '<span class="text-muted small">Sin amenidades</span>'}
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <a href="/habitaciones/detalle/${h.id}/"
+                                   class="btn btn-success px-4 fw-semibold">
+                                    Ver detalles
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------
+        // CARGAR HABITACIONES (AJAX)
+        // -------------------------
+        function cargarHabitaciones(reset = false) {
+            // Primero reseteamos si viene de un submit
+            if (reset) {
+                pagina = 1;
+                fin = false;
+                document.getElementById("resultados").innerHTML = "";
+                document.getElementById("finResultados").classList.add("d-none");
+            }
+
+            // Luego ya comprobamos si debemos seguir cargando
+            if (cargando || fin) return;
+
+            cargando = true;
+            document.getElementById("loader").classList.remove("d-none");
+
+            const params = new URLSearchParams({...filtros, page: pagina});
+
+            fetch(`/habitaciones/ajax/?${params.toString()}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        data.data.forEach(h => {
+                            document.getElementById("resultados")
+                                .insertAdjacentHTML("beforeend", renderHabitacion(h));
+                        });
+
+                        pagina++;
+
+                        if ((pagina - 1) * 5 >= data.total) {
+                            fin = true;
+                            document.getElementById("finResultados").classList.remove("d-none");
+                        }
+                    } else {
+                        fin = true;
+                        if (pagina === 1) {
+                            document.getElementById("resultados").innerHTML =
+                                `<p class="text-muted">No se encontraron habitaciones.</p>`;
+                        }
+                        document.getElementById("finResultados").classList.remove("d-none");
+                    }
+                })
+                .catch(err => {
+                    console.error("Error al cargar habitaciones:", err);
+                })
+                .finally(() => {
+                    cargando = false;
+                    document.getElementById("loader").classList.add("d-none");
+                });
+        }
+
+        // -------------------------
+        // FORMULARIO BUSCADOR
+        // -------------------------
+        document.getElementById("formBuscador").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const precioMin = form.precio_min.value.trim();
+            const precioMax = form.precio_max.value.trim();
+
+            // Validación: o ambos vacíos, o ambos con valor
+            if ((precioMin && !precioMax) || (!precioMin && precioMax)) {
+                alert("Debes ingresar tanto el precio mínimo como el precio máximo.");
+                return;
+            }
+            filtros = {
+                tipo_habitacion: form.tipo_habitacion.value,
+                fecha_entrada: form.fecha_entrada.value,
+                fecha_salida: form.fecha_salida.value,
+                capacidad: form.capacidad.value,
+                precio_min: form.precio_min.value,
+                precio_max: form.precio_max.value
+            };
+
+            cargarHabitaciones(true);
+        });
+
+        // -------------------------
+        // SCROLL INFINITO
+        // -------------------------
+        window.addEventListener("scroll", () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                cargarHabitaciones();
+            }
+        });
+
+        // -------------------------
+        // INIT LITEPICKER
+        // -------------------------
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const today = new Date();
+
+            const picker = new Litepicker({
+                element: document.getElementById('rangoFechas'),
+                singleMode: false,
+                numberOfMonths: 2,
+                numberOfColumns: 2,
+                format: 'YYYY-MM-DD',
+                minDate: today,            // 👈 NO PERMITE DÍAS ANTERIORES
+                autoApply: true,
+                tooltipText: {
+                    one: 'noche',
+                    other: 'noches'
+                },
+                tooltipNumber: (totalDays) => {
+                    return totalDays - 1;   // noches = días - 1
+                },
+                lang: 'es-ES',
+                setup: (picker) => {
+                    picker.on('selected', (date1, date2) => {
+                        const f1 = date1 ? date1.format('YYYY-MM-DD') : '';
+                        const f2 = date2 ? date2.format('YYYY-MM-DD') : '';
+
+                        document.getElementById('fechaEntrada').value = f1;
+                        document.getElementById('fechaSalida').value = f2;
+
+                        if (f1 && f2) {
+                            document.getElementById('rangoFechas').value = `${f1} → ${f2}`;
+                        } else if (f1) {
+                            document.getElementById('rangoFechas').value = f1;
+                        } else {
+                            document.getElementById('rangoFechas').value = '';
+                        }
+                    });
+                }
+            });
+
+            // Primera carga de resultados sin filtros
+            cargarHabitaciones(true);
+        });
+    </script>
+    <script>
+        // 1) Bloquear letras raras en TODOS los type="number"
+        const invalidChars = ["e", "E", "+", "-"];
+
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener("keydown", function (e) {
+                if (invalidChars.includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // 2) Capacidad: solo enteros positivos
+        const capacidadInput = document.querySelector('input[name="capacidad"]');
+        if (capacidadInput) {
+            capacidadInput.addEventListener("input", function (e) {
+                // Elimina todo lo que no sean dígitos
+                e.target.value = e.target.value.replace(/[^\d]/g, "");
+            });
+        }
+
+        // 3) Precios: permitir solo números y UN punto decimal
+        ["precio_min", "precio_max"].forEach(name => {
+            const input = document.querySelector(`input[name="${name}"]`);
+            if (input) {
+                input.addEventListener("input", function (e) {
+                    let v = e.target.value;
+
+                    // Quitar todo lo que no sea dígito o punto
+                    v = v.replace(/[^0-9.]/g, "");
+
+                    // Solo permitir un punto
+                    const parts = v.split(".");
+                    if (parts.length > 2) {
+                        v = parts[0] + "." + parts.slice(1).join("");
+                    }
+
+                    e.target.value = v;
+                });
+            }
+        });
+    </script>
+
+{% endblock %}

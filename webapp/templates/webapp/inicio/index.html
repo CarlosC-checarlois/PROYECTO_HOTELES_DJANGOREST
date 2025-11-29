@@ -1,0 +1,155 @@
+{% extends "cabezal.html" %}
+{% load static %}
+
+{% block titulo_pagina %}
+    <title>Inicio | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+    <link rel="stylesheet" href="{% static 'webapp/css/inicio/inicio_index.css' %}">
+{% endblock %}
+
+{% block contenido_pagina %}
+    <!-- ========================= -->
+    <!-- HERO / PORTADA PRINCIPAL -->
+    <!-- ========================= -->
+    <header class="hero-section text-white d-flex align-items-center">
+        <div class="container text-start hero-content">
+            <h1 class="fw-bold display-5 mb-3">Reserva tu estancia con facilidad</h1>
+            <p class="lead mb-4">
+                Elige fechas, tipo de habitación y completa tus datos.
+                Confirmación instantánea y cancelación flexible.
+            </p>
+        </div>
+    </header>
+
+    <!-- ========================= -->
+    <!-- SECCIÓN SOBRE NOSOTROS -->
+    <!-- ========================= -->
+    <section class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="mb-4">Sobre Nosotros</h2>
+            <p class="lead">
+                En <strong>Hotel Genérico</strong> combinamos la hospitalidad tradicional con el confort moderno.
+                Nuestro objetivo es ofrecerte una experiencia única, ya sea que viajes por placer o negocios.
+            </p>
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+                         class="img-fluid rounded shadow-sm" alt="Hotel">
+                    <h5 class="mt-3">Ubicación privilegiada</h5>
+                    <p>Situado en el centro, cerca de los principales puntos turísticos y gastronómicos.</p>
+                </div>
+
+                <div class="col-md-4">
+                    <img src="https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800"
+                         class="img-fluid rounded shadow-sm" alt="Comodidad">
+                    <h5 class="mt-3">Comodidad garantizada</h5>
+                    <p>Habitaciones amplias y equipadas con todo lo que necesitas para tu descanso.</p>
+                </div>
+
+                <div class="col-md-4">
+                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
+                         class="img-fluid rounded shadow-sm" alt="Experiencia">
+                    <h5 class="mt-3">Experiencia inolvidable</h5>
+                    <p>Atención personalizada y servicios diseñados para tu máxima satisfacción.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- SECCIÓN SERVICIOS -->
+    <!-- ========================= -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Nuestros Servicios</h2>
+            <div class="row g-4">
+                <div class="col-md-3 text-center">
+                    <div class="card h-100 border-0 shadow-sm p-3">
+                        <div class="card-body">
+                            <i class="bi bi-wifi display-5"></i>
+                            <h5 class="mt-3">Wi-Fi gratuito</h5>
+                            <p>Conéctate en todo momento, desde cualquier rincón del hotel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 text-center">
+                    <div class="card h-100 border-0 shadow-sm p-3">
+                        <div class="card-body">
+                            <i class="bi bi-cup-hot display-5"></i>
+                            <h5 class="mt-3">Desayuno incluido</h5>
+                            <p>Empieza el día con energía con nuestro buffet variado.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 text-center">
+                    <div class="card h-100 border-0 shadow-sm p-3">
+                        <div class="card-body">
+                            <i class="bi bi-water display-5"></i>
+                            <h5 class="mt-3">Piscina</h5>
+                            <p>Relájate bajo el sol en nuestra piscina al aire libre.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 text-center">
+                    <div class="card h-100 border-0 shadow-sm p-3">
+                        <div class="card-body">
+                            <i class="bi bi-car-front display-5"></i>
+                            <h5 class="mt-3">Estacionamiento</h5>
+                            <p>Amplio y seguro, disponible para todos nuestros huéspedes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- SECCIÓN HABITACIONES -->
+    <!-- ========================= -->
+    <section class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="mb-4">Habitaciones</h2>
+            <p class="lead mb-5">Elegancia y confort en cada detalle.</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+                             class="card-img-top" alt="Estándar">
+                        <div class="card-body">
+                            <h5>Habitación Estándar</h5>
+                            <p class="text-muted">Cama doble, baño privado y escritorio.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800"
+                             class="card-img-top" alt="Superior">
+                        <div class="card-body">
+                            <h5>Habitación Superior</h5>
+                            <p class="text-muted">Mayor espacio, vista al jardín y minibar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
+                             class="card-img-top" alt="Suite">
+                        <div class="card-body">
+                            <h5>Suite Ejecutiva</h5>
+                            <p class="text-muted">Sala de estar, jacuzzi y balcón privado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

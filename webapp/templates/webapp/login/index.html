@@ -1,0 +1,150 @@
+{% extends "cabezal.html" %}
+{% load static %}
+
+{% block titulo_pagina %}
+<title>Iniciar Sesión | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+    <style>
+    :root {
+        --color-principal: #3b82f6;
+        --color-secundario: #6c5ce7;
+        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+    }
+
+    .login-wrapper {
+        min-height: 100vh;
+        background: var(--degradado);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .login-card {
+        border-radius: 1.5rem;
+        padding: 2rem;
+    }
+
+    .login-card .form-control,
+    .login-card .input-group-text {
+        border-radius: 0.75rem;
+    }
+
+    .btn-primary {
+        border-radius: 0.75rem;
+        padding: 0.7rem;
+        font-weight: 600;
+    }
+
+    .btn-outline-primary {
+        border-radius: 0.75rem;
+        padding: 0.7rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+<div class="login-wrapper">
+    <div class="col-md-6 col-lg-4">
+
+        <div class="card shadow-lg border-0 login-card">
+
+            <div class="text-center mb-4">
+                <i class="bi bi-person-circle fs-1 text-primary"></i>
+                <h3 class="fw-bold mt-2">Iniciar sesión</h3>
+                <p class="text-muted">Accede a tu cuenta del Hotel</p>
+            </div>
+
+            <!-- MENSAJE DE ERROR -->
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="alert alert-danger text-center p-2">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- FORMULARIO -->
+            <form action="{% url 'login_post' %}" method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Correo electrónico</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        <input type="email" name="correo" class="form-control"
+                               placeholder="tucorreo@ejemplo.com" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" name="clave" class="form-control"
+                               placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <!-- Recordar + Olvidé contraseña -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="recordar">
+                        <label class="form-check-label" for="recordar">
+                            Recordarme
+                        </label>
+                    </div>
+                    <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <div class="d-grid">
+                    <button class="btn btn-primary">Ingresar</button>
+                </div>
+
+                <div class="text-center my-3">
+                    <span class="text-muted small">¿Aún no tienes cuenta?</span>
+                </div>
+
+                <div class="d-grid">
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary">Crear una cuenta</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block jvscript_archivos_defer %}
+<script>
+    {% if login_exitoso %}
+        console.log("Inicio de sesión correcto. Guardando en localStorage...");
+
+        // Guardar TODOS los datos del usuario en localStorage
+        localStorage.setItem("usuario_id",           "{{ usuario.id }}");
+        localStorage.setItem("usuario_correo",       "{{ usuario.correo }}");
+        localStorage.setItem("usuario_nombre",       "{{ usuario.nombre }}");
+        localStorage.setItem("usuario_apellido",     "{{ usuario.apellido }}");
+        localStorage.setItem("usuario_rol",          "{{ usuario.rol }}");
+        localStorage.setItem("usuario_tipo_doc",     "{{ usuario.tipo_doc }}");
+        localStorage.setItem("usuario_documento",    "{{ usuario.documento }}");
+        localStorage.setItem("usuario_fecha_nac",    "{{ usuario.fecha_nac }}");
+
+        // Las cookies ya están establecidas desde el servidor
+        console.log("Cookies establecidas: usuario_rol={{ usuario.rol }}, usuario_id={{ usuario.id }}");
+
+        // Redirigir al inicio luego de guardar
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 600);
+    {% endif %}
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,442 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#e0e0e0 !important;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+    .select2-container{
+        width:100%!important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Holds (Retenciones de Habitación)</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearHold()">
+            <i class="bi bi-plus-lg"></i> Crear Hold
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaHolds">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Hold</th>
+                    <th>ID Habitación</th>
+                    <th>ID Reserva</th>
+                    <th>Tiempo (min)</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Final</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+</div>
+
+{# MODALES #}
+{% include "webapp/usuario/administrador/crud/hold/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/hold/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+
+<script>
+// ================== URLs backend ==================
+const URL_LIST_HOLD   = "/admin/hold/list/";
+const URL_CREATE_HOLD = "/admin/hold/create/";
+const URL_GET_HOLD    = id => `/admin/hold/get/${id}/`;
+const URL_UPDATE_HOLD = id => `/admin/hold/update/${id}/`;
+const URL_DELETE_HOLD = id => `/admin/hold/delete/${id}/`;
+const URL_NEXT_HOLD   = "/admin/hold/next-id/";
+
+const URL_SEARCH_HAB  = "/admin/habitaciones/search/";
+const URL_SEARCH_RES  = "/admin/reservas/search/";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){ if(currentPage > 1) cargarHolds(currentPage - 1); }
+function irAPaginaSiguiente(){ if(currentPage < totalPages) cargarHolds(currentPage + 1); }
+
+// ================== Cargar tabla ==================
+function cargarHolds(page = 1){
+    currentPage = page;
+
+    $.get(`${URL_LIST_HOLD}?page=${page}`, function(resp){
+
+        const tbody = $("#tablaHolds tbody");
+        tbody.empty();
+
+        const data = resp.data || [];
+
+        data.forEach(h => {
+            const estadoBadge = h.EstadoHold
+                ? `<span class="badge bg-success badge-estado">Activo</span>`
+                : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+            const rowClass = h.EstadoHold ? "" : "table-secondary";
+
+            const btnEliminar = h.EstadoHold
+                ? `<button class="btn btn-danger btn-sm" onclick="eliminarHold('${h.IdHold}')">Eliminar</button>`
+                : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+            const tiempo = (h.TiempoHold !== null && h.TiempoHold !== undefined)
+                ? h.TiempoHold : "N/A";
+
+            const fIni = h.FechaInicioHold ? h.FechaInicioHold.replace("T", " ") : "N/A";
+            const fFin = h.FechaFinalHold  ? h.FechaFinalHold.replace("T", " ")  : "N/A";
+
+            tbody.append(`
+                <tr class="${rowClass}">
+                    <td class="fw-bold">${h.IdHold}</td>
+                    <td>${h.IdHabitacion}</td>
+                    <td>${h.IdReserva}</td>
+                    <td>${tiempo}</td>
+                    <td>${fIni}</td>
+                    <td>${fFin}</td>
+                    <td>${estadoBadge}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="abrirModalEditarHold('${h.IdHold}')">Editar</button>
+                        ${btnEliminar}
+                    </td>
+                </tr>
+            `);
+        });
+
+        currentPage = resp.page || 1;
+        totalPages  = resp.total_pages || 1;
+        actualizarPaginacion();
+
+    }).fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Holds.");
+    });
+}
+
+// ================== Select2 helpers (solo CREAR) ==================
+function initSelectHabitacion(selector, parentSelector){
+    const $sel = $(selector);
+    if ($sel.data("select2")) $sel.select2("destroy");
+    $sel.val("");
+
+    $sel.select2({
+        placeholder: "Buscar habitación...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $(parentSelector),
+        minimumInputLength: 1,
+        ajax: {
+            url: URL_SEARCH_HAB,
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(h => ({
+                    id: h.IdHabitacion,
+                    text: `${h.IdHabitacion} — ${h.NombreHabitacion || ""}`
+                }))
+            })
+        }
+    });
+}
+
+function initSelectReserva(selector, parentSelector){
+    const $sel = $(selector);
+    if ($sel.data("select2")) $sel.select2("destroy");
+    $sel.val("");
+
+    $sel.select2({
+        placeholder: "Buscar reserva...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $(parentSelector),
+        minimumInputLength: 1,
+        ajax: {
+            url: URL_SEARCH_RES,
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(r => ({
+                    id: r.IdReserva,
+                    text: `${r.IdReserva} — ${r.EstadoGeneralReserva || ""}`
+                }))
+            })
+        }
+    });
+}
+
+// ================== Litepicker (rango de fechas) ==================
+let pickerCrear = null;
+let pickerEditar = null;
+
+function initRangoFechas(crear = true, start = null, end = null){
+    const inputId   = crear ? "crear_RangoFechas" : "editar_RangoFechas";
+    const iniHidden = crear ? "#crear_FechaInicio" : "#editar_FechaInicio";
+    const finHidden = crear ? "#crear_FechaFinal"  : "#editar_FechaFinal";
+
+    const el = document.getElementById(inputId);
+    if (!el || !window.Litepicker) {
+        console.error("Litepicker no está cargado o el input no existe");
+        return;
+    }
+
+    if (crear && pickerCrear)  pickerCrear.destroy();
+    if (!crear && pickerEditar) pickerEditar.destroy();
+
+    const picker = new Litepicker({
+        element: el,
+        singleMode: false,
+        format: "YYYY-MM-DD",
+        numberOfMonths: 2,
+        numberOfColumns: 2,
+        autoApply: true,
+        minDate: crear ? new Date() : null,   // bloquear pasado SOLO al crear
+        startDate: start || null,
+        endDate: end || null,
+        tooltipText: { one: "día", other: "días" },
+        tooltipNumber: totalDays => totalDays,
+        setup: (p) => {
+            p.on("selected", (date1, date2) => {
+                const v1 = date1 ? date1.format("YYYY-MM-DD") : "";
+                const v2 = date2 ? date2.format("YYYY-MM-DD") : "";
+                $(iniHidden).val(v1);
+                $(finHidden).val(v2);
+            });
+        }
+    });
+
+    if (crear) pickerCrear = picker;
+    else pickerEditar = picker;
+}
+
+// ================== Crear ==================
+function abrirModalCrearHold(){
+
+    $("#crear_TiempoHold").val("");
+    $("#crear_RangoFechas").val("");
+    $("#crear_FechaInicio,#crear_FechaFinal").val("");
+    $("#crear_EstadoHold").prop("checked", true);
+
+    $.get(URL_NEXT_HOLD, function(resp){
+        $("#crear_IdHold").val(resp.next_id || resp.next || "");
+    });
+
+    initSelectHabitacion("#crear_IdHabitacion", "#modalCrearHold");
+    initSelectReserva("#crear_IdReserva", "#modalCrearHold");
+    initRangoFechas(true);  // crear
+
+    $("#modalCrearHold").modal("show");
+}
+
+function crearHold(){
+    const idHold       = $("#crear_IdHold").val().trim();
+    const idHab        = $("#crear_IdHabitacion").val();
+    const idReservaStr = $("#crear_IdReserva").val();
+    const tiempoStr    = $("#crear_TiempoHold").val().trim();
+    const fechaIni     = $("#crear_FechaInicio").val();
+    const fechaFin     = $("#crear_FechaFinal").val();
+    const estado       = $("#crear_EstadoHold").is(":checked");
+
+    if(!idHold || !idHab || !idReservaStr){
+        return crudNotify("warning", "ID Hold, Habitación y Reserva son obligatorios.");
+    }
+
+    const idReserva = parseInt(idReservaStr, 10);
+    if (Number.isNaN(idReserva)) {
+        return crudNotify("warning","La reserva seleccionada es inválida.");
+    }
+
+    if (tiempoStr !== "" && (isNaN(Number(tiempoStr)) || Number(tiempoStr) < 0)) {
+        return crudNotify("warning","El tiempo de hold debe ser un número mayor o igual a 0.");
+    }
+
+    const data = {
+        IdHold:       idHold,
+        IdHabitacion: idHab,
+        IdReserva:    idReserva,
+        TiempoHold:   tiempoStr === "" ? "" : tiempoStr,
+        FechaInicio:  fechaIni || "",
+        FechaFinal:   fechaFin || "",
+        EstadoHold:   estado ? "true" : "false"
+    };
+
+    $.post(URL_CREATE_HOLD, data)
+        .done(function(resp){
+            if (resp.status !== "ok") {
+                return crudNotify("error", resp.message || "No se pudo crear el hold.");
+            }
+            $("#modalCrearHold").modal("hide");
+            crudNotify("success", resp.message || "Hold creado correctamente.");
+            cargarHolds(currentPage);
+        })
+        .fail(function(xhr){
+            const msg = xhr.responseJSON?.message || "No se pudo crear el registro. Verifique los datos.";
+            crudNotify("error", msg);
+        });
+}
+
+// ================== Editar ==================
+async function abrirModalEditarHold(id){
+    try{
+        const resp = await $.get(URL_GET_HOLD(id));
+        if(resp.status !== "ok")
+            return crudNotify("error", resp.message || "No se pudo cargar el Hold.");
+
+        const h = resp.data;
+
+        // ID
+        $("#editar_IdHold").val(h.IdHold);
+
+        // Habitación (texto solo lectura + hidden con ID real)
+        $("#editar_HabitacionTexto").val(
+            h.IdHabitacion + (h.NombreHabitacion ? " — " + h.NombreHabitacion : "")
+        );
+        $("#editar_IdHabitacion").val(h.IdHabitacion);
+
+        // Reserva (texto solo lectura + hidden)
+        $("#editar_ReservaTexto").val(
+            String(h.IdReserva) + (h.EstadoGeneralReserva ? " — " + h.EstadoGeneralReserva : "")
+        );
+        $("#editar_IdReserva").val(h.IdReserva);
+
+        // Tiempo
+        $("#editar_TiempoHold").val(h.TiempoHold || "");
+
+        // Fechas
+        const fIni = h.FechaInicioHold ? h.FechaInicioHold.split("T")[0] : null;
+        const fFin = h.FechaFinalHold  ? h.FechaFinalHold.split("T")[0]  : null;
+
+        $("#editar_FechaInicio").val(fIni || "");
+        $("#editar_FechaFinal").val(fFin || "");
+        $("#editar_EstadoHold").prop("checked", !!h.EstadoHold);
+
+        initRangoFechas(false, fIni, fFin); // EDITAR sin minDate
+
+        $("#modalEditarHold").modal("show");
+
+    }catch(e){
+        crudNotify("error","Error al obtener datos para edición.");
+    }
+}
+
+function actualizarHold() {
+    const id        = $("#editar_IdHold").val().trim();
+    const idHab     = $("#editar_IdHabitacion").val();
+    const idResStr  = $("#editar_IdReserva").val();
+    const fechaIni  = $("#editar_FechaInicio").val();
+    const fechaFin  = $("#editar_FechaFinal").val();
+    const estado    = $("#editar_EstadoHold").is(":checked");
+    const tiempoStr = $("#editar_TiempoHold").val().trim();
+
+    if (!idHab || !idResStr) {
+        return crudNotify("warning", "Habitación y Reserva son obligatorias.");
+    }
+
+    const idReserva = parseInt(idResStr, 10);
+    if (Number.isNaN(idReserva)) {
+        return crudNotify("warning", "La reserva seleccionada es inválida.");
+    }
+
+    if (tiempoStr !== "" && (isNaN(Number(tiempoStr)) || Number(tiempoStr) < 0)) {
+        return crudNotify("warning", "El tiempo de hold debe ser un número mayor o igual a 0.");
+    }
+
+    const data = {
+        IdHabitacion: idHab,
+        IdReserva:    idReserva,
+        TiempoHold:   tiempoStr === "" ? "" : tiempoStr,
+        FechaInicio:  fechaIni || "",
+        FechaFinal:   fechaFin || "",
+        EstadoHold:   estado ? "true" : "false"
+    };
+
+    $.post(URL_UPDATE_HOLD(id), data)
+        .done(function (resp) {
+            if (resp.status !== "ok") {
+                return crudNotify("error", resp.message || "No se pudo actualizar el hold.");
+            }
+            $("#modalEditarHold").modal("hide");
+            crudNotify("success", resp.message || "Hold actualizado correctamente.");
+            cargarHolds(currentPage);
+        })
+        .fail(function (xhr) {
+            const msg = xhr.responseJSON?.message || "No se pudo actualizar el registro. Verifique los datos.";
+            crudNotify("error", msg);
+        });
+}
+
+// ================== Eliminar ==================
+function eliminarHold(id){
+    crudConfirm("¿Está seguro de eliminar este Hold? Esto podría revertir la disponibilidad de una habitación.")
+        .then(ok => {
+            if(!ok) return;
+            crudDelete(URL_DELETE_HOLD(id), () => cargarHolds(currentPage));
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(() => {
+    $("#modalCrearHold, #modalEditarHold")
+        .on("input", "input[type=number]", function () {
+            const val = parseFloat(this.value);
+            if (!isNaN(val) && val < 0) this.value = "";
+        });
+
+    cargarHolds(1);
+});
+</script>
+{% endblock %}

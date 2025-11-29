@@ -1,0 +1,315 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#e0e0e0 !important;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Facturas</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearFactura()">
+            <i class="bi bi-plus-lg"></i> Crear Factura
+        </button>
+    </div>
+
+    <!-- PAGINACIÓN SUPERIOR -->
+    <div class="d-flex justify-content-center mb-3">
+        <button class="btn btn-outline-secondary btn-sm me-2"
+                id="btnAnterior"
+                onclick="irAPaginaAnterior()"
+                disabled>
+            <i class="bi bi-arrow-left"></i> Anterior
+        </button>
+
+        <span class="align-self-center text-muted" id="infoPaginacion">
+            Página 1 de 1
+        </span>
+
+        <button class="btn btn-outline-secondary btn-sm ms-2"
+                id="btnSiguiente"
+                onclick="irAPaginaSiguiente()"
+                disabled>
+            Siguiente <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaFacturas">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Factura</th>
+                    <th>ID Reserva</th>
+                    <th>Subtotal</th>
+                    <th>Descuento</th>
+                    <th>Impuesto</th>
+                    <th>Total</th>
+                    <th>PDF</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{% include "webapp/usuario/administrador/crud/factura/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/factura/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+// ================== URLs backend ==================
+const URL_LIST_FACT   = "/admin/factura/list/";
+const URL_CREATE_FACT = "/admin/factura/create/";
+const URL_GET_FACT    = id => `/admin/factura/get/${id}/`;
+const URL_UPDATE_FACT = id => `/admin/factura/update/${id}/`;
+const URL_DELETE_FACT = id => `/admin/factura/delete/${id}/`;
+
+// Si luego quieres select2 de reservas, puedes usar:
+// const URL_SEARCH_RESERVA = "/admin/reservas/search/";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarFacturas(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarFacturas(currentPage + 1);
+}
+
+// ================== Util: formateo numérico ==================
+function valOrNA(v){
+    if (v === null || v === undefined || v === "") return "N/A";
+    return v;
+}
+
+// ================== Cargar tabla ==================
+function cargarFacturas(page = 1){
+
+    const url_with_page = `${URL_LIST_FACT}?page=${page}`;
+
+    $.ajax({
+        url: url_with_page,
+        method: "GET",
+        success: function(resp){
+
+            const tbody = $("#tablaFacturas tbody");
+            tbody.empty();
+
+            (resp.data || []).forEach(f => {
+
+                const idFactura  = f.IdFactura  !== undefined ? f.IdFactura  : f.idFactura;
+                const idReserva  = f.IdReserva  !== undefined ? f.IdReserva  : f.idReserva;
+                const subtotal   = f.Subtotal   !== undefined ? f.Subtotal   : f.subtotal;
+                const descuento  = f.Descuento  !== undefined ? f.Descuento  : f.descuento;
+                const impuesto   = f.Impuesto   !== undefined ? f.Impuesto   : f.impuesto;
+                const total      = f.Total      !== undefined ? f.Total      : f.total;
+                const urlPdf     = f.UrlPdf     !== undefined ? f.UrlPdf     : (f.urlPdf || "");
+
+                const btnPdf = urlPdf
+                    ? `<a href="${urlPdf}" target="_blank" class="btn btn-sm btn-outline-info">Ver PDF</a>`
+                    : `<span class="text-muted small">Sin PDF</span>`;
+
+                const rowHtml = `
+                    <tr>
+                        <td class="fw-bold">${valOrNA(idFactura)}</td>
+                        <td>${valOrNA(idReserva)}</td>
+                        <td>${valOrNA(subtotal)}</td>
+                        <td>${valOrNA(descuento)}</td>
+                        <td>${valOrNA(impuesto)}</td>
+                        <td>${valOrNA(total)}</td>
+                        <td>${btnPdf}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarFactura(${idFactura})">
+                                Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="eliminarFactura(${idFactura})">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                tbody.append(rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la información de facturas."
+            );
+        }
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearFactura(){
+
+    $("#crear_IdFactura").val("");
+    $("#crear_IdReserva").val("");
+    $("#crear_Subtotal").val("");
+    $("#crear_Descuento").val("");
+    $("#crear_Impuesto").val("");
+    $("#crear_Total").val("");
+    $("#crear_UrlPdf").val("");
+
+    $("#modalCrearFactura").modal("show");
+}
+
+function crearFactura(){
+
+    const idFactura = $("#crear_IdFactura").val().trim();
+    const idReserva = $("#crear_IdReserva").val().trim();
+
+    if(!idFactura || !idReserva){
+        crudNotify("warning", "ID Factura e ID Reserva son obligatorios.");
+        return;
+    }
+
+    const payload = {
+        IdFactura: idFactura,
+        IdReserva: idReserva,
+        Subtotal:  $("#crear_Subtotal").val().trim(),
+        Descuento: $("#crear_Descuento").val().trim(),
+        Impuesto:  $("#crear_Impuesto").val().trim(),
+        Total:     $("#crear_Total").val().trim(),
+        UrlPdf:    $("#crear_UrlPdf").val().trim()
+    };
+
+    crudCreate(
+        URL_CREATE_FACT,
+        payload,
+        () => {
+            $("#modalCrearFactura").modal("hide");
+            cargarFacturas(currentPage);
+        }
+    );
+}
+
+// ================== Editar ==================
+function abrirModalEditarFactura(id){
+
+    $.get(URL_GET_FACT(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar la factura.");
+        }
+
+        const f = resp.data || {};
+
+        const idFactura  = f.IdFactura  !== undefined ? f.IdFactura  : f.idFactura;
+        const idReserva  = f.IdReserva  !== undefined ? f.IdReserva  : f.idReserva;
+        const subtotal   = f.Subtotal   !== undefined ? f.Subtotal   : f.subtotal;
+        const descuento  = f.Descuento  !== undefined ? f.Descuento  : f.descuento;
+        const impuesto   = f.Impuesto   !== undefined ? f.Impuesto   : f.impuesto;
+        const total      = f.Total      !== undefined ? f.Total      : f.total;
+        const urlPdf     = f.UrlPdf     !== undefined ? f.UrlPdf     : (f.urlPdf || "");
+
+        $("#editar_IdFactura").val(idFactura);
+        $("#editar_IdReserva").val(idReserva);
+        $("#editar_Subtotal").val(subtotal || "");
+        $("#editar_Descuento").val(descuento || "");
+        $("#editar_Impuesto").val(impuesto || "");
+        $("#editar_Total").val(total || "");
+        $("#editar_UrlPdf").val(urlPdf || "");
+
+        $("#modalEditarFactura").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarFactura(){
+
+    const idFactura = $("#editar_IdFactura").val().trim();
+    const idReserva = $("#editar_IdReserva").val().trim();
+
+    if(!idFactura || !idReserva){
+        crudNotify("warning", "ID Factura e ID Reserva son obligatorios.");
+        return;
+    }
+
+    const payload = {
+        IdReserva: idReserva,
+        Subtotal:  $("#editar_Subtotal").val().trim(),
+        Descuento: $("#editar_Descuento").val().trim(),
+        Impuesto:  $("#editar_Impuesto").val().trim(),
+        Total:     $("#editar_Total").val().trim(),
+        UrlPdf:    $("#editar_UrlPdf").val().trim()
+    };
+
+    crudUpdate(
+        URL_UPDATE_FACT(idFactura),
+        payload,
+        () => {
+            $("#modalEditarFactura").modal("hide");
+            cargarFacturas(currentPage);
+        }
+    );
+}
+
+// ================== Eliminar ==================
+function eliminarFactura(id){
+    crudConfirm("¿Está seguro de eliminar esta factura?")
+        .then(ok => {
+            if(!ok) return;
+
+            crudDelete(
+                URL_DELETE_FACT(id),
+                () => cargarFacturas(currentPage)
+            );
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarFacturas(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+});
+</script>
+{% endblock %}

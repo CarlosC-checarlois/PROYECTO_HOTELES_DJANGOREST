@@ -1,0 +1,31 @@
+<div class="modal fade" id="modalEditarAmenidad" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Editar Amenidad</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<label>ID</label>
+<input readonly id="editar_IdAmenidad" class="form-control mb-2 readonly-input">
+
+<label>Nombre</label>
+<input id="editar_NombreAmenidad" class="form-control mb-2">
+
+<div class="form-check">
+    <input type="checkbox" id="editar_EstadoAmenidad" class="form-check-input">
+    <label class="form-check-label">Activo</label>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-primary" onclick="actualizarAmenidad()">Actualizar</button>
+</div>
+
+</div>
+</div>
+</div>

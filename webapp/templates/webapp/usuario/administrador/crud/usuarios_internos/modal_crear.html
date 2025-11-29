@@ -1,0 +1,121 @@
+<div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Usuario Interno</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row">
+          <!-- ID sugerido (solo lectura) -->
+          <div class="col-md-3 mb-3">
+            <label class="form-label">ID Usuario</label>
+            <input type="number"
+                   id="crear_IdUsuarioInterno"
+                   class="form-control readonly-input"
+                   readonly
+                   placeholder="Autogenerado">
+          </div>
+
+          <!-- Rol (combobox) -->
+          <div class="col-md-3 mb-3">
+            <label class="form-label">ID Rol *</label>
+            <select id="crear_idRol" class="form-select">
+              <option value="">Seleccione rol...</option>
+            </select>
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Nombre *</label>
+            <input type="text"
+                   id="crear_nombre"
+                   class="form-control"
+                   maxlength="100"
+                   placeholder="Nombres">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Apellido *</label>
+            <input type="text"
+                   id="crear_apellido"
+                   class="form-control"
+                   maxlength="100"
+                   placeholder="Apellidos">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Correo *</label>
+            <input type="email"
+                   id="crear_correo"
+                   class="form-control"
+                   placeholder="usuario@hotel.com">
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Clave *</label>
+            <input type="password"
+                   id="crear_clave"
+                   class="form-control"
+                   minlength="6"
+                   placeholder="Mínimo 6 caracteres">
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Fecha Nacimiento</label>
+            <input type="date"
+                   id="crear_fechaNac"
+                   class="form-control">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Tipo de Documento</label>
+            <select id="crear_tipoDoc" class="form-select">
+              <option value="">(sin documento)</option>
+              <option value="CEDULA">CÉDULA</option>
+              <option value="PASAPORTE">PASAPORTE</option>
+            </select>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Nº Documento</label>
+            <input type="text"
+                   id="crear_documento"
+                   class="form-control"
+                   maxlength="10"
+                   inputmode="numeric"
+                   pattern="\d*"
+                   oninput="this.value = this.value.replace(/\D/g, '').slice(0, 10);"
+                   placeholder="Ej: 0102030405">
+
+          </div>
+
+          <div class="col-md-4 mb-3 d-flex align-items-end">
+            <div class="form-check">
+              <input type="checkbox"
+                     id="crear_estado"
+                     class="form-check-input"
+                     checked>
+              <label class="form-check-label" for="crear_estado">
+                Usuario Activo
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-success" onclick="crearUsuarioInterno()">Guardar Usuario</button>
+      </div>
+
+    </div>
+  </div>
+</div>

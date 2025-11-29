@@ -1,0 +1,110 @@
+<div class="modal fade" id="modalCrearReserva" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Nueva Reserva</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <!-- ID Reserva (solo lectura) -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">ID Reserva *</label>
+                        <input type="number"
+                               id="crear_IdReserva"
+                               class="form-control readonly-input"
+                               readonly
+                               placeholder="ID autogenerado">
+                    </div>
+
+                    <!-- Usuario interno -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">ID Usuario Interno *</label>
+                        <select id="crear_IdUnicoUsuario" class="form-select">
+                            <option value="">Buscar usuario interno...</option>
+                        </select>
+                    </div>
+
+                    <!-- Estado general -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Estado General</label>
+                        <select id="crear_EstadoGeneralReserva" class="form-select">
+                            <option value="">Seleccione estado...</option>
+                            <option value="CONFIRMADA">CONFIRMADA</option>
+                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="CANCELADA">CANCELADA</option>
+                            <option value="FINALIZADA">FINALIZADA</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Costo total -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Costo Total</label>
+                        <input type="number"
+                               step="0.01"
+                               id="crear_CostoTotalReserva"
+                               class="form-control"
+                               placeholder="0.00"
+                               oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }">
+                    </div>
+
+                    <!-- Fecha registro (HOY, SOLO LECTURA) -->
+                    <div class="col-md-4 mb-1">
+                        <label class="form-label">Fecha Registro</label>
+                        <input type="text"
+                               id="crear_FechaRegistroReserva"
+                               class="form-control readonly-input"
+                               readonly>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted">Formato: YYYY-MM-DD</small>
+                    </div>
+
+                    <!-- Rango fechas (picker) -->
+                    <div class="col-md-4 mb-1">
+                        <label class="form-label">Rango de Fechas (Inicio - Final)</label>
+                        <input type="text"
+                               id="crear_RangoFechasReserva"
+                               class="form-control"
+                               placeholder="Ej: 2025-11-26 - 2025-11-28">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted">Seleccione el rango en el calendario.</small>
+                    </div>
+
+                    <!-- hidden: inicio / final que van al backend -->
+                    <input type="hidden" id="crear_FechaInicioReserva">
+                    <input type="hidden" id="crear_FechaFinalReserva">
+                </div>
+
+                <div class="form-check mt-2">
+                    <input type="checkbox" id="crear_EstadoReserva" class="form-check-input" checked>
+                    <label class="form-check-label" for="crear_EstadoReserva">
+                        Reserva Activa
+                    </label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" onclick="crearReserva()">Guardar Reserva</button>
+            </div>
+
+        </div>
+    </div>
+</div>

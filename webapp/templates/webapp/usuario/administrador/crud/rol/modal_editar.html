@@ -1,0 +1,42 @@
+<div class="modal fade" id="modalEditarRol" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Rol</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">ID Rol</label>
+          <input type="number"
+                 id="editar_IdRol"
+                 class="form-control readonly-input"
+                 readonly>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Nombre del Rol</label>
+          <input type="text"
+                 id="editar_NombreRol"
+                 class="form-control"
+                 placeholder="Ej: ADMIN, RECEPCIONISTA">
+        </div>
+
+        <div class="form-check mt-2">
+          <input type="checkbox" id="editar_EstadoRol" class="form-check-input">
+          <label class="form-check-label" for="editar_EstadoRol">Activo</label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-warning" onclick="actualizarRol()">Guardar Cambios</button>
+      </div>
+
+    </div>
+  </div>
+</div>

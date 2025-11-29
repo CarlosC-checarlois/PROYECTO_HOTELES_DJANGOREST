@@ -1,0 +1,459 @@
+{# templates/webapp/usuario/administrador/crud/pdf/index.html #}
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#f2f2f2 !important;
+    }
+    .dropzone-upload{
+        border:2px dashed #ced4da;
+        border-radius:6px;
+        padding:1rem;
+        text-align:center;
+        cursor:pointer;
+        transition:background-color .2s,border-color .2s;
+        background-color:#f8f9fa;
+    }
+    .dropzone-upload.dropzone-hover{
+        background-color:#e9f5ff;
+        border-color:#0d6efd;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">PDFs</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearPdf()">
+            <i class="bi bi-plus-lg"></i> Registrar PDF
+        </button>
+    </div>
+
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaPdf">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID PDF</th>
+                    <th>ID Factura</th>
+                    <th>URL PDF</th>
+                    <th>Estado</th>
+                    <th>Fecha Modificación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{% include "webapp/usuario/administrador/crud/pdf/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/pdf/modal_editar.html" %}
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+const URL_LIST_PDF    = "/admin/pdf/list/";
+const URL_CREATE_PDF  = "/admin/pdf/create/";
+const URL_GET_PDF     = id => `/admin/pdf/get/${id}/`;
+const URL_UPDATE_PDF  = id => `/admin/pdf/update/${id}/`;
+const URL_DELETE_PDF  = id => `/admin/pdf/delete/${id}/`;
+const URL_NEXT_ID_PDF = "/admin/pdf/next-id/";
+const URL_UPLOAD_PDF  = "/admin/pdf/upload/";
+const URL_FACTURA_SEARCH = "/admin/factura/search/";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Helpers básicos ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarPdfs(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarPdfs(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarPdfs(page=1){
+    $.ajax({
+        url: `${URL_LIST_PDF}?page=${page}`,
+        method: "GET",
+        success: function(resp){
+            const tbody = $("#tablaPdf tbody");
+            tbody.empty();
+
+            (resp.data || []).forEach(p => {
+                const url = p.UrlPdf || "";
+                const estadoBadge = p.EstadoPdf
+                    ? `<span class="badge bg-success badge-estado">Activo</span>`
+                    : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+                const rowClass = p.EstadoPdf ? "" : "table-secondary";
+
+                const btnEliminar = p.EstadoPdf
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarPdf(${p.IdPdf})">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                tbody.append(`
+                    <tr class="${rowClass}">
+                        <td class="fw-bold">${p.IdPdf}</td>
+                        <td>${p.IdFactura ?? "-"}</td>
+                        <td>
+                            ${url
+                                ? `<a href="${url}" target="_blank" class="small text-break">${url}</a>`
+                                : '<span class="text-muted small">Sin URL</span>'}
+                        </td>
+                        <td>${estadoBadge}</td>
+                        <td class="small">${p.FechaModificacionPdf || ""}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="abrirModalEditarPdf(${p.IdPdf})">Editar</button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la lista de PDFs."
+            );
+        }
+    });
+}
+
+// ================== Select2 Factura ==================
+function initSelectFactura(selector, parentSelector){
+    const $sel = $(selector);
+
+    if ($sel.data("select2")) {
+        // reset
+        $sel.val(null).trigger("change");
+        return;
+    }
+
+    $sel.select2({
+        placeholder: "Buscar factura...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $(parentSelector),
+        minimumInputLength: 0,
+        ajax: {
+            url: URL_FACTURA_SEARCH,
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term || "" }),
+            processResults: resp => ({
+                results: (resp.data || []).map(f => ({
+                    id: f.IdFactura,
+                    text: `IdFactura: ${f.IdFactura} — Reserva: ${f.IdReserva} — Total: ${f.Total ?? f.TotalCalculado ?? ""}`
+                }))
+            })
+        }
+    });
+}
+
+// ================== Upload PDF a S3 ==================
+function subirArchivoPdf(file, contexto){
+    if(!file) return;
+
+    if(file.type !== "application/pdf"){
+        crudNotify("warning","Solo se permiten archivos PDF.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    $.ajax({
+        url: URL_UPLOAD_PDF,
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(resp){
+            if(resp.status !== "ok" || !resp.url){
+                crudNotify("error", resp.message || "No se pudo subir el PDF.");
+                return;
+            }
+
+            const url = resp.url;
+
+            if(contexto === "crear"){
+                $("#crear_UrlPdf")
+                    .val(url)
+                    .prop("readonly", true)
+                    .addClass("readonly-input");
+                $("#crear_PdfNombre").text(file.name);
+            }else{
+                $("#editar_UrlPdf")
+                    .val(url)
+                    .prop("readonly", true)
+                    .addClass("readonly-input");
+                $("#editar_PdfNombre").text(file.name);
+            }
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "Error al subir el PDF."
+            );
+        }
+    });
+}
+
+function initDropzonesPdf(){
+    // --- Crear ---
+    const dzCrear = document.getElementById("crear_dropzone_pdf");
+    const inputCrear = document.getElementById("crear_FilePdf");
+
+    if(dzCrear && inputCrear){
+        dzCrear.addEventListener("click", () => inputCrear.click());
+
+        dzCrear.addEventListener("dragover", e => {
+            e.preventDefault();
+            dzCrear.classList.add("dropzone-hover");
+        });
+
+        dzCrear.addEventListener("dragleave", () => {
+            dzCrear.classList.remove("dropzone-hover");
+        });
+
+        dzCrear.addEventListener("drop", e => {
+            e.preventDefault();
+            dzCrear.classList.remove("dropzone-hover");
+            const file = e.dataTransfer.files[0];
+            subirArchivoPdf(file, "crear");
+        });
+
+        inputCrear.addEventListener("change", e => {
+            const file = e.target.files[0];
+            subirArchivoPdf(file, "crear");
+        });
+    }
+
+    // --- Editar ---
+    const dzEditar = document.getElementById("editar_dropzone_pdf");
+    const inputEditar = document.getElementById("editar_FilePdf");
+
+    if(dzEditar && inputEditar){
+        dzEditar.addEventListener("click", () => inputEditar.click());
+
+        dzEditar.addEventListener("dragover", e => {
+            e.preventDefault();
+            dzEditar.classList.add("dropzone-hover");
+        });
+
+        dzEditar.addEventListener("dragleave", () => {
+            dzEditar.classList.remove("dropzone-hover");
+        });
+
+        dzEditar.addEventListener("drop", e => {
+            e.preventDefault();
+            dzEditar.classList.remove("dropzone-hover");
+            const file = e.dataTransfer.files[0];
+            subirArchivoPdf(file, "editar");
+        });
+
+        inputEditar.addEventListener("change", e => {
+            const file = e.target.files[0];
+            subirArchivoPdf(file, "editar");
+        });
+    }
+}
+
+// ================== Crear ==================
+function abrirModalCrearPdf(){
+
+    // pedir siguiente ID
+    $.get(URL_NEXT_ID_PDF, function(resp){
+        $("#crear_IdPdf").val(resp.next || "");
+    });
+
+    // reset campos
+    $("#crear_IdFactura").val(null).trigger("change");
+    $("#crear_UrlPdf")
+        .val("")
+        .prop("readonly", false)
+        .removeClass("readonly-input");
+    $("#crear_EstadoPdf").prop("checked", true);
+    $("#crear_FilePdf").val("");
+    $("#crear_PdfNombre").text("Ningún archivo seleccionado");
+
+    initSelectFactura("#crear_IdFactura", "#modalCrearPdf");
+
+    $("#modalCrearPdf").modal("show");
+}
+
+function crearPdf(){
+    const idPdf     = $("#crear_IdPdf").val().trim();
+    const idFactura = $("#crear_IdFactura").val();
+    const urlPdf    = $("#crear_UrlPdf").val().trim();
+
+    if(!idPdf){
+        crudNotify("warning","No se pudo generar el ID del PDF.");
+        return;
+    }
+    if(!urlPdf){
+        crudNotify("warning","La URL del PDF es obligatoria (suba un archivo o ingrese la URL).");
+        return;
+    }
+
+    $.ajax({
+        url: URL_CREATE_PDF,
+        method: "POST",
+        data: {
+            IdPdf: idPdf,
+            IdFactura: idFactura || "",
+            UrlPdf: urlPdf,
+            EstadoPdf: $("#crear_EstadoPdf").is(":checked")
+        },
+        success: function(resp){
+            $("#modalCrearPdf").modal("hide");
+            crudNotify("success", resp.message || "PDF creado exitosamente");
+            cargarPdfs(currentPage);
+        },
+        error: function(xhr){
+            crudNotify("error", xhr.responseJSON?.message || "Error al crear el PDF.");
+        }
+    });
+}
+
+// ================== Editar ==================
+function abrirModalEditarPdf(id){
+    $.get(URL_GET_PDF(id), function(resp){
+        if(resp.status !== "ok"){
+            crudNotify("error", resp.message || "No se pudo cargar el PDF.");
+            return;
+        }
+
+        const p = resp.data;
+
+        $("#editar_IdPdf").val(p.IdPdf);
+        $("#editar_UrlPdf")
+            .val(p.UrlPdf || "")
+            .prop("readonly", false)
+            .removeClass("readonly-input");
+        $("#editar_EstadoPdf").prop("checked", !!p.EstadoPdf);
+        $("#editar_FilePdf").val("");
+        $("#editar_PdfNombre").text("Ningún archivo seleccionado");
+
+        // factura (select2)
+        initSelectFactura("#editar_IdFactura", "#modalEditarPdf");
+        if (p.IdFactura){
+            const option = new Option(
+                `IdFactura: ${p.IdFactura}`,
+                p.IdFactura,
+                true,
+                true
+            );
+            $("#editar_IdFactura").append(option).trigger("change");
+        } else {
+            $("#editar_IdFactura").val(null).trigger("change");
+        }
+
+        $("#modalEditarPdf").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarPdf(){
+    const idPdf  = $("#editar_IdPdf").val();
+    const urlPdf = $("#editar_UrlPdf").val().trim();
+
+    if(!urlPdf){
+        crudNotify("warning","La URL del PDF es obligatoria.");
+        return;
+    }
+
+    $.ajax({
+        url: URL_UPDATE_PDF(idPdf),
+        method: "POST",
+        data: {
+            IdFactura: $("#editar_IdFactura").val() || "",
+            UrlPdf: urlPdf,
+            EstadoPdf: $("#editar_EstadoPdf").is(":checked")
+        },
+        success: function(resp){
+            $("#modalEditarPdf").modal("hide");
+            crudNotify("success", resp.message || "PDF actualizado exitosamente");
+            cargarPdfs(currentPage);
+        },
+        error: function(xhr){
+            crudNotify("error", xhr.responseJSON?.message || "Error al actualizar el PDF.");
+        }
+    });
+}
+
+// ================== Eliminar ==================
+function eliminarPdf(id){
+    crudConfirm("¿Está seguro de eliminar este PDF? Esto lo marcará como inactivo.")
+        .then(ok => {
+            if(!ok) return;
+            $.ajax({
+                url: URL_DELETE_PDF(id),
+                method: "POST",
+                success: function(resp){
+                    crudNotify("success", resp.message || "PDF eliminado exitosamente");
+                    cargarPdfs(currentPage);
+                },
+                error: function(xhr){
+                    crudNotify("error", xhr.responseJSON?.message || "Error al eliminar el PDF.");
+                }
+            });
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarPdfs(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+    initDropzonesPdf();
+});
+</script>
+{% endblock %}

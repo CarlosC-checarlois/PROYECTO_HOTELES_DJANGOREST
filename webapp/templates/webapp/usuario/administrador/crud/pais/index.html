@@ -1,0 +1,273 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado {
+        font-size: .85rem;
+        padding: .25rem .6rem;
+        border-radius: 15px;
+    }
+    .table-inactive {
+        background-color: #f2f2f2 !important;
+    }
+    .readonly-input {
+        background-color: #f0f0f0 !important;
+        color: #6c757d !important;
+        cursor: not-allowed !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Países</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearPais()">
+            <i class="bi bi-plus-lg"></i> Agregar País
+        </button>
+    </div>
+
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaPaises">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID País</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{# Modales #}
+{% include "webapp/usuario/administrador/crud/pais/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/pais/modal_editar.html" %}
+    <!-- PAGINACIÓN (igual estilo que otros CRUDs) -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+// ================== Constantes ==================
+const URL_LIST_PAIS   = "/admin/pais/list/";
+const URL_CREATE_PAIS = "/admin/pais/create/";
+const URL_GET_PAIS    = id => `/admin/pais/get/${id}/`;
+const URL_UPDATE_PAIS = id => `/admin/pais/update/${id}/`;
+const URL_DELETE_PAIS = id => `/admin/pais/delete/${id}/`;
+const URL_NEXT_PAIS   = "/admin/pais/next-id/";
+
+const TABLA_SELECTOR_PAIS = "#tablaPaises";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarPaises(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarPaises(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarPaises(page = 1){
+
+    const url_with_page = `${URL_LIST_PAIS}?page=${page}`;
+
+    $.ajax({
+        url: url_with_page,
+        method: "GET",
+        success: function(resp){
+
+            const tbody = document.querySelector(TABLA_SELECTOR_PAIS + " tbody");
+            if(!tbody){
+                console.error("No se encontró tbody para tabla de países");
+                return;
+            }
+            tbody.innerHTML = "";
+
+            (resp.data || []).forEach(p => {
+
+                const estado = !!p.EstadoPais;
+                const rowClass = estado ? "" : "table-secondary";
+
+                const estadoBadge = estado
+                    ? '<span class="badge bg-success badge-estado">Activo</span>'
+                    : '<span class="badge bg-secondary badge-estado">Inactivo</span>';
+
+                const btnEliminar = estado
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarPais(${p.IdPais})">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                const rowHtml = `
+                    <tr class="${rowClass}">
+                        <td class="fw-bold">${p.IdPais}</td>
+                        <td>${p.NombrePais || ""}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarPais(${p.IdPais})">
+                                Editar
+                            </button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `;
+
+                tbody.insertAdjacentHTML("beforeend", rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la información de países."
+            );
+        }
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearPais(){
+
+    // Obtener siguiente ID desde el backend
+    $.get(URL_NEXT_PAIS, function(resp){
+        $("#crear_IdPais").val(resp.next || "");
+    }).fail(() => {
+        $("#crear_IdPais").val("");
+    });
+
+    $("#crear_NombrePais").val("");
+    $("#crear_EstadoPais").prop("checked", true);
+
+    $("#modalCrearPais").modal("show");
+}
+
+function crearPais(){
+
+    const idPais     = $("#crear_IdPais").val().trim();
+    const nombrePais = $("#crear_NombrePais").val().trim();
+
+    if(!idPais || !nombrePais){
+        crudNotify("warning", "ID País y Nombre son obligatorios.");
+        return;
+    }
+
+    if(isNaN(parseInt(idPais))){
+        crudNotify("error", "El ID País debe ser numérico.");
+        return;
+    }
+
+    crudCreate(
+        URL_CREATE_PAIS,
+        {
+            IdPais: parseInt(idPais),
+            NombrePais: nombrePais,
+            EstadoPais: $("#crear_EstadoPais").is(":checked")
+        },
+        () => {
+            $("#modalCrearPais").modal("hide");
+            cargarPaises(currentPage);
+        }
+    );
+}
+
+// ================== Editar ==================
+function abrirModalEditarPais(id){
+
+    $.get(URL_GET_PAIS(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar el país.");
+        }
+
+        const p = resp.data || {};
+
+        $("#editar_IdPais").val(p.IdPais);
+        $("#editar_NombrePais").val(p.NombrePais || "");
+        $("#editar_EstadoPais").prop("checked", !!p.EstadoPais);
+
+        $("#modalEditarPais").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarPais(){
+
+    const idPais     = $("#editar_IdPais").val();
+    const nombrePais = $("#editar_NombrePais").val().trim();
+
+    if(!nombrePais){
+        crudNotify("warning", "El Nombre del país es obligatorio.");
+        return;
+    }
+
+    crudUpdate(
+        URL_UPDATE_PAIS(idPais),
+        {
+            NombrePais: nombrePais,
+            EstadoPais: $("#editar_EstadoPais").is(":checked")
+        },
+        () => {
+            $("#modalEditarPais").modal("hide");
+            cargarPaises(currentPage);
+        }
+    );
+}
+
+// ================== Eliminar ==================
+function eliminarPais(id){
+    crudConfirm("¿Está seguro de eliminar este país? Esto lo marcará como inactivo o lo eliminará lógicamente.")
+        .then(ok => {
+            if(!ok) return;
+
+            crudDelete(URL_DELETE_PAIS(id), () => {
+                cargarPaises(currentPage);
+            });
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarPaises(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,430 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+.badge-estado {
+    font-size: .85rem;
+    padding: .25rem .6rem;
+    border-radius: 15px;
+}
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<!-- TOAST -->
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Descuentos por Habitación (Reserva)</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearDesxHabxRes()">Crear Relación</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped" id="tablaDesxHabxRes">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Descuento</th>
+                    <th>ID HabxRes</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Fecha Modificación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div id="paginacionDesxHabxRes" class="d-flex justify-content-center gap-3 mt-3"></div>
+
+</div>
+
+<!-- ===================== MODAL CREAR ===================== -->
+<div class="modal fade" id="modalCrearDesxHabxRes" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Crear Relación Descuento por Habitación</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<label>Descuento</label>
+<select id="crear_IdDescuento" class="form-select mb-3"></select>
+
+<label>HabxRes</label>
+<select id="crear_IdHabxRes" class="form-select mb-3"></select>
+
+<label>Monto</label>
+<input type="number" step="0.01" id="crear_MontoDesxHabxRes" class="form-control mb-3">
+
+<div class="form-check">
+    <input type="checkbox" id="crear_EstadoDesxHabxRes" class="form-check-input" checked>
+    <label class="form-check-label">Activo</label>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-success" onclick="crearDesxHabxRes()">Guardar</button>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<!-- ===================== MODAL EDITAR ===================== -->
+<div class="modal fade" id="modalEditarDesxHabxRes" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Editar Relación</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<label>ID Descuento</label>
+<input readonly id="editar_IdDescuento" class="form-control mb-2 readonly-input">
+
+<label>ID HabxRes</label>
+<input readonly id="editar_IdHabxRes" class="form-control mb-2 readonly-input">
+
+<label>Monto</label>
+<input type="number" step="0.01" id="editar_MontoDesxHabxRes" class="form-control mb-3">
+
+<div class="form-check">
+    <input type="checkbox" id="editar_EstadoDesxHabxRes" class="form-check-input">
+    <label class="form-check-label">Activo</label>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-primary" onclick="actualizarDesxHabxRes()">Actualizar</button>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock %}
+
+
+
+{% block jvscript_archivos_defer %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+/* ============================================================
+   URLs backend
+============================================================ */
+const URL_LIST   = "/admin/desxhabxres/list/";
+const URL_CREATE = "/admin/desxhabxres/create/";
+const URL_GET    = (d,h) => `/admin/desxhabxres/get/${d}/${h}/`;
+const URL_UPDATE = (d,h) => `/admin/desxhabxres/update/${d}/${h}/`;
+const URL_DELETE = (d,h) => `/admin/desxhabxres/delete/${d}/${h}/`;
+
+let PAGINA_ACTUAL = 1;
+
+/* ============================================================
+   VALIDACIÓN con validate.js
+============================================================ */
+function validarDatosDesxHabxRes(data, esEdicion = false) {
+    if (typeof validate === "undefined") {
+        console.warn("validate.js no está cargado; usando validación básica.");
+        // fallback mínimo
+        if (!esEdicion) {
+            if (!data.IdDescuento) return { _error: "Debe seleccionar un descuento." };
+            if (!data.IdHabxRes) return { _error: "Debe seleccionar una relación HabxRes." };
+        }
+        if (!data.MontoDesxHabxRes && data.MontoDesxHabxRes !== 0) {
+            return { _error: "El monto es obligatorio." };
+        }
+        if (Number(data.MontoDesxHabxRes) <= 0) {
+            return { _error: "El monto debe ser mayor a 0." };
+        }
+        return null;
+    }
+
+    const constraintsCrear = {
+        IdDescuento: {
+            presence: { allowEmpty: false, message: "^Debe seleccionar un descuento." }
+        },
+        IdHabxRes: {
+            presence: { allowEmpty: false, message: "^Debe seleccionar una relación HabxRes." }
+        },
+        MontoDesxHabxRes: {
+            presence: { allowEmpty: false, message: "^El monto es obligatorio." },
+            numericality: {
+                greaterThan: 0,
+                message: "^El monto debe ser mayor a 0."
+            }
+        }
+    };
+
+    const constraintsEditar = {
+        MontoDesxHabxRes: {
+            presence: { allowEmpty: false, message: "^El monto es obligatorio." },
+            numericality: {
+                greaterThan: 0,
+                message: "^El monto debe ser mayor a 0."
+            }
+        }
+    };
+
+    const constraints = esEdicion ? constraintsEditar : constraintsCrear;
+    return validate(data, constraints);  // null si no hay errores
+}
+
+/* ============================================================
+   CARGAR TABLA
+============================================================ */
+function cargarDesxHabxRes(page = 1){
+
+    PAGINA_ACTUAL = page;
+
+    crudLoadTable(
+        URL_LIST + `?page=${page}`,
+        function(r){
+
+            const estado = r.EstadoDesxHabxRes
+                ? `<span class="badge bg-success badge-estado">Activo</span>`
+                : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+            const eliminar = r.EstadoDesxHabxRes
+                ? `<button class="btn btn-danger btn-sm"
+                        onclick="eliminarDesxHabxRes(${r.IdDescuento}, ${r.IdHabxRes})">Eliminar</button>`
+                : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+            return `
+            <tr class="${r.EstadoDesxHabxRes ? "" : "table-secondary"}">
+                <td>${r.IdDescuento}</td>
+                <td>${r.IdHabxRes}</td>
+                <td>${r.MontoDesxHabxRes || "-"}</td>
+                <td>${estado}</td>
+                <td>${r.FechaModificacionDesxHabxRes || ""}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm"
+                            onclick="abrirModalEditarDesxHabxRes(${r.IdDescuento}, ${r.IdHabxRes})">
+                        Editar
+                    </button>
+                    ${eliminar}
+                </td>
+            </tr>
+            `;
+        },
+        "#tablaDesxHabxRes",
+        "#paginacionDesxHabxRes",
+        page
+    );
+}
+
+/* ============================================================
+   CREAR
+============================================================ */
+function abrirModalCrearDesxHabxRes(){
+
+    $("#crear_IdDescuento").empty();
+    $("#crear_IdHabxRes").empty();
+    $("#crear_MontoDesxHabxRes").val("");
+    $("#crear_EstadoDesxHabxRes").prop("checked", true);
+
+    inicializarSelect2HabxRes();
+    cargarSelectDescuentos();
+
+    $("#modalCrearDesxHabxRes").modal("show");
+}
+
+function crearDesxHabxRes(){
+
+    const data = {
+        IdDescuento:      $("#crear_IdDescuento").val(),
+        IdHabxRes:        $("#crear_IdHabxRes").val(),
+        MontoDesxHabxRes: $("#crear_MontoDesxHabxRes").val()?.replace(",", "."),
+        EstadoDesxHabxRes: $("#crear_EstadoDesxHabxRes").is(":checked")
+    };
+
+    // VALIDACIÓN
+    const errors = validarDatosDesxHabxRes(data, false);
+    if (errors) {
+        const firstKey = errors._error ? "_error" : Object.keys(errors)[0];
+        const firstMsg = errors._error || (errors[firstKey] && errors[firstKey][0]) || "Datos inválidos.";
+        return crudNotify("warning", firstMsg);
+    }
+
+    // Normalizar a número con 2 decimales
+    const montoNum = parseFloat(data.MontoDesxHabxRes);
+    data.MontoDesxHabxRes = montoNum.toFixed(2);
+
+    crudCreate(URL_CREATE, data, () => {
+        $("#modalCrearDesxHabxRes").modal("hide");
+        cargarDesxHabxRes(PAGINA_ACTUAL);
+    });
+}
+
+/* ============================================================
+   EDITAR
+============================================================ */
+function abrirModalEditarDesxHabxRes(idD,idHR){
+
+    $.get(URL_GET(idD,idHR), function(resp){
+
+        if(resp.status !== "ok")
+            return crudNotify("error", resp.message || "No se pudo cargar");
+
+        const r = resp.data;
+
+        $("#editar_IdDescuento").val(r.IdDescuento);
+        $("#editar_IdHabxRes").val(r.IdHabxRes);
+        $("#editar_MontoDesxHabxRes").val(r.MontoDesxHabxRes || "");
+        $("#editar_EstadoDesxHabxRes").prop("checked", !!r.EstadoDesxHabxRes);
+
+        $("#modalEditarDesxHabxRes").modal("show");
+    });
+}
+
+function actualizarDesxHabxRes(){
+
+    const data = {
+        IdDescuento:      $("#editar_IdDescuento").val(),      // solo informativo
+        IdHabxRes:        $("#editar_IdHabxRes").val(),        // solo informativo
+        MontoDesxHabxRes: $("#editar_MontoDesxHabxRes").val()?.replace(",", "."),
+        EstadoDesxHabxRes: $("#editar_EstadoDesxHabxRes").is(":checked")
+    };
+
+    // VALIDACIÓN
+    const errors = validarDatosDesxHabxRes(data, true);
+    if (errors) {
+        const firstKey = errors._error ? "_error" : Object.keys(errors)[0];
+        const firstMsg = errors._error || (errors[firstKey] && errors[firstKey][0]) || "Datos inválidos.";
+        return crudNotify("warning", firstMsg);
+    }
+
+    const idD  = data.IdDescuento;
+    const idHR = data.IdHabxRes;
+
+    // Normalizar a número con 2 decimales
+    const montoNum = parseFloat(data.MontoDesxHabxRes);
+    data.MontoDesxHabxRes = montoNum.toFixed(2);
+
+    crudUpdate(URL_UPDATE(idD,idHR), {
+        MontoDesxHabxRes: data.MontoDesxHabxRes,
+        EstadoDesxHabxRes: data.EstadoDesxHabxRes
+    }, () => {
+        $("#modalEditarDesxHabxRes").modal("hide");
+        cargarDesxHabxRes(PAGINA_ACTUAL);
+    });
+}
+
+/* ============================================================
+   ELIMINAR
+============================================================ */
+function eliminarDesxHabxRes(idD,idHR){
+
+    crudConfirm("¿Desea eliminar esta relación?")
+        .then(ok=>{
+            if(!ok) return;
+            crudDelete(URL_DELETE(idD,idHR),
+                () => cargarDesxHabxRes(PAGINA_ACTUAL)
+            );
+        });
+}
+
+/* ============================================================
+   SELECT2 HABXRES
+============================================================ */
+function inicializarSelect2HabxRes(){
+
+    if ($("#crear_IdHabxRes").data("select2"))
+        $("#crear_IdHabxRes").select2("destroy");
+
+    $("#crear_IdHabxRes").select2({
+        placeholder: "Buscar HabxRes...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $("#modalCrearDesxHabxRes"),
+        minimumInputLength: 1,
+        ajax: {
+            url: "/admin/habxres/search/",
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(h => ({
+                    id: h.IdHabxRes,
+                    text: `${h.IdHabxRes} — Reserva ${h.IdReserva} | Habitación ${h.IdHabitacion}`
+                }))
+            })
+        }
+    });
+}
+
+/* ============================================================
+   SELECT2 DESCUENTOS
+============================================================ */
+function cargarSelectDescuentos(){
+
+    $.get("/admin/descuento/list/", function(resp){
+
+        if(resp.status !== "ok"){
+            crudNotify("error", "No se pudieron cargar descuentos");
+            return;
+        }
+
+        const opciones = resp.data.map(d=>({
+            id: d.IdDescuento,
+            text: `${d.IdDescuento} — ${d.NombreDescuento} (${d.ValorDescuento}%)`
+        }));
+
+        if ($("#crear_IdDescuento").data("select2"))
+            $("#crear_IdDescuento").select2("destroy");
+
+        $("#crear_IdDescuento").select2({
+            data: opciones,
+            width: "100%",
+            allowClear: true,
+            placeholder: "Seleccione descuento",
+            dropdownParent: $("#modalCrearDesxHabxRes")
+        });
+    });
+}
+
+/* ===============================
+   INIT
+=============================== */
+$(document).ready(function () {
+
+    // evitar negativos directamente en el input (doble protección)
+    $("#modalCrearDesxHabxRes, #modalEditarDesxHabxRes")
+        .on("input", "input[type=number]", function () {
+            let v = this.value.replace(",", ".");
+            if (v === "") return;
+            const num = parseFloat(v);
+            if (isNaN(num) || num <= 0) {
+                this.value = "";
+            }
+        });
+
+    window.__crudReload = page => cargarDesxHabxRes(page);
+
+    cargarDesxHabxRes(1);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "cabezal.html" %}
+{% load static %}
+
+{% block titulo_pagina %}
+<title>Mi Perfil | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+<style>
+    :root {
+        --color-principal: #3b82f6;
+        --color-secundario: #6c5ce7;
+        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+    }
+
+    body {
+        background: #f5f7fb;
+    }
+
+    .perfil-wrapper {
+        max-width: 750px;
+        margin: auto;
+        padding: 2rem;
+    }
+
+    .card-perfil {
+        border-radius: 1rem;
+        padding: 2rem;
+        background: #fff;
+    }
+
+    .input-soft {
+        background: #eef0f3 !important;
+        border-radius: .75rem;
+        border: 1px solid #ccc;
+        padding: .9rem 1rem;
+        font-size: 1rem;
+        cursor: not-allowed;
+    }
+
+    select.input-soft {
+        pointer-events: none;
+    }
+
+    .btn-primary {
+        display: none; /* No actualizar porque TODO es readonly */
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<section class="perfil-wrapper">
+
+    <h2 class="fw-bold mb-4 text-center">
+        <i class="bi bi-person-circle text-primary"></i> Mi Perfil
+    </h2>
+
+    <div class="card card-perfil shadow">
+        <h5 class="fw-bold mb-4">Información personal</h5>
+
+        <form id="form-perfil">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="fw-semibold mb-1">Nombre</label>
+                    <input id="u_nombre" type="text" class="form-control input-soft" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-semibold mb-1">Apellido</label>
+                    <input id="u_apellido" type="text" class="form-control input-soft" readonly>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="fw-semibold mb-1">Correo electrónico</label>
+                    <input id="u_correo" type="email" class="form-control input-soft" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-semibold mb-1">Tipo documento</label>
+                    <select id="u_tipo_doc" class="form-select input-soft" disabled>
+                        <option value="CEDULA">Cédula</option>
+                        <option value="PASAPORTE">Pasaporte</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-semibold mb-1">Documento</label>
+                    <input id="u_documento" type="text" class="form-control input-soft" readonly>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script>
+    // =============================================
+    // Cargar datos desde localStorage — SOLO LECTURA
+    // =============================================
+    document.getElementById("u_nombre").value    = localStorage.getItem("usuario_nombre") || "";
+    document.getElementById("u_apellido").value  = localStorage.getItem("usuario_apellido") || "";
+    document.getElementById("u_correo").value    = localStorage.getItem("usuario_correo") || "";
+    document.getElementById("u_tipo_doc").value  = localStorage.getItem("usuario_tipo_doc") || "";
+    document.getElementById("u_documento").value = localStorage.getItem("usuario_documento") || "";
+
+</script>
+{% endblock %}

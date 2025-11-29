@@ -1,0 +1,76 @@
+:root {
+    --texto-claro: #ffffff;
+    --color-principal: #3b82f6;
+    --color-secundario: #6c5ce7;
+}
+
+.cabezal_general {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.menu_cabezal_general {
+    padding: 0.75rem 0;
+}
+
+.logo_cabezal_general {
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Enlaces del menú */
+.navbar-nav .nav-link {
+    color: #333333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #007bff;
+}
+
+/* Botón de reserva */
+.navbar .btn {
+    background: linear-gradient(90deg, #007bff, #00aaff);
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.navbar .btn:hover {
+    background: linear-gradient(90deg, #0056d2, #008cff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+}
+
+.footer-modern {
+    background: linear-gradient(135deg, #3b82f6, #6c5ce7);
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.15);
+}
+
+.footer-links a {
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.footer-social a {
+    color: #ffffff;
+    font-size: 1.4rem;
+    transition: 0.3s ease;
+}
+
+.footer-social a:hover {
+    color: #dfe6ff;
+    transform: translateY(-3px);
+}

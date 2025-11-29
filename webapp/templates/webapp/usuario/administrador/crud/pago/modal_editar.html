@@ -1,0 +1,132 @@
+<div class="modal fade" id="modalEditarPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <div class="row">
+                    <!-- ID Pago -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">ID Pago</label>
+                        <input type="number"
+                               id="editar_IdPago"
+                               class="form-control readonly-input"
+                               readonly>
+                    </div>
+
+                    <!-- Método de Pago (SOLO LECTURA) -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Método de Pago *</label>
+                        <select id="editar_IdMetodoPago"
+                                class="form-select readonly-input"
+                                disabled>
+                            <!-- se llena por JS, pero queda bloqueado -->
+                        </select>
+                    </div>
+
+                    <!-- Factura (SOLO LECTURA) -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Factura *</label>
+                        <select id="editar_IdFactura"
+                                class="form-select readonly-input"
+                                disabled>
+                            <!-- se llena por JS, pero queda bloqueado -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Usuario Interno (SOLO LECTURA) -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Usuario Interno *</label>
+                        <select id="editar_IdUnicoUsuario"
+                                class="form-select readonly-input"
+                                disabled>
+                            <!-- se llena por JS, pero queda bloqueado -->
+                        </select>
+                    </div>
+
+                    <!-- Monto -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Monto Total *</label>
+                        <input type="number"
+                               id="editar_MontoTotal"
+                               class="form-control"
+                               min="0.01"
+                               step="0.01"
+                               placeholder="Ej: 150.70"
+                               required
+                               oninput="
+                                    let v = this.value.replace(',', '.');
+                                    if (v === '') { return; }
+                                    let n = parseFloat(v);
+                                    if (isNaN(n) || n <= 0) {
+                                        this.value = '';
+                                    } else {
+                                        this.value = v;
+                                    }
+                               ">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Cuenta Origen (OBLIGATORIA) -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cuenta Origen *</label>
+                        <input type="text"
+                               id="editar_CuentaOrigen"
+                               class="form-control"
+                               placeholder="Ej: ACC-ORIG-6227"
+                               required
+                               oninput="
+                                   if (this.value.trim() === '') {
+                                       this.setCustomValidity('La cuenta origen es obligatoria.');
+                                   } else {
+                                       this.setCustomValidity('');
+                                   }
+                               ">
+                    </div>
+
+                    <!-- Cuenta Destino (OBLIGATORIA) -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cuenta Destino *</label>
+                        <input type="text"
+                               id="editar_CuentaDestino"
+                               class="form-control"
+                               placeholder="Ej: ACC-DEST-7601"
+                               required
+                               oninput="
+                                   if (this.value.trim() === '') {
+                                       this.setCustomValidity('La cuenta destino es obligatoria.');
+                                   } else {
+                                       this.setCustomValidity('');
+                                   }
+                               ">
+                    </div>
+                </div>
+
+                <div class="form-check mt-3">
+                    <input type="checkbox" id="editar_EstadoPago" class="form-check-input">
+                    <label class="form-check-label" for="editar_EstadoPago">
+                        Pago Completo / Activo
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="actualizarPago()">Actualizar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

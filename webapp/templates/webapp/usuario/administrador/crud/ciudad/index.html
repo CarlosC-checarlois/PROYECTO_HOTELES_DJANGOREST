@@ -1,0 +1,256 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+    <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+    <style>
+        .badge {
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+    <div id="crud-toast-container"></div>
+
+    <div class="container mt-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold">Ciudades</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrearCiudad()">Crear Ciudad</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped" id="tablaCiudad">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>País</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Fecha Modificación</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div id="paginacionCiudad" class="d-flex justify-content-center align-items-center gap-3 mt-3"></div>
+
+    </div>
+
+    <!-- MODALES -->
+    {% include "webapp/usuario/administrador/crud/ciudad/modal_crear.html" %}
+    {% include "webapp/usuario/administrador/crud/ciudad/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+    <script>
+        // ==========================
+        // URLS
+        // ==========================
+        const URL_LIST = "/admin/ciudad/list/";
+        const URL_CREATE = "/admin/ciudad/create/";
+        const URL_GET = id => `/admin/ciudad/get/${id}/`;
+        const URL_UPDATE = id => `/admin/ciudad/update/${id}/`;
+        const URL_DELETE = id => `/admin/ciudad/delete/${id}/`;
+
+        let PAGINA_ACTUAL = 1;
+
+        // ==========================
+        // CARGAR TABLA
+        // ==========================
+        function cargarCiudad(pagina = 1) {
+
+            PAGINA_ACTUAL = pagina;
+
+            $.get(`${URL_LIST}?page=${pagina}`, function (resp) {
+
+                const tbody = $("#tablaCiudad tbody");
+                tbody.html("");
+
+                if (!resp.data || resp.data.length === 0) {
+                    tbody.html(`<tr><td colspan="6" class="text-center">Sin datos</td></tr>`);
+                    return;
+                }
+
+                resp.data.forEach(c => {
+
+                    const estado = c.EstadoCiudad
+                        ? `<span class="badge bg-success">Activo</span>`
+                        : `<span class="badge bg-secondary">Inactivo</span>`;
+
+                    const fila = `
+            <tr class="${!c.EstadoCiudad ? 'table-secondary' : ''}">
+                <td>${c.IdCiudad}</td>
+                <td>${c.IdPais}</td>
+                <td>${c.NombreCiudad}</td>
+                <td>${estado}</td>
+                <td>${c.FechaModificacionCiudad || ""}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm"
+                            onclick="abrirModalEditarCiudad(${c.IdCiudad})">Editar</button>
+${c.EstadoCiudad
+    ? `<button class="btn btn-danger btn-sm"
+           onclick="eliminarCiudad(${c.IdCiudad})">
+       Eliminar
+   </button>`
+    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`
+}
+
+                    </td>
+            </tr>
+            `;
+                    tbody.append(fila);
+                });
+
+                // ✅ DIBUJAR PAGINACIÓN REAL
+                renderPaginacionCiudad(resp.page, resp.total_pages);
+            });
+        }
+
+        // ==========================
+        // RENDER PAGINACIÓN BIEN
+        // ==========================
+        function renderPaginacionCiudad(actual, total) {
+
+            let html = "";
+
+            // BOTÓN ANTERIOR
+            html += actual > 1
+                ? `<button class="btn btn-secondary" onclick="cargarCiudad(${actual - 1})">◀ Anterior</button>`
+                : `<button class="btn btn-secondary" disabled>◀ Anterior</button>`;
+
+            // TEXTO CENTRAL
+            html += `<span class="fw-bold">Página ${actual} de ${total}</span>`
+
+            // BOTÓN SIGUIENTE
+            html += actual < total
+                ? `<button class="btn btn-secondary" onclick="cargarCiudad(${actual + 1})">Siguiente ▶</button>`
+                : `<button class="btn btn-secondary" disabled>Siguiente ▶</button>`;
+
+            $("#paginacionCiudad").html(html);
+        }
+
+        // ==========================
+        // CREAR CIUDAD
+        // ==========================
+        function abrirModalCrearCiudad() {
+
+            crudGenerateNewId(URL_LIST, "#crear_IdCiudad", "IdCiudad");
+
+            $.get("/admin/pais/list/", function (resp) {
+                let html = '<option value="">Seleccione</option>';
+                resp.data.forEach(p => html += `<option value="${p.IdPais}">${p.NombrePais}</option>`);
+                $("#crear_IdPais").html(html);
+            });
+
+            $("#crear_NombreCiudad").val("");
+            $("#crear_EstadoCiudad").prop("checked", true);
+
+            $("#modalCrearCiudad").modal("show");
+        }
+
+        function crearCiudad() {
+
+            const data = {
+                IdCiudad: $("#crear_IdCiudad").val(),
+                IdPais: $("#crear_IdPais").val(),
+                NombreCiudad: $("#crear_NombreCiudad").val(),
+                EstadoCiudad: $("#crear_EstadoCiudad").is(":checked")
+            };
+
+            if (!data.IdPais) return crudNotify("warning", "Seleccione país");
+            if (!data.NombreCiudad.trim()) return crudNotify("warning", "Nombre requerido");
+
+            crudCreate(URL_CREATE, data, () => {
+                $("#modalCrearCiudad").modal("hide");
+                cargarCiudad(PAGINA_ACTUAL);
+            });
+        }
+
+        // ==========================
+        // EDITAR
+        // ==========================
+        function abrirModalEditarCiudad(id) {
+
+            $.get(URL_GET(id), function (resp) {
+
+                const c = resp.data;
+
+                $("#editar_IdCiudad").val(c.IdCiudad);
+                $("#editar_NombreCiudad").val(c.NombreCiudad);
+                $("#editar_EstadoCiudad").prop("checked", c.EstadoCiudad);
+
+                $.get("/admin/pais/list/", function (resp) {
+                    let html = "";
+                    resp.data.forEach(p => {
+                        html += `<option value="${p.IdPais}" ${p.IdPais == c.IdPais ? 'selected' : ''}>
+                        ${p.NombrePais}
+                      </option>`;
+                    });
+                    $("#editar_IdPais").html(html);
+                });
+
+                $("#modalEditarCiudad").modal("show");
+            });
+        }
+
+        function actualizarCiudad() {
+
+            const id = $("#editar_IdCiudad").val();
+
+            const data = {
+                IdPais: $("#editar_IdPais").val(),
+                NombreCiudad: $("#editar_NombreCiudad").val(),
+                EstadoCiudad: $("#editar_EstadoCiudad").is(":checked")
+            };
+
+            if (!data.NombreCiudad.trim()) return crudNotify("warning", "Nombre requerido");
+
+            crudUpdate(URL_UPDATE(id), data, () => {
+                $("#modalEditarCiudad").modal("hide");
+                cargarCiudad(PAGINA_ACTUAL);
+            });
+        }
+
+        // ==========================
+        // ELIMINAR
+        // ==========================
+        function eliminarCiudad(id) {
+
+            crudConfirm("¿Desea eliminar esta ciudad?")
+                .then(ok => {
+                    if (!ok) return;
+                    crudDelete(
+                        URL_DELETE(id),
+                        () => cargarCiudad(PAGINA_ACTUAL)
+                    );
+                });
+        }
+
+
+        // ===============================
+        // INIT
+        // ===============================
+
+        $(document).ready(function () {
+
+            // Hacer que el helper global invoque esta tabla
+            window.__crudReload = page => cargarCiudad(page);
+
+            // Cargar primer listado
+            cargarCiudad(1);
+        });
+    </script>
+
+{% endblock %}

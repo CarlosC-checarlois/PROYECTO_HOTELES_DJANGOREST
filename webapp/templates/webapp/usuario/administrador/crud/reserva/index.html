@@ -1,0 +1,409 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#e0e0e0 !important;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+    .select2-container{
+        width:100%!important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Reservas</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearReserva()">
+            <i class="bi bi-plus-lg"></i> Registrar Reserva
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle" id="tablaReservas">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Reserva</th>
+                    <th>Usuario Interno</th>
+                    <th>Usuario Externo</th>
+                    <th>Costo Total</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Final</th>
+                    <th>Estado General</th>
+                    <th>Activa</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+</div>
+
+{# MODALES #}
+{% include "webapp/usuario/administrador/crud/reserva/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/reserva/modal_editar.html" %}
+
+{% endblock %}
+
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+
+<script>
+// ================== URLs ==================
+const URL_LIST_RESERVA   = "/admin/reservas/list/";
+const URL_CREATE_RESERVA = "/admin/reservas/create/";
+const URL_GET_RESERVA    = id => `/admin/reservas/get/${id}/`;
+const URL_UPDATE_RESERVA = id => `/admin/reservas/update/${id}/`;
+const URL_DELETE_RESERVA = id => `/admin/reservas/delete/${id}/`;
+const URL_NEXT_RESERVA   = "/admin/reservas/next-id/";   // vista next-id que hicimos
+
+// buscador de usuario interno (Select2)
+const URL_SEARCH_USUARIO_INTERNO = "/admin/usuario-interno/search/";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarReservas(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarReservas(currentPage + 1);
+}
+
+// ================== Select2 Usuario Interno ==================
+function initSelectUsuarioInternoReserva(selector, parentSelector, selectedId=null, selectedText=""){
+    const $sel = $(selector);
+
+    if($sel.data("select2")){
+        $sel.select2("destroy");
+    }
+    $sel.empty();   // 👈 limpia cualquier opción anterior
+
+    $sel.select2({
+        placeholder: "Buscar usuario interno...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $(parentSelector),
+        minimumInputLength: 0,
+        ajax: {
+            url: URL_SEARCH_USUARIO_INTERNO,
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term || "" }),
+            processResults: resp => ({
+                results: (resp.data || []).map(u => ({
+                    id: u.Id,
+                    text: `${u.Id} — ${u.Nombre} ${u.Apellido} (${u.Correo})`
+                }))
+            }),
+            cache: true
+        }
+    });
+
+    // 🔴 SOLO preseleccionamos si de verdad hay ID
+    if(selectedId !== null && selectedId !== undefined && selectedId !== ""){
+        const option = new Option(selectedText || `ID ${selectedId}`, selectedId, true, true);
+        $sel.append(option).trigger("change");
+    }
+}
+
+// ================== Litepicker (rango de fechas) ==================
+let pickerCrearReserva = null;
+let pickerEditarReserva = null;
+
+function initRangoFechasReserva(crear = true, start = null, end = null){
+    const inputId   = crear ? "crear_RangoFechasReserva" : "editar_RangoFechasReserva";
+    const iniHidden = crear ? "#crear_FechaInicioReserva" : "#editar_FechaInicioReserva";
+    const finHidden = crear ? "#crear_FechaFinalReserva"  : "#editar_FechaFinalReserva";
+
+    const el = document.getElementById(inputId);
+    if (!el || !window.Litepicker) {
+        console.error("Litepicker no está cargado o el input no existe");
+        return;
+    }
+
+    if (crear && pickerCrearReserva)  pickerCrearReserva.destroy();
+    if (!crear && pickerEditarReserva) pickerEditarReserva.destroy();
+
+    const picker = new Litepicker({
+        element: el,
+        singleMode: false,
+        format: "YYYY-MM-DD",
+        numberOfMonths: 2,
+        numberOfColumns: 2,
+        autoApply: true,
+        // crear: no se permite seleccionar días anteriores a hoy
+        minDate: crear ? new Date() : null,
+        startDate: start || null,
+        endDate: end || null,
+        tooltipText: { one: "día", other: "días" },
+        tooltipNumber: totalDays => totalDays,
+        setup: (p) => {
+            p.on("selected", (date1, date2) => {
+                const v1 = date1 ? date1.format("YYYY-MM-DD") : "";
+                const v2 = date2 ? date2.format("YYYY-MM-DD") : "";
+                $(iniHidden).val(v1);
+                $(finHidden).val(v2);
+            });
+        }
+    });
+
+    if (crear) pickerCrearReserva = picker;
+    else pickerEditarReserva = picker;
+}
+
+// ================== Cargar tabla ==================
+function cargarReservas(page = 1){
+    $.ajax({
+        url: `${URL_LIST_RESERVA}?page=${page}`,
+        method: "GET",
+        success: function(resp){
+            const tbody = $("#tablaReservas tbody");
+            tbody.empty();
+
+            (resp.data || []).forEach(r => {
+                const activaBadge = r.EstadoReserva
+                    ? `<span class="badge bg-success badge-estado">Activa</span>`
+                    : `<span class="badge bg-secondary badge-estado">Inactiva</span>`;
+
+                const costo = r.CostoTotalReserva != null
+                    ? parseFloat(r.CostoTotalReserva).toLocaleString("es-EC", { style: "currency", currency: "USD" })
+                    : "-";
+
+                const rowHtml = `
+                    <tr class="${r.EstadoReserva ? "" : "table-secondary"}">
+                        <td>${r.IdReserva}</td>
+                        <td>${r.IdUnicoUsuario ?? "-"}</td>
+                        <td>${r.IdUnicoUsuarioExterno ?? "-"}</td>
+                        <td>${costo}</td>
+                        <td>${r.FechaInicioReserva ?? "-"}</td>
+                        <td>${r.FechaFinalReserva ?? "-"}</td>
+                        <td>${r.EstadoGeneralReserva ?? "-"}</td>
+                        <td>${activaBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="abrirModalEditarReserva(${r.IdReserva})">
+                                Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarReserva(${r.IdReserva})">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Reservas.");
+        }
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearReserva(){
+
+    // Obtener NEXT ID desde backend
+    $.get(URL_NEXT_RESERVA, function(resp){
+        if(resp.next_id){
+            $("#crear_IdReserva").val(resp.next_id);
+        }else if(resp.next){
+            $("#crear_IdReserva").val(resp.next);
+        }else{
+            $("#crear_IdReserva").val("");
+        }
+    });
+
+    // limpiar campos
+    $("#crear_CostoTotalReserva").val("");
+    $("#crear_FechaRegistroReserva").val("");
+    $("#crear_RangoFechasReserva").val("");
+    $("#crear_FechaInicioReserva").val("");
+    $("#crear_FechaFinalReserva").val("");
+    $("#crear_EstadoGeneralReserva").val("");
+    $("#crear_EstadoReserva").prop("checked", true);
+
+    // por defecto, fecha registro = hoy (YYYY-MM-DD)
+    const hoy = new Date().toISOString().slice(0,10);
+    $("#crear_FechaRegistroReserva").val(hoy);
+
+    initSelectUsuarioInternoReserva("#crear_IdUnicoUsuario", "#modalCrearReserva");
+    initRangoFechasReserva(true);  // crear, minDate = hoy
+
+    $("#modalCrearReserva").modal("show");
+}
+
+function crearReserva(){
+    const idReserva   = $("#crear_IdReserva").val().trim();
+    const idUsuario   = $("#crear_IdUnicoUsuario").val();
+    const costoTotal  = $("#crear_CostoTotalReserva").val().trim();
+
+    if(!idReserva || !idUsuario){
+        crudNotify("warning", "El ID Reserva y el Usuario Interno son obligatorios.");
+        return;
+    }
+
+    const data = {
+        IdReserva: idReserva,
+        IdUnicoUsuario: idUsuario,
+        IdUnicoUsuarioExterno: null,
+        CostoTotalReserva: costoTotal || null,
+        FechaRegistroReserva: $("#crear_FechaRegistroReserva").val().trim() || null,
+        FechaInicioReserva:   $("#crear_FechaInicioReserva").val().trim()   || null,
+        FechaFinalReserva:    $("#crear_FechaFinalReserva").val().trim()    || null,
+        EstadoGeneralReserva: $("#crear_EstadoGeneralReserva").val() || null,
+        EstadoReserva: $("#crear_EstadoReserva").is(":checked")
+    };
+
+    crudCreate(
+        URL_CREATE_RESERVA,
+        data,
+        () => {
+            $("#modalCrearReserva").modal("hide");
+            cargarReservas(currentPage);
+        }
+    );
+}
+
+// ================== Editar ==================
+function abrirModalEditarReserva(id){
+    $.get(URL_GET_RESERVA(id), function(resp){
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar la reserva.");
+        }
+
+        const r = resp.data;
+
+        $("#editar_IdReserva").val(r.IdReserva);
+        $("#editar_CostoTotalReserva").val(r.CostoTotalReserva ?? "");
+        $("#editar_FechaRegistroReserva").val((r.FechaRegistroReserva || "").split("T")[0] || "");
+        $("#editar_EstadoGeneralReserva").val(r.EstadoGeneralReserva || "");
+        $("#editar_EstadoReserva").prop("checked", !!r.EstadoReserva);
+
+        const fIni = r.FechaInicioReserva ? r.FechaInicioReserva.split("T")[0] : "";
+        const fFin = r.FechaFinalReserva  ? r.FechaFinalReserva.split("T")[0]  : "";
+
+        $("#editar_FechaInicioReserva").val(fIni);
+        $("#editar_FechaFinalReserva").val(fFin);
+
+        // mostrar rango en el input visible
+        const rangoText = (fIni && fFin) ? `${fIni} - ${fFin}` : "";
+        $("#editar_RangoFechasReserva").val(rangoText);
+
+        const usuarioId   = r.IdUnicoUsuario;
+        const usuarioText = usuarioId ? `ID ${usuarioId}` : "";
+
+        initSelectUsuarioInternoReserva(
+            "#editar_IdUnicoUsuario",
+            "#modalEditarReserva",
+            usuarioId,
+            usuarioText
+        );
+
+        initRangoFechasReserva(false, fIni || null, fFin || null);  // editar, sin minDate
+
+        $("#modalEditarReserva").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarReserva(){
+    const idReserva  = $("#editar_IdReserva").val();
+    const idUsuario  = $("#editar_IdUnicoUsuario").val();
+    const costoTotal = $("#editar_CostoTotalReserva").val().trim();
+
+    if(!idUsuario){
+        crudNotify("warning", "El Usuario Interno es obligatorio.");
+        return;
+    }
+
+    const data = {
+        IdUnicoUsuario: idUsuario,
+        IdUnicoUsuarioExterno: null,
+        CostoTotalReserva: costoTotal || null,
+        FechaRegistroReserva: $("#editar_FechaRegistroReserva").val().trim() || null,
+        FechaInicioReserva:   $("#editar_FechaInicioReserva").val().trim()   || null,
+        FechaFinalReserva:    $("#editar_FechaFinalReserva").val().trim()    || null,
+        EstadoGeneralReserva: $("#editar_EstadoGeneralReserva").val() || null,
+        EstadoReserva: $("#editar_EstadoReserva").is(":checked")
+    };
+
+    crudUpdate(
+        URL_UPDATE_RESERVA(idReserva),
+        data,
+        () => {
+            $("#modalEditarReserva").modal("hide");
+            cargarReservas(currentPage);
+        }
+    );
+}
+
+// ================== Eliminar ==================
+function eliminarReserva(id){
+    crudConfirm("¿Está seguro de eliminar esta reserva? Esto la marcará como inactiva.")
+        .then(ok => {
+            if(!ok) return;
+            crudDelete(URL_DELETE_RESERVA(id), () => cargarReservas(currentPage));
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarReservas(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+});
+</script>
+{% endblock %}

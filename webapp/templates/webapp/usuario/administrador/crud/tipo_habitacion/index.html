@@ -1,0 +1,266 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Tipos de Habitación</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearTipoHabitacion()">
+            <i class="bi bi-plus-lg"></i> Agregar Tipo
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaTiposHabitacion">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Tipo</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Página 1 de 1</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+</div>
+
+{# MODALES #}
+{% include "webapp/usuario/administrador/crud/tipo_habitacion/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/tipo_habitacion/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+// ================== URLs backend ==================
+const URL_LIST_TIPO   = "/admin/tipos-habitacion/list/";
+const URL_CREATE_TIPO = "/admin/tipos-habitacion/create/";
+const URL_GET_TIPO    = id => `/admin/tipos-habitacion/get/${id}/`;
+const URL_UPDATE_TIPO = id => `/admin/tipos-habitacion/update/${id}/`;
+const URL_DELETE_TIPO = id => `/admin/tipos-habitacion/delete/${id}/`;
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarTiposHabitacion(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarTiposHabitacion(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarTiposHabitacion(page = 1){
+
+    $.ajax({
+        url: `${URL_LIST_TIPO}?page=${page}`,
+        method: "GET",
+        success: function(resp){
+
+            const tbody = $("#tablaTiposHabitacion tbody");
+            tbody.empty();
+
+            (resp.data || []).forEach(t => {
+
+                // Datos vienen como IdTipoHabitacion, NombreHabitacion, EstadoTipoHabitacion
+                const activo   = !!t.EstadoTipoHabitacion;
+                const rowClass = activo ? "" : "table-secondary";
+
+                const estadoBadge = activo
+                    ? '<span class="badge bg-success badge-estado">Activo</span>'
+                    : '<span class="badge bg-secondary badge-estado">Inactivo</span>';
+
+                const btnEliminar = activo
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarTipoHabitacion(${t.IdTipoHabitacion})">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                const rowHtml = `
+                    <tr class="${rowClass}">
+                        <td class="fw-bold">${t.IdTipoHabitacion}</td>
+                        <td>${t.NombreHabitacion || ""}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarTipoHabitacion(${t.IdTipoHabitacion})">
+                                Editar
+                            </button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `;
+                tbody.append(rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la información de tipos de habitación."
+            );
+        }
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearTipoHabitacion(){
+
+    if(typeof crudGenerateNewId === "function"){
+        // usa el mismo helper que en País / Hotel
+        crudGenerateNewId(URL_LIST_TIPO, "#crear_IdTipoHabitacion", "IdTipoHabitacion");
+    }else{
+        $("#crear_IdTipoHabitacion").val("");
+    }
+
+    $("#crear_NombreHabitacion").val("");
+
+    $("#modalCrearTipoHabitacion").modal("show");
+}
+
+function crearTipoHabitacion(){
+
+    const idTipo = $("#crear_IdTipoHabitacion").val().trim();
+    const nombre = $("#crear_NombreHabitacion").val().trim();
+
+    if(!idTipo || !nombre){
+        crudNotify("warning","El ID y el Nombre son obligatorios.");
+        return;
+    }
+
+    if(isNaN(parseInt(idTipo))){
+        crudNotify("warning","El ID debe ser numérico.");
+        return;
+    }
+
+    // El view espera: id_tipo, nombre, descripcion (opcional), estado
+    crudCreate(
+        URL_CREATE_TIPO,
+        {
+            id_tipo: parseInt(idTipo),
+            nombre:  nombre,
+            descripcion: "",       // si luego agregas campo descripción lo envías aquí
+            estado:  true          // se crea siempre activo
+        },
+        () => {
+            $("#modalCrearTipoHabitacion").modal("hide");
+            cargarTiposHabitacion(currentPage);
+        }
+    );
+}
+
+// ================== Editar ==================
+function abrirModalEditarTipoHabitacion(id){
+
+    $.get(URL_GET_TIPO(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar el Tipo de Habitación.");
+        }
+
+        const t = resp.data || {};
+
+        $("#editar_IdTipoHabitacion").val(t.IdTipoHabitacion);
+        $("#editar_NombreHabitacion").val(t.NombreHabitacion || "");
+        $("#editar_EstadoTipoHabitacion").prop("checked", !!t.EstadoTipoHabitacion);
+
+        $("#modalEditarTipoHabitacion").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarTipoHabitacion(){
+
+    const idTipo = $("#editar_IdTipoHabitacion").val();
+    const nombre = $("#editar_NombreHabitacion").val().trim();
+    const estado = $("#editar_EstadoTipoHabitacion").is(":checked");
+
+    if(!nombre){
+        crudNotify("warning", "El nombre es obligatorio.");
+        return;
+    }
+
+    // el view espera nombre, descripcion, estado
+    crudUpdate(
+        URL_UPDATE_TIPO(idTipo),
+        {
+            nombre: nombre,
+            descripcion: "",
+            estado: estado
+        },
+        () => {
+            $("#modalEditarTipoHabitacion").modal("hide");
+            cargarTiposHabitacion(currentPage);
+        }
+    );
+}
+
+// ================== Eliminar ==================
+function eliminarTipoHabitacion(id){
+    crudConfirm("¿Está seguro de eliminar este Tipo de Habitación? Esto lo marcará como inactivo.")
+        .then(ok => {
+            if(!ok) return;
+
+            crudDelete(URL_DELETE_TIPO(id), () => {
+                cargarTiposHabitacion(currentPage);
+            });
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarTiposHabitacion(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+});
+</script>
+{% endblock %}

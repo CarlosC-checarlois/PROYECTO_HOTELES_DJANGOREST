@@ -1,0 +1,245 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Hoteles</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearHotel()">
+            <i class="bi bi-plus-lg"></i> Crear Hotel
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaHoteles">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Fecha Modificación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN (igual estilo que otros CRUDs) -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+</div>
+
+{# MODALES #}
+{% include "webapp/usuario/administrador/crud/hotel/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/hotel/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+// ================== URLs backend ==================
+const URL_LIST_HOTEL   = "/admin/hotel/list/";
+const URL_CREATE_HOTEL = "/admin/hotel/create/";
+const URL_GET_HOTEL    = id => `/admin/hotel/get/${id}/`;
+const URL_UPDATE_HOTEL = id => `/admin/hotel/update/${id}/`;
+const URL_DELETE_HOTEL = id => `/admin/hotel/delete/${id}/`;
+const URL_NEXT_HOTEL   = "/admin/hotel/next-id/";   // si no existe, simplemente no se usará
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Paginación ==================
+function actualizarPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarHoteles(currentPage - 1);
+}
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarHoteles(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarHoteles(page = 1){
+
+    $.get(`${URL_LIST_HOTEL}?page=${page}`, function(resp){
+
+        const tbody = $("#tablaHoteles tbody");
+        tbody.empty();
+
+        (resp.data || []).forEach(h => {
+
+            const estadoBadge = h.EstadoHotel
+                ? `<span class="badge bg-success badge-estado">Activo</span>`
+                : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+            const rowClass = h.EstadoHotel ? "" : "table-secondary";
+
+            const btnEliminar = h.EstadoHotel
+                ? `<button class="btn btn-danger btn-sm"
+                           onclick="eliminarHotel('${h.IdHotel}')">
+                        Eliminar
+                   </button>`
+                : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+            tbody.append(`
+                <tr class="${rowClass}">
+                    <td>${h.IdHotel}</td>
+                    <td>${h.NombreHotel}</td>
+                    <td>${estadoBadge}</td>
+                    <td>${h.FechaModificacionHotel || "N/A"}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm"
+                                onclick="abrirModalEditarHotel('${h.IdHotel}')">
+                            Editar
+                        </button>
+                        ${btnEliminar}
+                    </td>
+                </tr>
+            `);
+        });
+
+        currentPage = resp.page || 1;
+        totalPages  = resp.total_pages || 1;
+        actualizarPaginacion();
+
+    }).fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Hoteles.");
+    });
+}
+
+// ================== Crear ==================
+function abrirModalCrearHotel(){
+
+    // limpiar campos
+    $("#crear_IdHotel").val("");
+    $("#crear_NombreHotel").val("");
+    $("#crear_EstadoHotel").prop("checked", true);
+
+    // si tienes endpoint de next-id, úsalo
+    $.get(URL_NEXT_HOTEL)
+        .done(resp => {
+            if (resp.next_id) {
+                $("#crear_IdHotel").val(resp.next_id);
+            } else if (resp.next) {
+                $("#crear_IdHotel").val(resp.next);
+            }
+        })
+        .always(() => {
+            $("#modalCrearHotel").modal("show");
+        });
+}
+
+function crearHotel(){
+
+    const idHotel  = $("#crear_IdHotel").val().trim();
+    const nombre   = $("#crear_NombreHotel").val().trim();
+    const estado   = $("#crear_EstadoHotel").is(":checked");
+
+    if (!idHotel || !nombre){
+        return crudNotify("warning","ID y Nombre del hotel son obligatorios.");
+    }
+
+    const payload = {
+        IdHotel:     idHotel,   // lo tratamos como string (no parseInt)
+        NombreHotel: nombre,
+        EstadoHotel: estado
+    };
+
+    crudCreate(URL_CREATE_HOTEL, payload, () => {
+        $("#modalCrearHotel").modal("hide");
+        cargarHoteles(currentPage);
+    });
+}
+
+// ================== Editar ==================
+function abrirModalEditarHotel(id){
+
+    $.get(URL_GET_HOTEL(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar el hotel.");
+        }
+
+        const h = resp.data;
+
+        $("#editar_IdHotel").val(h.IdHotel);
+        $("#editar_NombreHotel").val(h.NombreHotel);
+        $("#editar_EstadoHotel").prop("checked", !!h.EstadoHotel);
+
+        $("#modalEditarHotel").modal("show");
+
+    }).fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener el hotel.");
+    });
+}
+
+function actualizarHotel(){
+
+    const id      = $("#editar_IdHotel").val();
+    const nombre  = $("#editar_NombreHotel").val().trim();
+    const estado  = $("#editar_EstadoHotel").is(":checked");
+
+    if(!nombre){
+        return crudNotify("warning","El nombre del hotel es obligatorio.");
+    }
+
+    const payload = {
+        NombreHotel: nombre,
+        EstadoHotel: estado
+    };
+
+    crudUpdate(URL_UPDATE_HOTEL(id), payload, () => {
+        $("#modalEditarHotel").modal("hide");
+        cargarHoteles(currentPage);
+    });
+}
+
+// ================== Eliminar ==================
+function eliminarHotel(id){
+
+    crudConfirm("¿Está seguro de eliminar (inactivar) este hotel?")
+        .then(ok => {
+            if(!ok) return;
+            crudDelete(URL_DELETE_HOTEL(id), () => cargarHoteles(currentPage));
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(() => {
+    cargarHoteles(1);
+});
+</script>
+{% endblock %}

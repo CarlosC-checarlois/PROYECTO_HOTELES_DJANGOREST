@@ -1,0 +1,453 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+    <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        .badge-estado {
+            font-size: .85rem;
+            padding: .25rem .6rem;
+            border-radius: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+    <div id="crud-toast-container"></div>
+
+    <div class="container mt-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold">Gestión de Pagos</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrearPago()">
+                <i class="bi bi-plus-lg"></i> Registrar Pago
+            </button>
+        </div>
+
+
+        <!-- TABLA -->
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover align-middle" id="tablaPagos">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID Pago</th>
+                    <th>Factura</th>
+                    <th>Monto</th>
+                    <th>Método Pago</th>
+                    <th>Usuario Interno</th>
+                    <th>Cuenta Origen</th>
+                    <th>Cuenta Destino</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    {% include "webapp/usuario/administrador/crud/pago/modal_crear.html" %}
+    {% include "webapp/usuario/administrador/crud/pago/modal_editar.html" %}
+    <!-- PAGINACIÓN (igual estilo que otros CRUDs) -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // ================== URLs backend ==================
+        const URL_LIST_PAGO = "/admin/pago/list/";
+        const URL_CREATE_PAGO = "/admin/pago/create/";
+        const URL_GET_PAGO = id => `/admin/pago/get/${id}/`;
+        const URL_UPDATE_PAGO = id => `/admin/pago/update/${id}/`;
+        const URL_DELETE_PAGO = id => `/admin/pago/delete/${id}/`;
+
+        // búsquedas (select2)
+        const URL_SEARCH_METODO = "/admin/metodo-pago/search/";
+        const URL_SEARCH_FACTURA = "/admin/factura/search/";
+        const URL_SEARCH_USUARIO = "/admin/usuario-interno/search/";
+        const TABLA_SELECTOR_PAGO = "#tablaPagos";
+        const URL_NEXT_PAGO = "/admin/pago/next-id/";
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // ================== Helpers ==================
+        function formatearMonto(valor) {
+            const n = parseFloat(valor);
+            if (isNaN(n)) return "0.00";
+            return n.toFixed(2);
+        }
+
+        function formatearCuenta(valor) {
+            if (!valor) return "N/A";
+            return valor;
+        }
+
+        // ================== Paginación ==================
+        function actualizarControlesPaginacion() {
+            $("#btnAnterior").prop("disabled", currentPage <= 1);
+            $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+            $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+        }
+
+        function irAPaginaAnterior() {
+            if (currentPage > 1) cargarPagos(currentPage - 1);
+        }
+
+        function irAPaginaSiguiente() {
+            if (currentPage < totalPages) cargarPagos(currentPage + 1);
+        }
+
+        // ================== Cargar tabla ==================
+        function cargarPagos(page = 1) {
+
+            const url_with_page = `${URL_LIST_PAGO}?page=${page}`;
+
+            $.ajax({
+                url: url_with_page,
+                method: "GET",
+                success: function (resp) {
+                    const tbody = document.querySelector(TABLA_SELECTOR_PAGO + " tbody");
+                    if (!tbody) {
+                        console.error("No se encontró tbody para tabla de pagos");
+                        return;
+                    }
+                    tbody.innerHTML = "";
+
+                    (resp.data || []).forEach(p => {
+                        // estructura real del API:
+                        // {IdPago, IdFactura, IdMetodoPago, IdUnicoUsuario,
+                        //  CuentaOrigenPago, CuentaDestinoPago, MontoTotalPago,
+                        //  EstadoPago, ...}
+
+                        const estadoBadge = p.EstadoPago
+                            ? `<span class="badge bg-success badge-estado">Completo</span>`
+                            : `<span class="badge bg-danger badge-estado">Pendiente/Fallido</span>`;
+
+                        const btnEliminar = p.EstadoPago
+                            ? `<button class="btn btn-danger btn-sm" onclick="eliminarPago(${p.IdPago})">Eliminar</button>`
+                            : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                        const rowHtml = `
+                    <tr class="${p.EstadoPago ? "" : "table-secondary"}">
+                        <td>${p.IdPago}</td>
+                        <td>${p.IdFactura}</td>
+                        <td>${formatearMonto(p.MontoTotalPago)}</td>
+                        <td>${p.IdMetodoPago}</td>
+                        <td>${p.IdUnicoUsuario}</td>
+                        <td>${formatearCuenta(p.CuentaOrigenPago)}</td>
+                        <td>${formatearCuenta(p.CuentaDestinoPago)}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="abrirModalEditarPago(${p.IdPago})">
+                                Editar
+                            </button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `;
+                        tbody.insertAdjacentHTML("beforeend", rowHtml);
+                    });
+
+                    currentPage = resp.page || 1;
+                    totalPages = resp.total_pages || 1;
+                    actualizarControlesPaginacion();
+                },
+                error: function (xhr) {
+                    crudNotify("error",
+                        xhr.responseJSON?.message || "No se pudo cargar la información de Pagos."
+                    );
+                }
+            });
+        }
+
+        // ================== Select2 helpers ==================
+        function initSelectMetodoPago(selector, parentSelector) {
+            const $sel = $(selector);
+            if ($sel.data("select2")) $sel.select2("destroy");
+            $sel.val("");
+
+            $sel.select2({
+                placeholder: "Buscar método de pago...",
+                allowClear: true,
+                width: "100%",
+                dropdownParent: $(parentSelector),
+                minimumInputLength: 0,
+                ajax: {
+                    url: URL_SEARCH_METODO,
+                    dataType: "json",
+                    delay: 250,
+                    data: params => ({q: params.term || ""}),
+                    processResults: resp => ({
+                        results: (resp.data || []).map(m => {
+                            const id = m.IdMetodoPago ?? m.idMetodoPago;
+                            const nombre = m.NombreMetodoPago ?? m.nombreMetodoPago ?? "";
+
+                            return {
+                                id: id,
+                                text: `${id} — ${nombre}`
+                            };
+                        })
+                    })
+                }
+            });
+        }
+
+        function initSelectUsuarioInterno(selector, parentSelector) {
+            const $sel = $(selector);
+            if ($sel.data("select2")) $sel.select2("destroy");
+            $sel.val("");
+
+            $sel.select2({
+                placeholder: "Buscar usuario interno...",
+                allowClear: true,
+                width: "100%",
+                dropdownParent: $(parentSelector),
+                minimumInputLength: 0,
+                ajax: {
+                    url: URL_SEARCH_USUARIO,
+                    dataType: "json",
+                    delay: 250,
+                    data: params => ({q: params.term || ""}),
+                    processResults: resp => ({
+                        results: (resp.data || []).map(u => ({
+                            id: u.Id,
+                            text: `${u.Id} — ${u.Nombre} ${u.Apellido} (${u.Correo})`
+                        }))
+                    })
+                }
+            });
+        }
+
+        function initSelectFactura(selector, parentSelector) {
+            const $sel = $(selector);
+            if ($sel.data("select2")) $sel.select2("destroy");
+            $sel.val("");
+
+            $sel.select2({
+                placeholder: "Buscar factura...",
+                allowClear: true,
+                width: "100%",
+                dropdownParent: $(parentSelector),
+                minimumInputLength: 0,
+                ajax: {
+                    url: "/admin/factura/search/",
+                    dataType: "json",
+                    delay: 250,
+                    data: params => ({q: params.term}),
+                    processResults: resp => {
+                        const items = resp.data || [];
+                        return {
+                            results: items.map(f => {
+                                const idFactura = f.IdFactura ?? f.idFactura;
+                                const idReserva = f.IdReserva ?? f.idReserva;
+
+                                const totalCalc = f.TotalCalculado ?? f.totalCalculado ?? 0;
+
+                                return {
+                                    id: idFactura,
+                                    text: `IdFactura: ${idFactura} — Reserva: ${idReserva} — Total: ${parseFloat(totalCalc).toFixed(2)}`
+                                };
+                            })
+                        };
+                    }
+                }
+            });
+        }
+
+        // ================== Crear ==================
+        function abrirModalCrearPago() {
+
+            if (typeof crudGenerateNewId === "function") {
+                crudGenerateNewId(URL_LIST_PAGO, "#crear_IdPago", "IdPago");
+            } else {
+                $("#crear_IdPago").val("");
+            }
+            $.get(URL_NEXT_PAGO, function (resp) {
+                const nextId = resp.next || "";
+                $("#crear_IdPago").val(nextId);
+            }).fail(() => {
+                // fallback si algo falla
+                $("#crear_IdPago").val("");
+            });
+
+            // limpiar campos
+            $("#crear_MontoTotal").val("");
+            $("#crear_CuentaOrigen").val("");
+            $("#crear_CuentaDestino").val("");
+            $("#crear_EstadoPago").prop("checked", true);
+
+            // init selects
+            initSelectMetodoPago("#crear_IdMetodoPago", "#modalCrearPago");
+            initSelectFactura("#crear_IdFactura", "#modalCrearPago");
+            initSelectUsuarioInterno("#crear_IdUnicoUsuario", "#modalCrearPago");
+
+            $("#modalCrearPago").modal("show");
+        }
+
+        function crearPago() {
+            const idPago = $("#crear_IdPago").val().trim();
+            const idMetodoPago = $("#crear_IdMetodoPago").val();
+            const idFactura = $("#crear_IdFactura").val();
+            const idUsuarioInt = $("#crear_IdUnicoUsuario").val();
+            const montoTotal = $("#crear_MontoTotal").val().trim();
+            const cuentaOrigen = $("#crear_CuentaOrigen").val().trim();
+            const cuentaDestino = $("#crear_CuentaDestino").val().trim();
+
+            if (!cuentaOrigen) {
+                crudNotify("warning", "La cuenta de origen es obligatoria.");
+                return;
+            }
+            if (!cuentaDestino) {
+                crudNotify("warning", "La cuenta de destino es obligatoria.");
+                return;
+            }
+
+            if (!idPago || !idMetodoPago || !idFactura || !idUsuarioInt || !montoTotal) {
+                crudNotify("warning", "ID Pago, Método, Factura, Usuario y Monto son obligatorios.");
+                return;
+            }
+
+            if (isNaN(parseInt(idMetodoPago)) || isNaN(parseInt(idFactura)) ||
+                isNaN(parseInt(idUsuarioInt)) || isNaN(parseFloat(montoTotal))) {
+                crudNotify("error", "Los IDs y el monto deben ser numéricos.");
+                return;
+            }
+
+            const payload = {
+                IdPago: parseInt(idPago),
+                IdMetodoPago: parseInt(idMetodoPago),
+                IdFactura: parseInt(idFactura),
+                IdUnicoUsuario: parseInt(idUsuarioInt),
+                MontoTotal: montoTotal,
+                CuentaOrigen: $("#crear_CuentaOrigen").val().trim() || null,
+                CuentaDestino: $("#crear_CuentaDestino").val().trim() || null,
+                IdUnicoUsuarioExterno: null,               // no lo usamos
+                EstadoPago: $("#crear_EstadoPago").is(":checked")
+            };
+
+            crudCreate(URL_CREATE_PAGO, payload, () => {
+                $("#modalCrearPago").modal("hide");
+                cargarPagos(currentPage);
+            });
+        }
+
+        // ================== Editar ==================
+        function abrirModalEditarPago(id) {
+            $.get(URL_GET_PAGO(id), function (resp) {
+
+                if (resp.status !== "ok") {
+                    return crudNotify("error", resp.message || "No se pudo cargar el pago.");
+                }
+
+                const p = resp.data;
+
+                $("#editar_IdPago").val(p.IdPago);
+                $("#editar_MontoTotal").val(p.MontoTotalPago);
+                $("#editar_CuentaOrigen").val(p.CuentaOrigenPago);
+                $("#editar_CuentaDestino").val(p.CuentaDestinoPago);
+                $("#editar_EstadoPago").prop("checked", !!p.EstadoPago);
+
+                // inicializar selects
+                initSelectMetodoPago("#editar_IdMetodoPago", "#modalEditarPago");
+                initSelectFactura("#editar_IdFactura", "#modalEditarPago");
+                initSelectUsuarioInterno("#editar_IdUnicoUsuario", "#modalEditarPago");
+
+                // preseleccionar valores actuales
+                if (p.IdMetodoPago) {
+                    const optM = new Option(`${p.IdMetodoPago}`, p.IdMetodoPago, true, true);
+                    $("#editar_IdMetodoPago").append(optM).trigger("change");
+                }
+                if (p.IdFactura) {
+                    const optF = new Option(`${p.IdFactura}`, p.IdFactura, true, true);
+                    $("#editar_IdFactura").append(optF).trigger("change");
+                }
+                if (p.IdUnicoUsuario) {
+                    const optU = new Option(`${p.IdUnicoUsuario}`, p.IdUnicoUsuario, true, true);
+                    $("#editar_IdUnicoUsuario").append(optU).trigger("change");
+                }
+
+                $("#modalEditarPago").modal("show");
+            })
+                .fail(xhr => {
+                    crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+                });
+        }
+
+        function actualizarPago() {
+            const idPago = $("#editar_IdPago").val();
+            const idMetodoPago = $("#editar_IdMetodoPago").val();
+            const idFactura = $("#editar_IdFactura").val();
+            const idUsuarioInt = $("#editar_IdUnicoUsuario").val();
+            const montoTotal = $("#editar_MontoTotal").val().trim();
+            const cuentaOrigen = $("#crear_CuentaOrigen").val().trim();
+            const cuentaDestino = $("#crear_CuentaDestino").val().trim();
+            if (!cuentaOrigen) {
+                crudNotify("warning", "La cuenta de origen es obligatoria.");
+                return;
+            }
+            if (!cuentaDestino) {
+                crudNotify("warning", "La cuenta de destino es obligatoria.");
+                return;
+            }
+            if (!idMetodoPago || !idFactura || !idUsuarioInt || !montoTotal) {
+                crudNotify("warning", "Método, Factura, Usuario y Monto son obligatorios.");
+                return;
+            }
+
+            if (isNaN(parseInt(idMetodoPago)) || isNaN(parseInt(idFactura)) ||
+                isNaN(parseInt(idUsuarioInt)) || isNaN(parseFloat(montoTotal))) {
+                crudNotify("error", "Los IDs y el monto deben ser numéricos.");
+                return;
+            }
+
+            const payload = {
+                IdMetodoPago: parseInt(idMetodoPago),
+                IdFactura: parseInt(idFactura),
+                IdUnicoUsuario: parseInt(idUsuarioInt),
+                MontoTotal: montoTotal,
+                CuentaOrigen: $("#editar_CuentaOrigen").val().trim() || null,
+                CuentaDestino: $("#editar_CuentaDestino").val().trim() || null,
+                IdUnicoUsuarioExterno: null,
+                EstadoPago: $("#editar_EstadoPago").is(":checked")
+            };
+
+            crudUpdate(URL_UPDATE_PAGO(idPago), payload, () => {
+                $("#modalEditarPago").modal("hide");
+                cargarPagos(currentPage);
+            });
+        }
+
+        // ================== Eliminar ==================
+        function eliminarPago(id) {
+            crudConfirm("¿Está seguro de eliminar este Pago? Esto lo marcará como inactivo.")
+                .then(ok => {
+                    if (!ok) return;
+                    crudDelete(URL_DELETE_PAGO(id), () => cargarPagos(currentPage));
+                });
+        }
+
+        // ================== INIT ==================
+        $(document).ready(function () {
+            cargarPagos(1);
+            $("#btnAnterior").on("click", irAPaginaAnterior);
+            $("#btnSiguiente").on("click", irAPaginaSiguiente);
+        });
+    </script>
+{% endblock %}

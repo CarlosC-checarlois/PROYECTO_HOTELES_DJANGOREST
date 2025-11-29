@@ -1,0 +1,569 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+    <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+    <style>
+        .badge-estado {
+            font-size: .85rem;
+            padding: .25rem .6rem;
+            border-radius: 12px
+        }
+
+        .table-inactive {
+            background: #e0e0e0 !important
+        }
+    </style>
+{% endblock %}
+
+
+{% block contenido_pagina %}
+
+    <div id="crud-toast-container"></div>
+
+    <div class="container mt-4">
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold">Habitaciones</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrearHabitacion()">Crear Habitación</button>
+        </div>
+
+        <!-- TABLA -->
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover align-middle" id="tablaHabitaciones">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Ciudad</th>
+                    <th>Hotel</th>
+                    <th>Precio</th>
+                    <th>Capacidad</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+            <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irPagina(-1)" disabled>◀ Anterior
+            </button>
+            <span id="infoPagina" class="fw-bold">Cargando...</span>
+            <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irPagina(1)" disabled>Siguiente ▶
+            </button>
+        </div>
+
+    </div>
+
+
+
+    <!-- ======================= MODAL CREAR ======================= -->
+    <div class="modal fade" id="modalCrearHabitacion">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Habitación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label>ID</label>
+                            <input id="crear_IdHabitacion" class="form-control readonly-input" readonly>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label>Nombre</label>
+                            <input id="crear_NombreHabitacion" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Tipo</label>
+                            <select id="crear_IdTipoHabitacion" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Ciudad</label>
+                            <select id="crear_IdCiudad" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Hotel</label>
+                            <select id="crear_IdHotel" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Precio Normal</label>
+                            <input id="crear_PrecioNormalHabitacion" type="number" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Precio Actual</label>
+                            <input id="crear_PrecioActualHabitacion" type="number" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Capacidad</label>
+                            <input id="crear_CapacidadHabitacion" type="number" class="form-control">
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-check mt-2">
+                                <input type="checkbox" id="crear_EstadoActivoHabitacion" class="form-check-input"
+                                       checked>
+                                <label class="form-check-label">Activo</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success" onclick="crearHabitacion()">Guardar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================= MODAL EDITAR ======================= -->
+    <div class="modal fade" id="modalEditarHabitacion">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Habitación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label>ID</label>
+                            <input id="editar_IdHabitacion" class="form-control readonly-input" readonly>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label>Nombre</label>
+                            <input id="editar_NombreHabitacion" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Tipo</label>
+                            <select id="editar_IdTipoHabitacion" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Ciudad</label>
+                            <select id="editar_IdCiudad" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Hotel</label>
+                            <select id="editar_IdHotel" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Precio Normal</label>
+                            <input id="editar_PrecioNormalHabitacion" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Precio Actual</label>
+                            <input id="editar_PrecioActualHabitacion" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Capacidad</label>
+                            <input id="editar_CapacidadHabitacion" class="form-control">
+                        </div>
+
+
+                        <div class="col-md-12">
+                            <div class="form-check mt-2">
+                                <input type="checkbox" id="editar_EstadoActivoHabitacion" class="form-check-input">
+                                <label class="form-check-label">Activo</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="actualizarHabitacion()">Actualizar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+<!-- validate.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js"></script>
+
+<script>
+    const URL_LIST   = "/admin/habitaciones/list/";
+    const URL_CREATE = "/admin/habitaciones/create/";
+    const URL_GET    = id => `/admin/habitaciones/get/${id}/`;
+    const URL_UPDATE = id => `/admin/habitaciones/update/${id}/`;
+    const URL_DELETE = id => `/admin/habitaciones/delete/${id}/`;
+    const URL_NEXTID = "/admin/habitaciones/next-id/";
+
+    let CURRENT_PAGE = 1;
+    let TOTAL_PAGES  = 1;
+
+    // ======================= VALIDATE.JS =======================
+    const habitacionConstraints = {
+        NombreHabitacion: {
+            presence: { allowEmpty: false, message: "^El nombre es obligatorio" },
+            length: {
+                maximum: 200,
+                tooLong: "^El nombre no puede superar %{count} caracteres"
+            }
+        },
+        IdTipoHabitacion: {
+            presence: { allowEmpty: false, message: "^Seleccione el tipo de habitación" }
+        },
+        IdCiudad: {
+            presence: { allowEmpty: false, message: "^Seleccione la ciudad" }
+        },
+        IdHotel: {
+            presence: { allowEmpty: false, message: "^Seleccione el hotel" }
+        },
+        PrecioNormalHabitacion: {
+            numericality: {
+                greaterThanOrEqualTo: 0,
+                message: "^El precio normal debe ser mayor o igual a 0",
+                allowBlank: true
+            }
+        },
+        PrecioActualHabitacion: {
+            numericality: {
+                greaterThanOrEqualTo: 0,
+                message: "^El precio actual debe ser mayor o igual a 0",
+                allowBlank: true
+            }
+        },
+        CapacidadHabitacion: {
+            presence: { allowEmpty: false, message: "^La capacidad es obligatoria" },
+            numericality: {
+                onlyInteger: true,
+                greaterThanOrEqualTo: 1,
+                message: "^La capacidad debe ser un entero mayor o igual a 1"
+            }
+        }
+    };
+
+    function validarHabitacion(data) {
+        const errors = validate(data, habitacionConstraints);
+        if (!errors) return null;  // sin errores
+
+        // Tomamos el primer mensaje legible
+        const firstField = Object.keys(errors)[0];
+        return errors[firstField][0];
+    }
+
+    // ======================= PAGINACIÓN =======================
+    function actualizarPaginacion() {
+        $("#btnAnterior").prop("disabled", CURRENT_PAGE <= 1);
+        $("#btnSiguiente").prop("disabled", CURRENT_PAGE >= TOTAL_PAGES);
+        $("#infoPagina").text(`Página ${CURRENT_PAGE} de ${TOTAL_PAGES}`);
+    }
+
+    function irPagina(delta) {
+        cargarHabitaciones(CURRENT_PAGE + delta);
+    }
+
+    // ======================= TABLA =======================
+    function cargarHabitaciones(page = 1) {
+
+        crudLoadTable(
+            `${URL_LIST}?page=${page}`,
+            function (r) {
+
+                const estadoBadge = r.EstadoActivoHabitacion
+                    ? `<span class="badge bg-success badge-estado">Activo</span>`
+                    : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+                const btnEliminar = r.EstadoActivoHabitacion
+                    ? `<button class="btn btn-danger btn-sm"
+                               onclick="eliminarHabitacion('${r.IdHabitacion}')">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                const rowClass = r.EstadoActivoHabitacion ? "" : "table-secondary";
+
+                return `
+<tr class="${rowClass}">
+  <td>${r.IdHabitacion}</td>
+  <td>${r.NombreHabitacion}</td>
+  <td>${r.IdTipoHabitacion}</td>
+  <td>${r.IdCiudad}</td>
+  <td>${r.IdHotel}</td>
+  <td>${r.PrecioActualHabitacion ?? "-"}</td>
+  <td>${r.CapacidadHabitacion ?? "-"}</td>
+  <td>${estadoBadge}</td>
+  <td>
+    <button class="btn btn-warning btn-sm"
+            onclick="abrirModalEditarHabitacion('${r.IdHabitacion}')">Editar</button>
+    ${btnEliminar}
+  </td>
+</tr>`;
+            },
+            "#tablaHabitaciones",
+            null,
+            page,
+            function (meta) {
+                CURRENT_PAGE = meta.page;
+                TOTAL_PAGES  = meta.total_pages;
+                actualizarPaginacion();
+            }
+        );
+    }
+
+    // ======================= CREAR =======================
+    function abrirModalCrearHabitacion() {
+
+        $.get(URL_NEXTID, function (resp) {
+            if (resp.status === "ok" && resp.next_id) {
+                $("#crear_IdHabitacion").val(resp.next_id);
+            } else if (resp.next) {
+                $("#crear_IdHabitacion").val(resp.next);
+            }
+        });
+
+        $("#crear_NombreHabitacion").val("");
+        $("#crear_PrecioNormalHabitacion").val("");
+        $("#crear_PrecioActualHabitacion").val("");
+        $("#crear_CapacidadHabitacion").val("");
+        $("#crear_EstadoHabitacion").val("");
+        $("#crear_EstadoActivoHabitacion").prop("checked", true);
+
+        cargarCombosCrear();
+
+        $("#modalCrearHabitacion").modal("show");
+    }
+
+    function crearHabitacion() {
+
+        const data = {
+            IdHabitacion:          $("#crear_IdHabitacion").val(),
+            IdTipoHabitacion:      $("#crear_IdTipoHabitacion").val(),
+            IdCiudad:              $("#crear_IdCiudad").val(),
+            IdHotel:               $("#crear_IdHotel").val(),
+            NombreHabitacion:      $("#crear_NombreHabitacion").val(),
+            PrecioNormalHabitacion: $("#crear_PrecioNormalHabitacion").val(),
+            PrecioActualHabitacion: $("#crear_PrecioActualHabitacion").val(),
+            CapacidadHabitacion:   $("#crear_CapacidadHabitacion").val(),
+            EstadoHabitacion:      $("#crear_EstadoHabitacion").val() || "",
+            EstadoActivoHabitacion: $("#crear_EstadoActivoHabitacion").is(":checked")
+        };
+
+        const error = validarHabitacion(data);
+        if (error) {
+            crudNotify("error", error);
+            return;
+        }
+
+        crudCreate(URL_CREATE, data, () => {
+            $("#modalCrearHabitacion").modal("hide");
+            cargarHabitaciones(CURRENT_PAGE);
+        });
+    }
+
+    // ======================= EDITAR =======================
+    function abrirModalEditarHabitacion(id) {
+
+        $.get(URL_GET(id), function (resp) {
+
+            if (resp.status !== "ok")
+                return crudNotify("error", resp.message || "No se pudo cargar la habitación");
+
+            const r = resp.data;
+
+            $("#editar_IdHabitacion").val(r.IdHabitacion);
+            $("#editar_NombreHabitacion").val(r.NombreHabitacion);
+            $("#editar_PrecioNormalHabitacion").val(r.PrecioNormalHabitacion);
+            $("#editar_PrecioActualHabitacion").val(r.PrecioActualHabitacion);
+            $("#editar_CapacidadHabitacion").val(r.CapacidadHabitacion);
+            $("#editar_EstadoHabitacion").val(r.EstadoHabitacion || "");
+            $("#editar_EstadoActivoHabitacion").prop("checked", !!r.EstadoActivoHabitacion);
+
+            cargarCombosEditar(r);
+
+            $("#modalEditarHabitacion").modal("show");
+        });
+    }
+
+    function actualizarHabitacion() {
+
+        const id = $("#editar_IdHabitacion").val();
+
+        const data = {
+            IdTipoHabitacion:      $("#editar_IdTipoHabitacion").val(),
+            IdCiudad:              $("#editar_IdCiudad").val(),
+            IdHotel:               $("#editar_IdHotel").val(),
+            NombreHabitacion:      $("#editar_NombreHabitacion").val(),
+            PrecioNormalHabitacion: $("#editar_PrecioNormalHabitacion").val(),
+            PrecioActualHabitacion: $("#editar_PrecioActualHabitacion").val(),
+            CapacidadHabitacion:   $("#editar_CapacidadHabitacion").val(),
+            EstadoHabitacion:      $("#editar_EstadoHabitacion").val() || "",
+            EstadoActivoHabitacion: $("#editar_EstadoActivoHabitacion").is(":checked")
+        };
+
+        const error = validarHabitacion(data);
+        if (error) {
+            crudNotify("error", error);
+            return;
+        }
+
+        crudUpdate(URL_UPDATE(id), data, () => {
+            $("#modalEditarHabitacion").modal("hide");
+            cargarHabitaciones(CURRENT_PAGE);
+        });
+    }
+
+    // ======================= ELIMINAR =======================
+    function eliminarHabitacion(id) {
+        crudConfirm("¿Desea desactivar esta habitación?")
+            .then(ok => {
+                if (!ok) return;
+                crudDelete(URL_DELETE(id), () => cargarHabitaciones(CURRENT_PAGE));
+            });
+    }
+
+    // ======================= COMBOS =======================
+    function cargarCombosCrear() {
+
+        $.get("/admin/tipos-habitacion/list/", function (resp) {
+            const data = resp.data || resp;
+            if (!data) return;
+
+            let html = `<option value="">Seleccione tipo...</option>`;
+            data.forEach(x => {
+                html += `
+<option value="${x.IdTipoHabitacion}">
+  ${x.NombreHabitacion || x.NombreTipoHabitacion || ("Tipo " + x.IdTipoHabitacion)}
+</option>`;
+            });
+            $("#crear_IdTipoHabitacion").html(html);
+        });
+
+        $.get("/admin/ciudad/list/", function (resp) {
+            const data = resp.data || resp;
+            if (!data) return;
+
+            let html = `<option value="">Seleccione ciudad...</option>`;
+            data.forEach(x => {
+                html += `
+<option value="${x.IdCiudad}">
+  ${x.NombreCiudad || ("Ciudad " + x.IdCiudad)}
+</option>`;
+            });
+            $("#crear_IdCiudad").html(html);
+        });
+
+        $.get("/admin/hotel/list/", function (resp) {
+            const data = resp.data || resp;
+            if (!data) return;
+
+            let html = `<option value="">Seleccione hotel...</option>`;
+            data.forEach(x => {
+                html += `
+<option value="${x.IdHotel}">
+  ${x.NombreHotel || ("Hotel " + x.IdHotel)}
+</option>`;
+            });
+            $("#crear_IdHotel").html(html);
+        });
+    }
+
+function cargarCombosEditar(r) {
+
+    // TIPO
+    $.get("/admin/tipos-habitacion/list/", function (resp) {
+        const data = resp.data || resp;
+        if (!data) return;
+
+        let html = "";
+        data.forEach(x => {
+            html += `
+<option value="${x.IdTipoHabitacion}"
+  ${String(x.IdTipoHabitacion) === String(r.IdTipoHabitacion) ? "selected" : ""}>
+  ${x.NombreHabitacion || x.NombreTipoHabitacion || ("Tipo " + x.IdTipoHabitacion)}
+</option>`;
+        });
+        $("#editar_IdTipoHabitacion")
+            .html(html)
+            .prop("disabled", true);   // 🔒 bloqueado
+    });
+
+    // CIUDAD
+    $.get("/admin/ciudad/list/", function (resp) {
+        const data = resp.data || resp;
+        if (!data) return;
+
+        let html = "";
+        data.forEach(x => {
+            html += `
+<option value="${x.IdCiudad}"
+  ${String(x.IdCiudad) === String(r.IdCiudad) ? "selected" : ""}>
+  ${x.NombreCiudad || ("Ciudad " + x.IdCiudad)}
+</option>`;
+        });
+        $("#editar_IdCiudad")
+            .html(html)
+            .prop("disabled", true);   // 🔒 bloqueado
+    });
+
+    // HOTEL
+    $.get("/admin/hotel/list/", function (resp) {
+        const data = resp.data || resp;
+        if (!data) return;
+
+        let html = "";
+        data.forEach(x => {
+            html += `
+<option value="${x.IdHotel}"
+  ${String(x.IdHotel) === String(r.IdHotel) ? "selected" : ""}>
+  ${x.NombreHotel || ("Hotel " + x.IdHotel)}
+</option>`;
+        });
+        $("#editar_IdHotel")
+            .html(html)
+            .prop("disabled", true);   // 🔒 bloqueado
+    });
+}
+
+
+    // ======================= INIT =======================
+    $(document).ready(function () {
+
+        // Bloqueo visual extra de negativos (por si el navegador no respeta min)
+        $("#modalCrearHabitacion, #modalEditarHabitacion")
+            .on("input", "input[type=number]", function () {
+                const v = parseFloat(this.value);
+                if (!isNaN(v) && v < 0) this.value = "";
+            });
+
+        cargarHabitaciones(1);
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,257 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado {
+        font-size: .85rem;
+        padding: .25rem .6rem;
+        border-radius: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+    <div id="crud-toast-container"></div>
+
+    <div class="container mt-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Gestión de Métodos de Pago</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrearMetodoPago()">Crear Método de Pago</button>
+        </div>
+
+
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="tablaMetodosPago">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    {# Modales específicos del CRUD #}
+    {% include "webapp/usuario/administrador/crud/metodoPago/modal_crear.html" %}
+    {% include "webapp/usuario/administrador/crud/metodoPago/modal_editar.html" %}
+    <!-- PAGINACIÓN (igual estilo que otros CRUDs) -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+{% endblock %}
+
+
+{% block jvscript_archivos_defer %}
+
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+    <script>
+        // ================== URLs del backend para METODO PAGO ==================
+        const URL_LIST_MP   = "/admin/metodo-pago/list/";
+        const URL_CREATE_MP = "/admin/metodo-pago/create/";
+        const URL_GET_MP    = id => `/admin/metodo-pago/get/${id}/`;
+        const URL_UPDATE_MP = id => `/admin/metodo-pago/update/${id}/`;
+        const URL_DELETE_MP = id => `/admin/metodo-pago/delete/${id}/`;
+
+        const TABLA_SELECTOR_MP = "#tablaMetodosPago";
+
+        // ================== Paginación ==================
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function actualizarControlesPaginacion() {
+            $("#btnAnterior").prop("disabled", currentPage <= 1);
+            $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+            $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+        }
+
+        function irAPaginaAnterior() {
+            if (currentPage > 1) cargarMetodosPago(currentPage - 1);
+        }
+
+        function irAPaginaSiguiente() {
+            if (currentPage < totalPages) cargarMetodosPago(currentPage + 1);
+        }
+
+        // ================== Cargar tabla ==================
+        /**
+         * Carga los registros de Método de Pago en la tabla.
+         */
+        function cargarMetodosPago(page = 1) {
+
+            if (typeof crudLoadTable !== "function") {
+                console.error("crudLoadTable no está definido.");
+                return;
+            }
+
+            const url_with_page = `${URL_LIST_MP}?page=${page}`;
+
+            // Usamos $.ajax para controlar la paginación que viene en la respuesta.
+            $.ajax({
+                url: url_with_page,
+                method: "GET",
+                success: function (resp) {
+                    const tbody = document.querySelector(TABLA_SELECTOR_MP + ' tbody');
+                    if (!tbody) {
+                        console.error(`No se encontró tbody para selector ${TABLA_SELECTOR_MP}`);
+                        return;
+                    }
+
+                    tbody.innerHTML = "";
+
+                    (resp.data || []).forEach(mp => {
+                        // mp: {IdMetodoPago, NombreMetodoPago, EstadoMetodoPago}
+                        const estadoBadge = mp.EstadoMetodoPago
+                            ? `<span class="badge bg-success badge-estado">Activo</span>`
+                            : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+                        const btnEliminar = mp.EstadoMetodoPago
+                            ? `<button class="btn btn-danger btn-sm" onclick="eliminarMetodoPago(${mp.IdMetodoPago})">Eliminar</button>`
+                            : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                        const rowHtml = `
+                            <tr class="${mp.EstadoMetodoPago ? "" : "table-secondary"}">
+                                <td>${mp.IdMetodoPago}</td>
+                                <td>${mp.NombreMetodoPago}</td>
+                                <td>${estadoBadge}</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm" onclick="abrirModalEditarMetodoPago(${mp.IdMetodoPago})">
+                                        Editar
+                                    </button>
+                                    ${btnEliminar}
+                                </td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML("beforeend", rowHtml);
+                    });
+
+                    // Actualizar paginación
+                    currentPage = resp.page || 1;
+                    totalPages = resp.total_pages || 1;
+                    actualizarControlesPaginacion();
+                },
+                error: function (xhr) {
+                    crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Métodos de Pago.");
+                }
+            });
+        }
+
+        // ================== Crear ==================
+        function abrirModalCrearMetodoPago() {
+
+            if (typeof crudGenerateNewId !== "function") {
+                console.error("crudGenerateNewId no está definido.");
+            } else {
+                // Genera ID asíncronamente
+                crudGenerateNewId(URL_LIST_MP, "#crear_IdMetodoPago", "IdMetodoPago");
+            }
+
+            $("#crear_NombreMetodoPago").val("");
+            $("#modalCrearMetodoPago").modal("show");
+        }
+
+        function crearMetodoPago() {
+            const idMetodo = $("#crear_IdMetodoPago").val().trim();
+            const nombreMetodo = $("#crear_NombreMetodoPago").val().trim();
+
+            if (!idMetodo || !nombreMetodo) {
+                crudNotify("warning", "El ID y el Nombre del Método de Pago son obligatorios.");
+                return;
+            }
+
+            crudCreate(
+                URL_CREATE_MP,
+                {
+                    IdMetodoPago: parseInt(idMetodo), // Asegura que se envíe como entero
+                    NombreMetodoPago: nombreMetodo,
+                    EstadoMetodoPago: true, // Se asume que se crea como activo
+                },
+                () => {
+                    $("#modalCrearMetodoPago").modal("hide");
+                    cargarMetodosPago(currentPage);
+                }
+            );
+        }
+
+        // ================== Editar ==================
+        function abrirModalEditarMetodoPago(id) {
+            $.get(URL_GET_MP(id), function (resp) {
+
+                if (resp.status !== "ok") {
+                    return crudNotify("error", resp.message || "No se pudo cargar el Método de Pago.");
+                }
+
+                const mp = resp.data;
+
+                $("#editar_IdMetodoPago").val(mp.IdMetodoPago);
+                $("#editar_NombreMetodoPago").val(mp.NombreMetodoPago);
+                $("#editar_EstadoMetodoPago").prop("checked", !!mp.EstadoMetodoPago);
+
+                $("#modalEditarMetodoPago").modal("show");
+            })
+            .fail(xhr => {
+                crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+            });
+        }
+
+        function actualizarMetodoPago() {
+            const id = $("#editar_IdMetodoPago").val();
+            const nombreMetodo = $("#editar_NombreMetodoPago").val().trim();
+
+            if (!nombreMetodo) {
+                crudNotify("warning", "El Nombre del Método de Pago es obligatorio.");
+                return;
+            }
+
+            crudUpdate(
+                URL_UPDATE_MP(id),
+                {
+                    NombreMetodoPago: nombreMetodo,
+                    EstadoMetodoPago: $("#editar_EstadoMetodoPago").is(":checked")
+                },
+                () => {
+                    $("#modalEditarMetodoPago").modal("hide");
+                    cargarMetodosPago(currentPage);
+                }
+            );
+        }
+
+        // ================== Eliminar (con confirm modal) ==================
+        function eliminarMetodoPago(id) {
+            crudConfirm("¿Está seguro de eliminar este Método de Pago? Esto lo marcará como inactivo.")
+                .then(confirmed => {
+                    if (!confirmed) return;
+
+                    crudDelete(URL_DELETE_MP(id), () => {
+                        cargarMetodosPago(currentPage);
+                    });
+                });
+        }
+
+        // ================== Init ==================
+        $(document).ready(function() {
+            cargarMetodosPago(1);
+            $("#btnAnterior").on("click", irAPaginaAnterior);
+            $("#btnSiguiente").on("click", irAPaginaSiguiente);
+        });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+{# templates/webapp/usuario/administrador/crud/pdf/modal_editar.html #}
+<div class="modal fade" id="modalEditarPdf" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Editar PDF</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label">ID PDF</label>
+                    <input type="number"
+                           id="editar_IdPdf"
+                           class="form-control readonly-input"
+                           readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Factura (opcional)</label>
+                    <select id="editar_IdFactura" class="form-select">
+                        <option value="">Buscar factura...</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">URL PDF *</label>
+                    <input type="text"
+                           id="editar_UrlPdf"
+                           class="form-control"
+                           placeholder="URL del PDF">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Subir nuevo PDF (opcional)</label>
+                    <div id="editar_dropzone_pdf" class="dropzone-upload">
+                        <div>Arrastra un PDF aquí o haz clic para seleccionar</div>
+                        <div class="small text-muted">Si subes un nuevo archivo, se reemplazará la URL.</div>
+                    </div>
+                    <input type="file" id="editar_FilePdf" accept="application/pdf" class="d-none">
+                    <div class="small mt-1 text-muted">
+                        Archivo seleccionado: <span id="editar_PdfNombre">Ningún archivo seleccionado</span>
+                    </div>
+                </div>
+
+                <div class="form-check mt-3">
+                    <input type="checkbox" id="editar_EstadoPdf" class="form-check-input">
+                    <label class="form-check-label" for="editar_EstadoPdf">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="actualizarPdf()">Guardar Cambios</button>
+            </div>
+
+        </div>
+    </div>
+</div>

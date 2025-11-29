@@ -1,0 +1,42 @@
+<div class="modal fade" id="modalCrearTipoHabitacion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Tipo de Habitación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">ID Tipo</label>
+          <input type="number"
+                 id="crear_IdTipoHabitacion"
+                 class="form-control readonly-input"
+                 readonly
+                 placeholder="Se generará automáticamente">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Nombre</label>
+          <input type="text"
+                 id="crear_NombreHabitacion"
+                 class="form-control"
+                 placeholder="Ej: Familiar, Suite, Deluxe">
+        </div>
+
+        <small class="text-muted">
+          El nuevo tipo se creará como <strong>Activo</strong>. Para desactivarlo, use el botón Eliminar.
+        </small>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" onclick="crearTipoHabitacion()">Guardar</button>
+      </div>
+
+    </div>
+  </div>
+</div>

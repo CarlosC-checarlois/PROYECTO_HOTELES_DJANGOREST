@@ -1,0 +1,37 @@
+<div class="modal fade" id="modalEditarMetodoPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Método de Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <label class="form-label">ID Método de Pago</label>
+                <input type="number"
+                       id="editar_IdMetodoPago"
+                       class="form-control mb-3 readonly-input"
+                       readonly>
+
+                <label class="form-label">Nombre</label>
+                <input type="text"
+                       id="editar_NombreMetodoPago"
+                       class="form-control mb-3"
+                       placeholder="Ej: Tarjeta de Crédito, PayPal">
+
+                <div class="form-check mt-3">
+                    <input type="checkbox" id="editar_EstadoMetodoPago" class="form-check-input">
+                    <label class="form-check-label" for="editar_EstadoMetodoPago">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="actualizarMetodoPago()">Actualizar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

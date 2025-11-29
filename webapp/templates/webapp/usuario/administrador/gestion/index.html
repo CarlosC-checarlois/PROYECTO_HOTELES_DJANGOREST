@@ -1,0 +1,258 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block titulo_pagina %}
+<title>Panel Administrador | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+<style>
+    :root {
+        --color-principal: #3b82f6;
+        --color-secundario: #6c5ce7;
+        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+    }
+
+    body {
+        background: #f5f7fb;
+    }
+
+    .admin-wrapper {
+        max-width: 1200px;
+        margin: auto;
+        padding: 2rem;
+    }
+
+    .card-admin {
+        border-radius: 1rem;
+        padding: 1.8rem;
+        background: #fff;
+        transition: 0.2s;
+        height: 100%;
+    }
+
+    .card-admin:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    }
+
+    .admin-icon {
+        font-size: 2.8rem;
+        color: var(--color-principal);
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<section class="admin-wrapper">
+
+    <h2 class="fw-bold mb-4 text-center">
+        <i class="bi bi-gear-fill text-primary"></i> Panel de Administración
+    </h2>
+
+    <div class="row g-4">
+
+        <!-- AMENIDADES -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'amenidades_index' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-list-check admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Amenidades</h5>
+                    <p class="text-muted small">Crear, editar y administrar amenidades</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- AMEXHAB -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'amexhab_index' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-bag-plus admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Amenidad x Habitación</h5>
+                    <p class="text-muted small">Relación entre amenidades y habitaciones</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- CIUDAD -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'ciudad_index' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-geo-alt admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Ciudades</h5>
+                    <p class="text-muted small">Gestión de ciudades registradas</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- DESCUENTO -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'descuento_index' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-percent admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Descuentos</h5>
+                    <p class="text-muted small">Configuración de descuentos disponibles</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- DESXHABXRES -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_desxhabxres' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-tags admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Desc. x Hab. x Res.</h5>
+                    <p class="text-muted small">Descuentos aplicados a reservas</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- HABITACIONES -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_habitaciones' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-door-closed admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Habitaciones</h5>
+                    <p class="text-muted small">Crear y gestionar habitaciones</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- HABXRES -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_habxres' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-door-open admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Hab. x Reserva</h5>
+                    <p class="text-muted small">Relación habitación–reserva</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- HOLD -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_hold' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-clock-history admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Hold</h5>
+                    <p class="text-muted small">Bloqueos y reservas temporales</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- HOTEL -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_hotel' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-building admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Hoteles</h5>
+                    <p class="text-muted small">Administración de hoteles</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- IMAGEN HABITACION -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_imagen_habitacion' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-image admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Imágenes de Habitaciones</h5>
+                    <p class="text-muted small">Gestión de galería de habitaciones</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- METODO PAGO -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_metodo_pago' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-wallet2 admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Métodos de Pago</h5>
+                    <p class="text-muted small">Configuración de métodos de pago</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- PAGO -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_pago' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-credit-card admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Pagos</h5>
+                    <p class="text-muted small">Ver y auditar pagos realizados</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- PAIS -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_pais' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-globe admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Países</h5>
+                    <p class="text-muted small">Catálogo de países</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- PDF -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_pdf' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-file-earmark-pdf admin-icon"></i>
+                    <h5 class="fw-bold mt-3">PDF</h5>
+                    <p class="text-muted small">Generación y gestión de documentos PDF</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- RESERVAS -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_reservas' %}" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-calendar-check admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Reservas</h5>
+                    <p class="text-muted small">Gestión completa de reservas</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- ROL (sin name en la ruta) -->
+        <div class="col-md-4 col-lg-3">
+            <a href="/admin/rol/" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-person-badge admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Roles</h5>
+                    <p class="text-muted small">Perfiles y permisos de usuario</p>
+                </div>
+            </a>
+        </div>
+        <!-- TIPOS HABITACION (sin name en la ruta) -->
+        <div class="col-md-4 col-lg-3">
+            <a href="/admin/tipos-habitacion/" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-grid-3x3-gap admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Tipos de Habitación</h5>
+                    <p class="text-muted small">Clasificación de habitaciones</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- USUARIOS INTERNOS (sin name en la ruta) -->
+        <div class="col-md-4 col-lg-3">
+            <a href="/admin/usuarios-internos/" class="text-decoration-none text-dark">
+                <div class="card card-admin shadow-sm text-center">
+                    <i class="bi bi-people admin-icon"></i>
+                    <h5 class="fw-bold mt-3">Usuarios Internos</h5>
+                    <p class="text-muted small">Administración de usuarios del sistema</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

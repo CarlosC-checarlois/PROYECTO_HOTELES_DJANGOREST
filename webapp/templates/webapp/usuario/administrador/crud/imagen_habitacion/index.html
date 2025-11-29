@@ -1,0 +1,523 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+    .badge-estado{
+        font-size:.85rem;
+        padding:.25rem .6rem;
+        border-radius:15px;
+    }
+    .table-inactive{
+        background-color:#e0e0e0 !important;
+    }
+    .img-preview{
+        max-width:100px;
+        max-height:60px;
+        object-fit:cover;
+        border-radius:4px;
+    }
+    .readonly-input{
+        background-color:#f0f0f0 !important;
+        color:#6c757d !important;
+        cursor:not-allowed !important;
+    }
+
+    /* Dropzone */
+    .dropzone-upload{
+        border:2px dashed #ced4da;
+        border-radius:6px;
+        padding:1rem;
+        text-align:center;
+        cursor:pointer;
+        transition:background-color .2s, border-color .2s;
+        background-color:#f8f9fa;
+    }
+    .dropzone-upload.dropzone-hover{
+        background-color:#e9f5ff;
+        border-color:#0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión de Imágenes de Habitación</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearImagenHabitacion()">
+            <i class="bi bi-plus-lg"></i> Agregar Imagen
+        </button>
+    </div>
+
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaImagenesHabitacion">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID Imagen</th>
+                    <th>ID Habitación</th>
+                    <th>URL / Vista previa</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{# Modales #}
+{% include "webapp/usuario/administrador/crud/imagen_habitacion/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/imagen_habitacion/modal_editar.html" %}
+    <!-- PAGINACIÓN (igual estilo que otros CRUDs) -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+            ◀ Anterior
+        </button>
+        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+            Siguiente ▶
+        </button>
+    </div>
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+// ================== Constantes ==================
+const URL_LIST_IMG   = "/admin/imagen-habitacion/list/";
+const URL_CREATE_IMG = "/admin/imagen-habitacion/create/";
+const URL_GET_IMG    = id => `/admin/imagen-habitacion/get/${id}/`;
+const URL_UPDATE_IMG = id => `/admin/imagen-habitacion/update/${id}/`;
+const URL_DELETE_IMG = id => `/admin/imagen-habitacion/delete/${id}/`;
+
+// buscador de habitaciones (Select2)
+const URL_SEARCH_HAB = "/admin/habitaciones/search/";
+
+// Imagen de respaldo
+const DEFAULT_IMG_URL = "https://imageness3realdecuenca.s3.us-east-2.amazonaws.com/Imagen3.png";
+
+let currentPage = 1;
+let totalPages  = 1;
+
+// ================== Helpers de paginación ==================
+function actualizarControlesPaginacion(){
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior(){
+    if(currentPage > 1) cargarImagenes(currentPage - 1);
+}
+
+function irAPaginaSiguiente(){
+    if(currentPage < totalPages) cargarImagenes(currentPage + 1);
+}
+
+// ================== Cargar tabla ==================
+function cargarImagenes(page = 1){
+
+    const url_with_page = `${URL_LIST_IMG}?page=${page}`;
+
+    $.ajax({
+        url: url_with_page,
+        method: "GET",
+        success: function(resp){
+
+            const tbody = $("#tablaImagenesHabitacion tbody");
+            tbody.empty();
+
+            (resp.data || []).forEach(img => {
+
+                const url = img.UrlImagen || "";
+                const previewUrl = url || DEFAULT_IMG_URL;
+
+                const estadoBadge = img.EstadoImagen
+                    ? `<span class="badge bg-success badge-estado">Activo</span>`
+                    : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+                const rowClass = img.EstadoImagen ? "" : "table-secondary";
+
+                const btnEliminar = img.EstadoImagen
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarImagen(${img.IdImagenHabitacion})">Eliminar</button>`
+                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+                const rowHtml = `
+                    <tr class="${rowClass}">
+                        <td class="fw-bold">${img.IdImagenHabitacion}</td>
+                        <td>${img.IdHabitacion}</td>
+                        <td>
+                            <img src="${previewUrl}"
+                                 alt="Preview"
+                                 class="img-preview"
+                                 onerror="this.onerror=null;this.src='${DEFAULT_IMG_URL}';">
+                            <span class="d-block text-truncate small">${url || ""}</span>
+                        </td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarImagen(${img.IdImagenHabitacion})">
+                                Editar
+                            </button>
+                            ${btnEliminar}
+                        </td>
+                    </tr>
+                `;
+
+                tbody.append(rowHtml);
+            });
+
+            currentPage = resp.page || 1;
+            totalPages  = resp.total_pages || 1;
+            actualizarControlesPaginacion();
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "No se pudo cargar la información de imágenes."
+            );
+        }
+    });
+}
+
+// ================== Select2 Habitaciones ==================
+function inicializarSelect2Habitaciones(selector, modalSelector){
+    const $sel = $(selector);
+
+    if($sel.data("select2")){
+        $sel.select2("destroy");
+    }
+
+    $sel.val("");
+
+    $sel.select2({
+        placeholder: "Buscar habitación...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $(modalSelector),
+        minimumInputLength: 1,
+        ajax: {
+            url: URL_SEARCH_HAB,
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(h => ({
+                    id: h.IdHabitacion,
+                    text: `${h.IdHabitacion} — ${h.NombreHabitacion}`
+                }))
+            })
+        }
+    });
+}
+
+// ================== Dropzones (solo manejo de file en memoria) ==================
+function limpiarArchivo(contexto){
+    // contexto: 'crear' | 'editar'
+    const urlInput   = $(`#${contexto}_UrlImagen`);
+    const fileInput  = $(`#${contexto}_FileImagen`);
+    const previewImg = $(`#${contexto}_Preview`);
+
+    // limpiar file
+    fileInput.val("");
+    // habilitar URL y dejar lo que el usuario escriba
+    urlInput.prop("disabled", false);
+    // si no hay URL, volver a imagen por defecto
+    const url = urlInput.val().trim();
+    previewImg.attr("src", url || DEFAULT_IMG_URL);
+}
+
+function manejarArchivoSeleccionado(file, contexto){
+    const urlInput   = $(`#${contexto}_UrlImagen`);
+    const previewImg = $(`#${contexto}_Preview`);
+
+    if(!file){
+        return;
+    }
+
+    if(!file.type.startsWith("image/")){
+        crudNotify("warning", "Solo se permiten archivos de imagen.");
+        return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if(file.size > maxSize){
+        crudNotify("warning", "La imagen es demasiado grande (máx 5MB).");
+        return;
+    }
+
+    // limpiar y deshabilitar la URL porque se usará archivo
+    urlInput.val("").prop("disabled", true);
+
+    // mostrar preview local
+    const reader = new FileReader();
+    reader.onload = e => {
+        previewImg.attr("src", e.target.result || DEFAULT_IMG_URL);
+    };
+    reader.readAsDataURL(file);
+}
+
+function initDropzonesImagenHabitacion(){
+    // ----- Crear -----
+    const dzCrear    = document.getElementById("crear_dropzone");
+    const inputCrear = document.getElementById("crear_FileImagen");
+
+    if(dzCrear && inputCrear){
+        dzCrear.addEventListener("click", () => inputCrear.click());
+
+        dzCrear.addEventListener("dragover", e => {
+            e.preventDefault();
+            dzCrear.classList.add("dropzone-hover");
+        });
+
+        dzCrear.addEventListener("dragleave", e => {
+            dzCrear.classList.remove("dropzone-hover");
+        });
+
+        dzCrear.addEventListener("drop", e => {
+            e.preventDefault();
+            dzCrear.classList.remove("dropzone-hover");
+            const file = e.dataTransfer.files[0];
+            inputCrear.files = e.dataTransfer.files;
+            manejarArchivoSeleccionado(file, "crear");
+        });
+
+        inputCrear.addEventListener("change", e => {
+            const file = e.target.files[0];
+            manejarArchivoSeleccionado(file, "crear");
+        });
+    }
+
+    // ----- Editar -----
+    const dzEditar    = document.getElementById("editar_dropzone");
+    const inputEditar = document.getElementById("editar_FileImagen");
+
+    if(dzEditar && inputEditar){
+        dzEditar.addEventListener("click", () => inputEditar.click());
+
+        dzEditar.addEventListener("dragover", e => {
+            e.preventDefault();
+            dzEditar.classList.add("dropzone-hover");
+        });
+
+        dzEditar.addEventListener("dragleave", e => {
+            dzEditar.classList.remove("dropzone-hover");
+        });
+
+        dzEditar.addEventListener("drop", e => {
+            e.preventDefault();
+            dzEditar.classList.remove("dropzone-hover");
+            const file = e.dataTransfer.files[0];
+            inputEditar.files = e.dataTransfer.files;
+            manejarArchivoSeleccionado(file, "editar");
+        });
+
+        inputEditar.addEventListener("change", e => {
+            const file = e.target.files[0];
+            manejarArchivoSeleccionado(file, "editar");
+        });
+    }
+}
+
+// ================== CREAR ==================
+function abrirModalCrearImagenHabitacion(){
+
+    $("#crear_IdHabitacion").val("").trigger("change");
+    $("#crear_UrlImagen").val("").prop("disabled", false);
+    $("#crear_Preview").attr("src", DEFAULT_IMG_URL);
+    $("#crear_FileImagen").val("");
+
+    inicializarSelect2Habitaciones("#crear_IdHabitacion", "#modalCrearImagenHabitacion");
+
+    $("#modalCrearImagenHabitacion").modal("show");
+}
+
+function crearImagenHabitacion(){
+
+    const idHabitacion = $("#crear_IdHabitacion").val();
+    const urlImagen    = ($("#crear_UrlImagen").val() || "").trim();
+    const file         = $("#crear_FileImagen")[0].files[0];
+
+    if(!idHabitacion){
+        crudNotify("warning","Debe seleccionar una habitación.");
+        return;
+    }
+
+    if(!file && !urlImagen){
+        crudNotify("warning","Debe subir un archivo o ingresar una URL de imagen.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("IdHabitacion", idHabitacion);
+    formData.append("UrlImagen", urlImagen);
+    formData.append("EstadoImagen", "true");
+    if(file){
+        formData.append("file", file);
+    }
+
+    $.ajax({
+        url: URL_CREATE_IMG,
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(resp){
+            if(resp.status !== "ok"){
+                crudNotify("error", resp.message || "No se pudo crear la imagen.");
+                return;
+            }
+            crudNotify("success", resp.message || "Imagen creada exitosamente.");
+            $("#modalCrearImagenHabitacion").modal("hide");
+            cargarImagenes(currentPage);
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "Error al crear la imagen."
+            );
+        }
+    });
+}
+
+// Vista previa en crear cuando se escribe la URL (solo si no está deshabilitada)
+$(document).on("input", "#crear_UrlImagen", function(){
+    if($(this).prop("disabled")) return;
+    const url = $(this).val().trim();
+    $("#crear_Preview").attr("src", url || DEFAULT_IMG_URL);
+});
+
+// ================== EDITAR ==================
+function abrirModalEditarImagen(id){
+
+    $.get(URL_GET_IMG(id), function(resp){
+
+        if(resp.status !== "ok"){
+            return crudNotify("error", resp.message || "No se pudo cargar la imagen.");
+        }
+
+        const img = resp.data;
+        const url = img.UrlImagen || "";
+
+        $("#editar_IdImagen").val(img.IdImagenHabitacion);
+
+        // Habitación: texto readonly + hidden
+        const habLabel = img.IdHabitacion +
+                         (img.NombreHabitacion ? " — " + img.NombreHabitacion : "");
+        $("#editar_HabitacionTexto").val(habLabel);
+        $("#editar_IdHabitacion").val(img.IdHabitacion);
+
+
+        $("#editar_UrlImagen").val(url).prop("disabled", false);
+        $("#editar_EstadoImagen").prop("checked", !!img.EstadoImagen);
+        $("#editar_FileImagen").val("");
+
+        $("#editar_Preview").attr("src", url || DEFAULT_IMG_URL);
+
+        $("#modalEditarImagenHabitacion").modal("show");
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+    });
+}
+
+function actualizarImagenHabitacion(){
+
+    const idImagen     = $("#editar_IdImagen").val();
+    const idHabitacion = $("#editar_IdHabitacion").val();
+    const urlImagen    = ($("#editar_UrlImagen").val() || "").trim();
+    const file         = $("#editar_FileImagen")[0].files[0];
+
+    if(!idHabitacion){
+        crudNotify("warning","Debe seleccionar una habitación.");
+        return;
+    }
+
+    if(!file && !urlImagen){
+        crudNotify("warning","Debe subir un archivo o ingresar una URL de imagen.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("IdHabitacion", idHabitacion);
+    formData.append("UrlImagen", urlImagen);
+    formData.append("EstadoImagen", $("#editar_EstadoImagen").is(":checked") ? "true" : "false");
+    if(file){
+        formData.append("file", file);
+    }
+
+    $.ajax({
+        url: URL_UPDATE_IMG(idImagen),
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(resp){
+            if(resp.status !== "ok"){
+                crudNotify("error", resp.message || "No se pudo actualizar la imagen.");
+                return;
+            }
+            crudNotify("success", resp.message || "Imagen actualizada exitosamente.");
+            $("#modalEditarImagenHabitacion").modal("hide");
+            cargarImagenes(currentPage);
+        },
+        error: function(xhr){
+            crudNotify(
+                "error",
+                xhr.responseJSON?.message || "Error al actualizar la imagen."
+            );
+        }
+    });
+}
+
+// Vista previa en editar cuando se escribe la URL (solo si no está deshabilitada)
+$(document).on("input", "#editar_UrlImagen", function(){
+    if($(this).prop("disabled")) return;
+    const url = $(this).val().trim();
+    $("#editar_Preview").attr("src", url || DEFAULT_IMG_URL);
+});
+
+// ================== Botones para volver a usar URL ==================
+// (llámalos desde un pequeño botón en cada modal: onclick="limpiarArchivo('crear')" / "limpiarArchivo('editar')")
+
+// ================== Eliminar ==================
+function eliminarImagen(id){
+    crudConfirm("¿Está seguro de eliminar esta imagen? Esto la marcará como inactiva.")
+        .then(ok => {
+            if(!ok) return;
+
+            $.post(URL_DELETE_IMG(id), {}, function(resp){
+                if(resp.status !== "ok"){
+                    crudNotify("error", resp.message || "No se pudo eliminar la imagen.");
+                    return;
+                }
+                crudNotify("success", resp.message || "Imagen eliminada exitosamente.");
+                cargarImagenes(currentPage);
+            }).fail(xhr => {
+                crudNotify("error", xhr.responseJSON?.message || "Error al eliminar la imagen.");
+            });
+        });
+}
+
+// ================== INIT ==================
+$(document).ready(function(){
+    cargarImagenes(1);
+    $("#btnAnterior").on("click", irAPaginaAnterior);
+    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+    initDropzonesImagenHabitacion();
+});
+</script>
+{% endblock %}

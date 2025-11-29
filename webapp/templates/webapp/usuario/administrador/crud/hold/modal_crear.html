@@ -1,0 +1,117 @@
+<div class="modal fade" id="modalCrearHold" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Crear Nuevo Hold</h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- FILA 1: ID / HAB / RES -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">ID Hold</label>
+                        <input type="text"
+                               id="crear_IdHold"
+                               class="form-control readonly-input"
+                               readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Habitación</label>
+                        <select id="crear_IdHabitacion" class="form-select"></select>
+                        <small class="text-muted">
+                            Escriba parte del ID o nombre de la habitación.
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Reserva</label>
+                        <select id="crear_IdReserva" class="form-select"></select>
+                        <small class="text-muted">
+                            Escriba parte del ID de la reserva.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- FILA 2: TIEMPO + RANGO FECHAS -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Tiempo Hold (minutos, opcional)</label>
+                        <input type="number"
+                               id="crear_TiempoHold"
+                               class="form-control"
+
+                               min="1"
+                               step="1"
+                               placeholder="Ej: 25"
+                               required
+                               oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }">
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Rango de Fechas (yyyy-mm-dd)</label>
+                        <input type="text"
+                               id="crear_RangoFechas"
+                               class="form-control"
+                               placeholder="Seleccionar rango de fechas">
+                        <small class="text-muted">
+                            Seleccione la fecha de inicio y la fecha final del hold.
+                        </small>
+
+                        <!-- Inputs ocultos usados por JS para enviar al backend -->
+                        <input type="hidden" id="crear_FechaInicio">
+                        <input type="hidden" id="crear_FechaFinal">
+                    </div>
+                </div>
+
+                <!-- FILA 3: ESTADO -->
+                <div class="row g-3">
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox"
+                                   id="crear_EstadoHold"
+                                   class="form-check-input"
+                                   checked>
+                            <label class="form-check-label fw-bold" for="crear_EstadoHold">
+                                Activo (por defecto)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button"
+                        class="btn btn-success"
+                        onclick="crearHold()">
+                    Guardar Hold
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

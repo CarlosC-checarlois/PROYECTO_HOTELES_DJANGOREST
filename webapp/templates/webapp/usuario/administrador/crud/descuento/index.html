@@ -1,0 +1,379 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css"/>
+
+<style>
+.badge-estado{
+    padding:6px 12px;
+    border-radius:14px;
+    font-size:.85rem;
+}
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h2 class="fw-bold">Descuentos</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearDescuento()">Crear Descuento</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped" id="tablaDescuento">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>%</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="paginacionDescuento" class="d-flex justify-content-center gap-3 mt-3"></div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL CREAR -->
+<!-- ====================================================== -->
+<div class="modal fade" id="modalCrearDescuento" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content shadow">
+
+<div class="modal-header bg-primary text-white">
+<h5 class="modal-title"><i class="bi bi-percent"></i> Crear Descuento</h5>
+<button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+<div class="row g-3">
+
+<div class="col-md-4">
+<label class="form-label">ID</label>
+<input type="number" id="crear_IdDescuento" class="form-control readonly-input" readonly>
+</div>
+
+<div class="col-md-8">
+<label class="form-label">Nombre</label>
+<input type="text" id="crear_NombreDescuento" class="form-control" required>
+</div>
+
+<div class="col-md-4">
+<label class="form-label">Valor (%)</label>
+<input type="number" id="crear_ValorDescuento"
+       class="form-control"
+       min="0.01" step="0.01"
+       oninput="if(this.value<=0)this.value='';">
+<small class="text-muted">Solo valores positivos</small>
+</div>
+
+<div class="col-md-8">
+<label class="form-label">Periodo de vigencia</label>
+<input type="text" id="rangoFechas"
+       class="form-control"
+       placeholder="Fecha inicio — Fecha fin"
+       readonly>
+</div>
+
+<input type="hidden" id="crear_fechaEntrada">
+<input type="hidden" id="crear_fechaSalida">
+
+<div class="col-12">
+<div class="form-check mt-2">
+<input type="checkbox" id="crear_EstadoDescuento" class="form-check-input" checked>
+<label class="form-check-label">Activo</label>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button class="btn btn-success" onclick="crearDescuento()">Guardar</button>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL EDITAR -->
+<!-- ====================================================== -->
+<div class="modal fade" id="modalEditarDescuento" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content shadow">
+
+<div class="modal-header bg-warning">
+<h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Descuento</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+<div class="row g-3">
+
+<div class="col-md-4">
+<label>ID</label>
+<input type="number" id="editar_IdDescuento"
+       class="form-control readonly-input" readonly>
+</div>
+
+<div class="col-md-8">
+<label>Nombre</label>
+<input type="text" id="editar_NombreDescuento"
+       class="form-control" required>
+</div>
+
+<div class="col-md-4">
+<label>Valor (%)</label>
+<input type="number" id="editar_ValorDescuento"
+       class="form-control"
+       min="0.01" step="0.01"
+       oninput="if(this.value<=0)this.value='';">
+</div>
+
+<div class="col-md-8">
+<label>Rango</label>
+<input type="text" id="editar_rangoFechas"
+       class="form-control" readonly>
+</div>
+
+<input type="hidden" id="editar_fechaEntrada">
+<input type="hidden" id="editar_fechaSalida">
+
+<div class="col-12">
+<div class="form-check mt-2">
+<input type="checkbox" id="editar_EstadoDescuento" class="form-check-input">
+<label>Activo</label>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button class="btn btn-primary" onclick="actualizarDescuento()">Guardar cambios</button>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+const URL_LIST = "/admin/descuento/list/";
+const URL_CREATE = "/admin/descuento/create/";
+const URL_GET = id => `/admin/descuento/get/${id}/`;
+const URL_UPDATE = id => `/admin/descuento/update/${id}/`;
+const URL_DELETE = id => `/admin/descuento/delete/${id}/`;
+const URL_NEXT_ID = "/admin/descuento/next-id/";
+
+let PAGINA_ACTUAL=1;
+
+/* ===== ID AUTOMÁTICO ===== */
+function obtenerNextIdDescuento(){
+    $.get(URL_NEXT_ID,function(resp){
+        $("#crear_IdDescuento").val(resp.next);
+    });
+}
+
+/* ===== LISTADO ===== */
+function cargarDescuentos(page=1){
+PAGINA_ACTUAL=page;
+
+$.get(`${URL_LIST}?page=${page}`,function(resp){
+
+let tbody=$("#tablaDescuento tbody").html("");
+
+(resp.data||[]).forEach(d=>{
+
+let estado=d.EstadoDescuento
+   ? `<span class="badge bg-success badge-estado">Activo</span>`
+   : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+let eliminar=d.EstadoDescuento
+ ? `<button class="btn btn-danger btn-sm"
+          onclick="eliminarDescuento(${d.IdDescuento})">Eliminar</button>`
+ : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+tbody.append(`
+<tr class="${d.EstadoDescuento?'':'table-secondary'}">
+<td>${d.IdDescuento}</td>
+<td>${d.NombreDescuento}</td>
+<td>${parseFloat(d.ValorDescuento).toFixed(2)}%</td>
+<td>${d.FechaInicioDescuento?.split("T")[0]}</td>
+<td>${d.FechaFinDescuento?.split("T")[0]}</td>
+<td>${estado}</td>
+<td>
+<button class="btn btn-warning btn-sm"
+ onclick="abrirModalEditarDescuento(${d.IdDescuento})">Editar</button>
+${eliminar}
+</td>
+</tr>
+`);
+});
+
+renderPaginacion(resp.page,resp.total_pages);
+});
+}
+
+/* ===== PAGINACIÓN ===== */
+function renderPaginacion(a,t){
+$("#paginacionDescuento").html(`
+${a>1?`<button class="btn btn-secondary" onclick="cargarDescuentos(${a-1})">◀</button>`:`<button class="btn btn-secondary" disabled>◀</button>`}
+<span class="fw-bold">Página ${a} de ${t}</span>
+${a<t?`<button class="btn btn-secondary" onclick="cargarDescuentos(${a+1})">▶</button>`:`<button class="btn btn-secondary" disabled>▶</button>`}
+`);
+}
+
+/* ===== LITEPICKER ===== */
+function iniciarLitepicker(id,prefijo){
+new Litepicker({
+element:document.getElementById(id),
+singleMode:false,
+autoApply:true,
+format:"DD/MM/YYYY",
+numberOfMonths:2,
+numberOfColumns:2,
+minDate:new Date(),
+tooltipNumber:t=>t-1
+}).on("selected",(d1,d2)=>{
+$(`#${prefijo}_fechaEntrada`).val(d1.format("YYYY-MM-DD"));
+$(`#${prefijo}_fechaSalida`).val(d2.format("YYYY-MM-DD"));
+});
+}
+
+/* ===== CREAR ===== */
+function abrirModalCrearDescuento(){
+obtenerNextIdDescuento();
+$("#crear_NombreDescuento,#crear_ValorDescuento").val("");
+$("#crear_fechaEntrada,#crear_fechaSalida,#rangoFechas").val("");
+$("#crear_EstadoDescuento").prop("checked",true);
+iniciarLitepicker("rangoFechas","crear");
+$("#modalCrearDescuento").modal("show");
+}
+
+function crearDescuento(){
+const nombre=$("#crear_NombreDescuento").val().trim();
+const valor=parseFloat($("#crear_ValorDescuento").val());
+const inicio=$("#crear_fechaEntrada").val();
+const fin=$("#crear_fechaSalida").val();
+
+if(!nombre) return crudNotify("warning","Nombre obligatorio");
+if(isNaN(valor)||valor<=0) return crudNotify("warning","Valor inválido");
+if(!inicio||!fin) return crudNotify("warning","Seleccione fechas");
+
+crudCreate(URL_CREATE,{
+IdDescuento:$("#crear_IdDescuento").val(),
+NombreDescuento:nombre,
+ValorDescuento:valor,
+FechaInicioDescuento:inicio+"T00:00:00",
+FechaFinDescuento:fin+"T00:00:00",
+EstadoDescuento:$("#crear_EstadoDescuento").is(":checked")
+},()=>{
+$("#modalCrearDescuento").modal("hide");
+cargarDescuentos(PAGINA_ACTUAL);
+});
+}
+
+/* ===== EDITAR ===== */
+function abrirModalEditarDescuento(id) {
+
+    $.get(`/admin/descuento/get/${id}/`, function (resp) {
+
+        const d = resp.data;
+
+        // Campos normales
+        $("#editar_IdDescuento").val(d.IdDescuento);
+        $("#editar_NombreDescuento").val(d.NombreDescuento);
+        $("#editar_ValorDescuento").val(d.ValorDescuento);
+        $("#editar_EstadoDescuento").prop("checked", d.EstadoDescuento);
+
+        // Fechas ocultas
+        const fechaInicio = d.FechaInicioDescuento?.split("T")[0];
+        const fechaFin    = d.FechaFinDescuento?.split("T")[0];
+
+        $("#editar_fechaEntrada").val(fechaInicio);
+        $("#editar_fechaSalida").val(fechaFin);
+
+        // Mostrar texto
+        $("#editar_rangoFechas").val(
+            fechaInicio.split("-").reverse().join("/") + " — " +
+            fechaFin.split("-").reverse().join("/")
+        );
+
+        // Destruir picker viejo si existe
+        if (window.pickerEditar) {
+            window.pickerEditar.destroy();
+        }
+
+        // Crear nuevo Litepicker
+        window.pickerEditar = new Litepicker({
+            element: document.getElementById("editar_rangoFechas"),
+            singleMode: false,
+            autoApply: true,
+            format: "DD/MM/YYYY",
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            tooltipText: { one: 'noche', other: 'noches' },
+            tooltipNumber: total => total - 1,
+            setup: (picker) => {
+
+                picker.on('selected', (d1, d2) => {
+                    $("#editar_fechaEntrada").val(d1.format("YYYY-MM-DD"));
+                    $("#editar_fechaSalida").val(d2.format("YYYY-MM-DD"));
+                });
+
+                // ✅ Pintar fechas del backend en el calendario
+                picker.setDateRange(fechaInicio, fechaFin);
+            }
+        });
+
+        $("#modalEditarDescuento").modal("show");
+    });
+}
+
+
+function actualizarDescuento(){
+crudUpdate(URL_UPDATE($("#editar_IdDescuento").val()),{
+NombreDescuento:$("#editar_NombreDescuento").val(),
+ValorDescuento:parseFloat($("#editar_ValorDescuento").val()),
+FechaInicioDescuento:$("#editar_fechaEntrada").val()+"T00:00:00",
+FechaFinDescuento:$("#editar_fechaSalida").val()+"T00:00:00",
+EstadoDescuento:$("#editar_EstadoDescuento").is(":checked")
+},()=>{
+$("#modalEditarDescuento").modal("hide");
+cargarDescuentos(PAGINA_ACTUAL);
+});
+}
+
+/* ===== ELIMINAR ===== */
+function eliminarDescuento(id){
+crudConfirm("¿Eliminar descuento?")
+.then(ok=>{
+if(!ok)return;
+crudDelete(URL_DELETE(id),()=>cargarDescuentos(PAGINA_ACTUAL));
+});
+}
+
+$(document).ready(()=>cargarDescuentos(1));
+</script>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<style>
+.badge-estado {
+    font-size: .85rem;
+    padding: .25rem .6rem;
+    border-radius: 15px;
+}
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<!-- TOASTS -->
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Amenidades por Habitación</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearAmexHab()">Crear Relación</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped" id="tablaAmexHab">
+            <thead class="table-dark">
+                <tr>
+                    <th>Habitación</th>
+                    <th>Amenidad</th>
+                    <th>Estado</th>
+                    <th>Fecha Modificación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div id="paginacionAmexHab"
+         class="d-flex justify-content-center align-items-center gap-3 mt-3">
+    </div>
+
+</div>
+
+<!-- MODALES -->
+{% include "webapp/usuario/administrador/crud/amexhab/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/amexhab/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+
+<script>
+
+// ===============================
+// URLs backend
+// ===============================
+const URL_LIST   = "/admin/amexhab/list/";
+const URL_CREATE = "/admin/amexhab/create/";
+const URL_GET    = (h,a) => `/admin/amexhab/get/${h}/${a}/`;
+const URL_UPDATE = (h,a) => `/admin/amexhab/update/${h}/${a}/`;
+const URL_DELETE = (h,a) => `/admin/amexhab/delete/${h}/${a}/`;
+
+// ===============================
+// PAGINACIÓN
+// ===============================
+let PAGINA_ACTUAL = 1;
+
+// ===============================
+// Cargar tabla
+// ===============================
+function cargarAmexHab(page = 1) {
+
+    PAGINA_ACTUAL = page;
+
+    crudLoadTable(
+        URL_LIST + `?page=${page}`,
+        function (r) {
+
+const estado = r.EstadoAmexHab
+    ? `<span class="badge rounded-pill bg-success">Activo</span>`
+    : `<span class="badge rounded-pill bg-secondary">Inactivo</span>`;
+
+            const rowClass = r.EstadoAmexHab ? "" : "table-secondary";
+
+            return `
+                <tr class="${rowClass}">
+                        <td>${r.IdHabitacion}</td>
+                        <td>${r.IdAmenidad}</td>
+                        <td>${estado}</td>
+                        <td>${r.FechaModificacionAmexHab || ""}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick="abrirModalEditarAmexHab('${r.IdHabitacion}', ${r.IdAmenidad})">
+                                Editar
+                            </button>
+
+${r.EstadoAmexHab
+    ? `<button class="btn btn-danger btn-sm"
+               onclick="eliminarAmexHab('${r.IdHabitacion}', ${r.IdAmenidad})">
+           Eliminar
+       </button>`
+    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`
+}
+
+                        </td>
+                    </tr>
+            `;
+        },
+        "#tablaAmexHab",
+        "#paginacionAmexHab",
+        page
+    );
+}
+
+// ===============================
+// Abrir modal CREAR
+// ===============================
+function abrirModalCrearAmexHab() {
+
+    $("#crear_IdHabitacion").val("").trigger("change");
+    $("#crear_IdAmenidad").val("").trigger("change");
+    $("#crear_EstadoAmexHab").prop("checked", true);
+
+    inicializarSelect2Habitaciones();
+    cargarSelectAmenidades();
+
+    $("#modalCrearAmexHab").modal("show");
+}
+
+// ===============================
+// Crear relación
+// ===============================
+function crearAmexHab() {
+
+    const idH = $("#crear_IdHabitacion").val();
+    const idA = $("#crear_IdAmenidad").val();
+
+    if (!idH || !idA)
+        return crudNotify("warning", "Debe seleccionar habitación y amenidad.");
+
+    crudCreate(
+        URL_CREATE,
+        {
+            IdHabitacion: idH,
+            IdAmenidad: idA,
+            EstadoAmexHab: $("#crear_EstadoAmexHab").is(":checked")
+        },
+        () => {
+            $("#modalCrearAmexHab").modal("hide");
+            cargarAmexHab(PAGINA_ACTUAL);
+        }
+    );
+}
+
+// ===============================
+// Abrir modal EDITAR
+// ===============================
+function abrirModalEditarAmexHab(hab, amen) {
+
+    $.get(URL_GET(hab, amen), function(resp) {
+
+        if (resp.status !== "ok")
+            return crudNotify("error", resp.message);
+
+        const r = resp.data;
+
+        $("#editar_IdHabitacion").val(r.IdHabitacion);
+        $("#editar_IdAmenidad").val(r.IdAmenidad);
+        $("#editar_EstadoAmexHab").prop("checked", !!r.EstadoAmexHab);
+
+        $("#modalEditarAmexHab").modal("show");
+    });
+}
+
+// ===============================
+// Actualizar
+// ===============================
+function actualizarAmexHab() {
+
+    const idH = $("#editar_IdHabitacion").val();
+    const idA = $("#editar_IdAmenidad").val();
+
+    crudUpdate(
+        URL_UPDATE(idH, idA),
+        {
+            EstadoAmexHab: $("#editar_EstadoAmexHab").is(":checked")
+        },
+        () => {
+            $("#modalEditarAmexHab").modal("hide");
+            cargarAmexHab(PAGINA_ACTUAL);
+        }
+    );
+}
+
+// ===============================
+// Eliminar — con confirmación animada
+// ===============================
+function eliminarAmexHab(hab, amen) {
+
+    crudConfirm("¿Desea eliminar esta relación?")
+        .then(ok => {
+            if (!ok) return;
+
+            crudDelete(
+                URL_DELETE(hab, amen),
+                () => cargarAmexHab(PAGINA_ACTUAL)
+            );
+        });
+}
+
+// ===============================
+// SELECT2 HABITACIONES
+// ===============================
+function inicializarSelect2Habitaciones() {
+
+    $("#crear_IdHabitacion").select2({
+        placeholder: "Buscar habitación...",
+        allowClear: true,
+        width: "100%",
+        dropdownParent: $("#modalCrearAmexHab"),
+        minimumInputLength: 1,
+        ajax: {
+            url: "/admin/habitaciones/search/",
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(h => ({
+                    id: h.IdHabitacion,
+                    text: `${h.IdHabitacion} — ${h.NombreHabitacion}`
+                }))
+            })
+        }
+    });
+}
+
+// ===============================
+// SELECT DE AMENIDADES
+// ===============================
+function cargarSelectAmenidades() {
+
+    $.get("/admin/amenidades/list/", function(resp){
+
+        let opciones = resp.data.map(a => ({
+            id: a.IdAmenidad,
+            text: `${a.IdAmenidad} — ${a.NombreAmenidad}`
+        }));
+
+        $("#crear_IdAmenidad").select2({
+            data: opciones,
+            width: "100%",
+            placeholder: "Seleccione amenidad...",
+            allowClear: true,
+            dropdownParent: $("#modalCrearAmexHab")
+        });
+    });
+}
+
+// ===============================
+// INIT
+// ===============================
+
+$(document).ready(function () {
+
+    // Hacer que el helper global invoque esta tabla
+    window.__crudReload = page => cargarAmexHab(page);
+
+    // Cargar primer listado
+    cargarAmexHab(1);
+});
+
+</script>
+
+{% endblock %}

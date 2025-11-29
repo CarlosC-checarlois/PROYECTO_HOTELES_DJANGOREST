@@ -1,0 +1,137 @@
+<div class="modal fade" id="modalCrearHabitacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Crear Habitación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+
+                    <!-- ID -->
+                    <div class="col-md-4">
+                        <label class="form-label">ID</label>
+                        <input id="crear_IdHabitacion" class="form-control readonly-input" readonly>
+                    </div>
+
+                    <!-- NOMBRE -->
+                    <div class="col-md-8">
+                        <label class="form-label">Nombre *</label>
+                        <input id="crear_NombreHabitacion" class="form-control">
+                    </div>
+
+                    <!-- TIPO -->
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo *</label>
+                        <select id="crear_IdTipoHabitacion" class="form-select"></select>
+                    </div>
+
+                    <!-- CIUDAD -->
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad *</label>
+                        <select id="crear_IdCiudad" class="form-select"></select>
+                    </div>
+
+                    <!-- HOTEL -->
+                    <div class="col-md-4">
+                        <label class="form-label">Hotel *</label>
+                        <select id="crear_IdHotel" class="form-select"></select>
+                    </div>
+
+                    <!-- PRECIO NORMAL -->
+                    <div class="col-md-4">
+                        <label class="form-label">Precio Normal *</label>
+                        <input
+                                id="crear_PrecioNormalHabitacion"
+                                type="number"
+                                min="1"
+                                step="0.01"
+                                class="form-control"
+                                placeholder="0.00"
+                                oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }
+                           ">
+                    </div>
+
+                    <!-- PRECIO ACTUAL -->
+                    <div class="col-md-4">
+                        <label class="form-label">Precio Actual *</label>
+                        <input
+                                id="crear_PrecioActualHabitacion"
+                                type="number"
+                                min="1"
+                                step="0.01"
+                                class="form-control"
+                                placeholder="0.00"
+                                oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }"
+                        >
+                    </div>
+
+                    <!-- CAPACIDAD -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Capacidad *</label>
+                        <input
+                                id="crear_CapacidadHabitacion"
+                                type="number"
+                                min="1"
+                                step="1"
+                                class="form-control"
+                                placeholder="1"
+                                oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }
+                           ">
+                    </div>
+
+                    <!-- ESTADO TEXTO (OCULTO O RESERVADO, SI LO NECESITAS LUEGO) -->
+                    <input type="hidden" id="crear_EstadoHabitacion">
+
+                    <!-- ACTIVO -->
+                    <div class="col-md-12">
+                        <div class="form-check mt-2">
+                            <input
+                                    type="checkbox"
+                                    id="crear_EstadoActivoHabitacion"
+                                    class="form-check-input"
+                                    checked>
+                            <label class="form-check-label">Activo</label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" onclick="crearHabitacion()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

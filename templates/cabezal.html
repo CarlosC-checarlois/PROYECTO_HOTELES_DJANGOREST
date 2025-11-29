@@ -1,0 +1,223 @@
+<!-- SECCION CABEZAL -->
+
+{% load static %}
+<!-- SECCION CABEZAL -->
+<!-- SECCION CABEZAL -->
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    {% block titulo_pagina %}
+    {% endblock %}
+
+    {% block sobreescribir_css_archivos %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js"></script>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="{% static 'webapp/css/general/general_index.css' %}">
+        {% block css_archivos %}
+
+        {% endblock %}
+    {% endblock %}
+    {% block jvscript_archivos %}
+        {% block sobreescribir_jvscript_archivos %}
+        {% endblock %}
+    {% endblock %}
+
+    <!-- ESTILOS -->
+    <!-- ESTILOS -->
+    <!-- ESTILOS -->
+
+    <!-- ESTILOS -->
+    <!-- ESTILOS -->
+    <!-- ESTILOS -->
+
+</head>
+<body>
+<!-- SECCION CABEZAL -->
+<!-- SECCION CABEZAL -->
+<!-- SECCION CABEZAL -->
+
+<!-- CONTENIDO PAGINA WEB -->
+<!-- CONTENIDO PAGINA WEB -->
+<!-- CONTENIDO PAGINA WEB -->
+{% block sobreescribir_contenido_pagina %}
+    <!-- MENU -->
+    <!-- MENU -->
+    <!-- MENU -->
+
+    <!-- MENU -->
+    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top">
+        <div class="container menu_cabezal_general">
+
+            <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
+                Hotel Genérico
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
+                    aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav ms-auto" id="menu-dinamico">
+                    <!-- Aquí JS insertará el menú según el rol -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- FIN MENU -->
+
+
+    <!-- MENU -->
+    <!-- MENU -->
+    <!-- MENU -->
+
+    {% block contenido_pagina %}
+    {% endblock %}
+    {% block bloquear_footer %}
+        <footer class="footer-modern mt-5 text-white">
+            <div class="container py-5">
+
+                <div class="row justify-content-center text-center">
+
+                    <!-- Nombre del hotel -->
+                    <div class="col-12 mb-3">
+                        <h4 class="fw-bold">Hotel Genérico</h4>
+                    </div>
+
+                    <!-- Enlaces -->
+                    <div class="col-12 mb-3">
+                        <ul class="footer-links list-inline">
+                            <li class="list-inline-item mx-3"><a href="/" class="text-white-50">Inicio</a></li>
+                            <li class="list-inline-item mx-3"><a href="/habitaciones/"
+                                                                 class="text-white-50">Habitaciones</a></li>
+                        </ul>
+                    </div>
+                    <!-- Derechos -->
+                    <div class="col-12">
+                        <p class="mb-0 text-white-50">
+                            © 2025 Hotel Genérico — Todos los derechos reservados.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </footer>
+    {% endblock %}
+{% endblock %}
+
+{% block sobreescribir_jvscript_archivos_defer %}
+    <!-- SCRIPT EXTERNO -->
+    <!-- SCRIPT EXTERNO -->
+    <!-- SCRIPT EXTERNO -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SCRIPT EXTERNO -->
+    <!-- SCRIPT EXTERNO -->
+    <!-- SCRIPT EXTERNO -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const menu = document.getElementById("menu-dinamico");
+
+            const id = localStorage.getItem("usuario_id");
+            const nombre = localStorage.getItem("usuario_nombre");
+            const rol = localStorage.getItem("usuario_rol");
+
+            menu.innerHTML = ""; // limpia el menú
+
+            // Si NO hay usuario, mostrar botón de login
+            if (!id) {
+                menu.innerHTML = `
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inicio' %}">Inicio</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'habitaciones' %}">Habitaciones</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-primary ms-lg-3" href="{% url 'login' %}">Iniciar sesión</a>
+            </li>
+        `;
+                return;
+            }
+
+            // Si hay usuario, construimos menú según su rol
+            let items = `
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'inicio' %}">Inicio</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'habitaciones' %}">Habitaciones</a>
+        </li>
+    `;
+
+            if (rol === "1") {
+                // Usuario normal
+                items += `
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'usuario_reservas' %}">Mis reservas</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'usuario_pagos' %}">Pagos</a>
+            </li>
+        `;
+            }
+
+            if (rol === "2") {
+                // Administrador
+                items += `
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin_dashboard' %}">Panel Administrador</a>
+            </li>
+        `;
+            }
+
+            // Botón de logout
+            items += `
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle fw-semibold" href="#" data-bs-toggle="dropdown">
+                ${nombre}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item text-danger" href="#" id="logout-btn">Cerrar sesión</a></li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'usuario_perfil' %}">Mi perfil</a>
+    </li>
+            </ul>
+        </li>
+    `;
+
+            menu.innerHTML = items;
+
+            // Evento logout
+            document.getElementById("logout-btn").addEventListener("click", function () {
+                localStorage.clear();
+                window.location.href = "{% url 'inicio' %}";
+            });
+// Reescribir enlace cuando exista en el DOM
+            setTimeout(() => {
+                const enlaces = document.querySelectorAll("a.nav-link");
+
+                enlaces.forEach(a => {
+                    if (a.textContent.trim() === "Mis reservas") {
+                        a.href = `/usuario/reservas/?uid=${id}`;
+                    }
+                });
+            }, 10);  // pequeño delay para asegurar que el menú ya está construido
+
+        });
+    </script>
+
+    {% block jvscript_archivos_defer %}
+    {% endblock %}
+{% endblock %}
+</body>
+</html>

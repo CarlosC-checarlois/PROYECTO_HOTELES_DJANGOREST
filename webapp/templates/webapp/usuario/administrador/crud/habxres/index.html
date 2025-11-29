@@ -1,0 +1,384 @@
+{% extends "cabezal.html" %}
+{% load static %}
+{% block bloquear_footer %}
+{% endblock %}
+{% block css_archivos %}
+<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+.badge-estado{
+    font-size:.85rem;
+    padding:.25rem .6rem;
+    border-radius:12px;
+}
+.table-inactive{
+    background-color:#e0e0e0 !important;
+}
+.select2-container{
+    width:100%!important;
+}
+</style>
+{% endblock %}
+
+{% block contenido_pagina %}
+
+<div id="crud-toast-container"></div>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Gestión Habitación por Reserva</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearHabxRes()">
+            <i class="bi bi-plus-lg"></i> Asignar Habitación
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle" id="tablaHabxRes">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Habitación</th>
+                    <th>Reserva</th>
+                    <th>Capacidad</th>
+                    <th>Costo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+        <button class="btn btn-secondary btn-sm" id="btnAnterior" disabled onclick="irAPaginaAnterior()">◀ Anterior</button>
+        <span id="infoPaginacion" class="fw-bold">Cargando…</span>
+        <button class="btn btn-secondary btn-sm" id="btnSiguiente" disabled onclick="irAPaginaSiguiente()">Siguiente ▶</button>
+    </div>
+
+</div>
+
+<!-- MODALES -->
+{% include "webapp/usuario/administrador/crud/habxres/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/habxres/modal_editar.html" %}
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+
+<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
+<script>
+/* ======================= URLs ======================= */
+const URL_LIST    = "/admin/habxres/list/";
+const URL_CREATE  = "/admin/habxres/create/";
+const URL_GET     = id => `/admin/habxres/get/${id}/`;
+const URL_UPDATE  = id => `/admin/habxres/update/${id}/`;
+const URL_DELETE  = id => `/admin/habxres/delete/${id}/`;
+const URL_NEXT_ID = "/admin/habxres/next-id/";   // <-- NUEVO
+
+let currentPage = 1;
+let totalPages  = 1;
+
+
+/* ======================= PAGINACIÓN ======================= */
+function actualizarPaginacion() {
+    $("#btnAnterior").prop("disabled", currentPage <= 1);
+    $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+    $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
+}
+
+function irAPaginaAnterior() {
+    if (currentPage > 1) cargarHabxRes(currentPage - 1);
+}
+
+function irAPaginaSiguiente() {
+    if (currentPage < totalPages) cargarHabxRes(currentPage + 1);
+}
+
+// ================== VALIDACIÓN HABXRES ==================
+function validarHabxResFront(data) {
+    // Reserva obligatoria
+    if (!data.IdReserva) {
+        return "Debe seleccionar una reserva.";
+    }
+
+    // Habitación obligatoria
+    if (!data.IdHabitacion) {
+        return "Debe seleccionar una habitación.";
+    }
+
+    // Capacidad: entero >= 1 (opcional, pero si viene, debe ser válido)
+    if (data.CapacidadReservaHabxRes !== "" && data.CapacidadReservaHabxRes != null) {
+        const cap = Number(data.CapacidadReservaHabxRes);
+        if (!Number.isInteger(cap) || cap < 1) {
+            return "La capacidad debe ser un número entero mayor o igual a 1.";
+        }
+    }
+
+    // Costo: obligatorio, número >= 0
+    if (data.CostoCalculadoHabxRes === "" || data.CostoCalculadoHabxRes == null) {
+        return "El costo es obligatorio.";
+    }
+    const costo = Number(data.CostoCalculadoHabxRes);
+    if (Number.isNaN(costo) || costo < 0) {
+        return "El costo debe ser un número mayor o igual a 0.";
+    }
+
+    // Descuento: opcional, número >= 0
+    if (data.DescuentoHabxRes !== "" && data.DescuentoHabxRes != null) {
+        const des = Number(data.DescuentoHabxRes);
+        if (Number.isNaN(des) || des < 0) {
+            return "El descuento debe ser un número mayor o igual a 0.";
+        }
+    }
+
+    // Impuestos: opcional, número >= 0
+    if (data.ImpuestosHabxRes !== "" && data.ImpuestosHabxRes != null) {
+        const imp = Number(data.ImpuestosHabxRes);
+        if (Number.isNaN(imp) || imp < 0) {
+            return "Los impuestos deben ser un número mayor o igual a 0.";
+        }
+    }
+
+    return null; // sin errores
+}
+
+/* ======================= TABLA ======================= */
+function cargarHabxRes(page = 1) {
+
+    currentPage = page;
+
+    $.get(`${URL_LIST}?page=${page}`, function(resp) {
+
+        const tbody = $("#tablaHabxRes tbody");
+        tbody.empty();
+
+        (resp.data || []).forEach(r => {
+
+            const estado = r.EstadoHabxRes
+                ? `<span class="badge bg-success badge-estado">Activo</span>`
+                : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+
+            const filaClass = r.EstadoHabxRes ? "" : "table-secondary";
+
+            const btnEliminar = r.EstadoHabxRes
+                ? `<button class="btn btn-danger btn-sm" onclick="eliminarHabxRes(${r.IdHabxRes})">Eliminar</button>`
+                : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
+
+            tbody.append(`
+                <tr class="${filaClass}">
+                    <td class="fw-bold">${r.IdHabxRes}</td>
+                    <td>${r.IdHabitacion}</td>
+                    <td>${r.IdReserva}</td>
+                    <td>${r.CapacidadReservaHabxRes || "-"}</td>
+                    <td>$${parseFloat(r.CostoCalculadoHabxRes || 0).toFixed(2)}</td>
+                    <td>${estado}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="abrirModalEditarHabxRes(${r.IdHabxRes})">Editar</button>
+                        ${btnEliminar}
+                    </td>
+                </tr>
+            `);
+        });
+
+        currentPage = resp.page;
+        totalPages  = resp.total_pages;
+        actualizarPaginacion();
+
+    }).fail(() => crudNotify("error", "No se pudo cargar HabxRes"));
+
+}
+
+
+/* ======================= SELECT2 ======================= */
+function initSelectHabitacion(selector, reservaSelector) {
+
+    $(selector).select2({
+        dropdownParent: $(selector).closest(".modal"),
+        placeholder: "Seleccione habitación...",
+        width: "100%",
+        ajax: {
+            url: "/admin/habitaciones/search/",
+            dataType: "json",
+            delay: 300,
+            data: params => ({
+                q: params.term,
+                reserva: $(reservaSelector).val()   // enviamos reserva activa
+            }),
+            processResults: r => ({
+                results: (r.data || []).map(h => ({
+                    id: h.IdHabitacion,
+                    text: `${h.IdHabitacion} — ${h.NombreHabitacion || ""}`
+                }))
+            })
+        }
+    });
+}
+
+function initSelectReserva(selector) {
+
+    $(selector).select2({
+        dropdownParent: $(selector).closest(".modal"),
+        placeholder: "Buscar reserva...",
+        minimumInputLength: 1,
+        width: "100%",
+        ajax: {
+            url: "/admin/reservas/search/",
+            dataType: "json",
+            delay: 250,
+            data: params => ({ q: params.term }),
+            processResults: resp => ({
+                results: (resp.data || []).map(r => ({
+                    id: r.IdReserva,
+                    text: `Reserva #${r.IdReserva}`
+                }))
+            })
+        }
+    });
+}
+
+
+/* ======================= CREAR ======================= */
+function abrirModalCrearHabxRes() {
+
+    // Limpiar campos
+    $("#crear_Capacidad,#crear_Costo,#crear_Descuento,#crear_Impuestos").val("");
+    $("#crear_Estado").prop("checked", true);
+
+    // Obtener NEXT ID desde backend
+    $.get(URL_NEXT_ID, function (resp) {
+        if (resp.next) {
+            $("#crear_IdHabxRes").val(resp.next);
+        } else if (resp.next_id) {
+            $("#crear_IdHabxRes").val(resp.next_id);
+        }
+    });
+
+    // Inicializar selects (create usa select2)
+    initSelectReserva("#crear_IdReserva");
+    initSelectHabitacion("#crear_IdHabitacion", "#crear_IdReserva");
+
+    // cuando cambia reserva → recargamos habitaciones (limpiando el select)
+    $("#crear_IdReserva").off("change").on("change", () => {
+        $("#crear_IdHabitacion").val(null).trigger("change");
+    });
+
+    $("#modalCrearHabxRes").modal("show");
+}
+
+
+function crearHabxRes() {
+
+    const data = {
+        IdHabxRes: $("#crear_IdHabxRes").val(),
+        IdHabitacion: $("#crear_IdHabitacion").val(),
+        IdReserva: $("#crear_IdReserva").val(),
+        CapacidadReservaHabxRes: $("#crear_Capacidad").val(),
+        CostoCalculadoHabxRes: $("#crear_Costo").val(),
+        DescuentoHabxRes: $("#crear_Descuento").val(),
+        ImpuestosHabxRes: $("#crear_Impuestos").val(),
+        EstadoHabxRes: $("#crear_Estado").is(":checked")
+    };
+
+    if (!data.IdHabitacion || !data.IdReserva || !data.CostoCalculadoHabxRes)
+        return crudNotify("warning", "Complete todos los campos obligatorios.");
+    const error = validarHabxResFront(data);
+    if (error) {
+        crudNotify("error", error);
+        return;
+    }
+
+    crudCreate(URL_CREATE, data, () => {
+        $("#modalCrearHabxRes").modal("hide");
+        cargarHabxRes(currentPage);
+    });
+}
+
+
+/* ======================= EDITAR ======================= */
+async function abrirModalEditarHabxRes(id) {
+
+    try {
+        const resp = await $.get(URL_GET(id));
+
+        if (resp.status !== "ok")
+            return crudNotify("error", resp.message || "No se pudo cargar el registro");
+
+        const r = resp.data;
+
+        // llenar inputs (todos readonly para clave e IDs)
+        $("#editar_IdHabxRes").val(r.IdHabxRes);
+        $("#editar_IdHabitacion").val(r.IdHabitacion);
+        $("#editar_IdReserva").val(r.IdReserva);
+        $("#editar_Capacidad").val(r.CapacidadReservaHabxRes);
+        $("#editar_Costo").val(r.CostoCalculadoHabxRes);
+        $("#editar_Descuento").val(r.DescuentoHabxRes);
+        $("#editar_Impuestos").val(r.ImpuestosHabxRes);
+        $("#editar_Estado").prop("checked", !!r.EstadoHabxRes);
+
+        $("#modalEditarHabxRes").modal("show");
+
+    } catch (e) {
+        crudNotify("error", "Error al cargar el registro");
+    }
+}
+
+
+function actualizarHabxRes() {
+
+    const id = $("#editar_IdHabxRes").val();
+
+    const data = {
+        // Los IDs se envían igual (aunque sean readonly) por si el backend los usa
+        IdHabitacion: $("#editar_IdHabitacion").val(),
+        IdReserva: $("#editar_IdReserva").val(),
+        CapacidadReservaHabxRes: $("#editar_Capacidad").val(),
+        CostoCalculadoHabxRes: $("#editar_Costo").val(),
+        DescuentoHabxRes: $("#editar_Descuento").val(),
+        ImpuestosHabxRes: $("#editar_Impuestos").val(),
+        EstadoHabxRes: $("#editar_Estado").is(":checked")
+    };
+    const error = validarHabxResFront(data);
+    if (error) {
+        crudNotify("error", error);
+        return;
+    }
+    crudUpdate(URL_UPDATE(id), data, () => {
+        $("#modalEditarHabxRes").modal("hide");
+        cargarHabxRes(currentPage);
+    });
+}
+
+
+/* ======================= ELIMINAR ======================= */
+function eliminarHabxRes(id) {
+
+    crudConfirm("¿Desea desactivar esta relación?")
+        .then(ok => {
+            if (!ok) return;
+            crudDelete(URL_DELETE(id), () => cargarHabxRes(currentPage));
+        });
+}
+
+
+/* ======================= INIT ======================= */
+$(document).ready(function () {
+
+    // pequeña protección: no negativos en numéricos
+    $("#modalCrearHabxRes, #modalEditarHabxRes")
+        .on("input", "input[type=number]", function () {
+            const v = parseFloat(this.value);
+            if (!isNaN(v) && v < 0) this.value = "";
+        });
+
+    cargarHabxRes(1);
+});
+
+</script>
+
+{% endblock %}

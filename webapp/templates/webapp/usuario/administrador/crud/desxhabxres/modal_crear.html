@@ -1,0 +1,73 @@
+<div class="modal fade" id="modalCrearDesxHabxRes" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i> Crear Relación Descuento por Habitación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- DESCUENTO -->
+                <label class="form-label">Descuento</label>
+                <select id="crear_IdDescuento" class="form-select mb-3"></select>
+
+                <!-- HABXRES -->
+                <label class="form-label">HabxRes</label>
+                <select id="crear_IdHabxRes" class="form-select mb-3"></select>
+
+                <!-- MONTO -->
+                <label class="form-label">Monto</label>
+
+              <!-- MONTO -->
+                <div class="mb-3">
+                    <label for="crear_MontoDesxHabxRes" class="form-label fw-semibold">
+                        Monto del Descuento <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="number"
+                           id="crear_MontoDesxHabxRes"
+                           class="form-control"
+                           min="0.01"
+                           step="0.01"
+                           placeholder="Ej: 25.50"
+                           required
+                           oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }
+                           ">
+
+                    <small class="text-muted">
+                        Debe ser un valor numérico mayor a <strong>0</strong>. No se permiten valores nulos ni negativos.
+                    </small>
+                </div>
+
+                <!-- ESTADO -->
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="crear_EstadoDesxHabxRes" checked>
+                    <label class="form-check-label">Activo</label>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" onclick="crearDesxHabxRes()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

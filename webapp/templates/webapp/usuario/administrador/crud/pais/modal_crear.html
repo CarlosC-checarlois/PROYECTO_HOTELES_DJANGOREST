@@ -1,0 +1,43 @@
+<div class="modal fade" id="modalCrearPais" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nuevo País</h5>
+                <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label">ID País *</label>
+                    <input type="number"
+                           id="crear_IdPais"
+                           class="form-control readonly-input"
+                           readonly
+                           placeholder="Se autogenera">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre del País *</label>
+                    <input type="text"
+                           id="crear_NombrePais"
+                           class="form-control"
+                           placeholder="Ej: Ecuador">
+                </div>
+
+                <div class="form-check mt-2">
+                    <input type="checkbox" id="crear_EstadoPais" class="form-check-input" checked>
+                    <label class="form-check-label" for="crear_EstadoPais">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" onclick="crearPais()">Guardar País</button>
+            </div>
+
+        </div>
+    </div>
+</div>

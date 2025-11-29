@@ -1,0 +1,40 @@
+<div class="modal fade" id="modalEditarAmexHab" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Relación Amenidad por Habitación</h5>
+                <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- HABITACIÓN (readonly porque es PK) -->
+                <label class="form-label">Habitación</label>
+                <input type="text"
+                       id="editar_IdHabitacion"
+                       class="form-control mb-3 readonly-input"
+                       readonly>
+
+                <!-- AMENIDAD (readonly porque es PK) -->
+                <label class="form-label">Amenidad</label>
+                <input type="text"
+                       id="editar_IdAmenidad"
+                       class="form-control mb-3 readonly-input"
+                       readonly>
+
+                <!-- ESTADO -->
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="editar_EstadoAmexHab">
+                    <label class="form-check-label">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="actualizarAmexHab()">Actualizar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

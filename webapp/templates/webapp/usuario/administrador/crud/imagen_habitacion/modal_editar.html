@@ -1,0 +1,69 @@
+<div class="modal fade" id="modalEditarImagenHabitacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- ID Imagen (readonly) -->
+                <label class="form-label">ID Imagen</label>
+                <input type="number"
+                       id="editar_IdImagen"
+                       class="form-control mb-3 readonly-input"
+                       readonly>
+
+                <!-- HABITACIÓN (SOLO LECTURA) -->
+                <label class="form-label">Habitación</label>
+                <!-- texto solo lectura para mostrar al usuario -->
+                <input type="text"
+                       id="editar_HabitacionTexto"
+                       class="form-control mb-3 readonly-input"
+                       readonly>
+                <!-- id real oculto (este se usa en el JS y se envía al backend) -->
+                <input type="hidden" id="editar_IdHabitacion">
+
+                <!-- URL -->
+                <label class="form-label">URL de la Imagen (opcional si sube archivo)</label>
+                <input type="url"
+                       id="editar_UrlImagen"
+                       class="form-control mb-3"
+                       placeholder="Ej: https://ejemplo.com/imagen1.jpg">
+
+                <!-- DROPZONE -->
+                <label class="form-label">Subir archivo (opcional)</label>
+                <div id="editar_dropzone" class="dropzone-upload mb-3">
+                    <div>Arrastra una imagen aquí o haz clic para seleccionar</div>
+                    <div class="small text-muted">Formatos: JPG, PNG. Máx 5MB.</div>
+                </div>
+                <input type="file" id="editar_FileImagen" accept="image/*" class="d-none">
+
+                <!-- PREVIEW -->
+                <div class="mb-3 text-center">
+                    <label class="form-label d-block">Vista Previa</label>
+                    <img id="editar_Preview"
+                         src=""
+                         alt="Vista Previa"
+                         class="img-fluid"
+                         style="max-height: 150px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <!-- ESTADO -->
+                <div class="form-check mt-3">
+                    <input type="checkbox" id="editar_EstadoImagen" class="form-check-input">
+                    <label class="form-check-label" for="editar_EstadoImagen">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="actualizarImagenHabitacion()">Actualizar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

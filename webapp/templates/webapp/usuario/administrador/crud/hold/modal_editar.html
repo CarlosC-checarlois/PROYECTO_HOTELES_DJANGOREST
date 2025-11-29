@@ -1,0 +1,121 @@
+<div class="modal fade" id="modalEditarHold" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">Editar Hold</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- FILA 1: ID / HAB / RES (SOLO LECTURA) -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">ID Hold</label>
+                        <input type="text"
+                               id="editar_IdHold"
+                               class="form-control readonly-input"
+                               readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Habitación</label>
+                        <!-- texto visible solo lectura -->
+                        <input type="text"
+                               id="editar_HabitacionTexto"
+                               class="form-control readonly-input"
+                               readonly>
+                        <!-- id real oculto -->
+                        <input type="hidden" id="editar_IdHabitacion">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Reserva</label>
+                        <!-- texto visible solo lectura -->
+                        <input type="text"
+                               id="editar_ReservaTexto"
+                               class="form-control readonly-input"
+                               readonly>
+                        <!-- id real oculto -->
+                        <input type="hidden" id="editar_IdReserva">
+                    </div>
+                </div>
+
+                <!-- FILA 2: TIEMPO + RANGO FECHAS -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Tiempo Hold (minutos, opcional)</label>
+                        <input type="number"
+                               id="editar_TiempoHold"
+                               class="form-control"
+                               min="1"
+                               step="1"
+                               placeholder="Ej: 25"
+                               required
+                               oninput="
+                                // impedir valores negativos o cero
+                                let v = this.value.replace(',', '.');
+                                if (v === '') { return; }
+                                let n = parseFloat(v);
+                                if (isNaN(n) || n <= 0) {
+                                    this.value = '';
+                                } else {
+                                    this.value = v;
+                                }">
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Rango de Fechas (yyyy-mm-dd)</label>
+                        <input type="text"
+                               id="editar_RangoFechas"
+                               class="form-control"
+                               placeholder="Seleccionar rango de fechas">
+                        <small class="text-muted">
+                            Ajuste la fecha de inicio y la fecha final del hold.
+                        </small>
+
+                        <!-- Inputs ocultos usados por JS para enviar al backend -->
+                        <input type="hidden" id="editar_FechaInicio">
+                        <input type="hidden" id="editar_FechaFinal">
+                    </div>
+                </div>
+
+                <!-- FILA 3: ESTADO -->
+                <div class="row g-3">
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox"
+                                   id="editar_EstadoHold"
+                                   class="form-check-input">
+                            <label class="form-check-label fw-bold" for="editar_EstadoHold">
+                                Activo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="actualizarHold()">
+                    Actualizar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+{# templates/webapp/usuario/administrador/crud/pdf/modal_crear.html #}
+<div class="modal fade" id="modalCrearPdf" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Nuevo PDF</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label">ID PDF *</label>
+                    <input type="number"
+                           id="crear_IdPdf"
+                           class="form-control readonly-input"
+                           readonly
+                           placeholder="Se generará automáticamente">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Factura (opcional)</label>
+                    <select id="crear_IdFactura" class="form-select">
+                        <option value="">Buscar factura...</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">URL PDF *</label>
+                    <input type="text"
+                           id="crear_UrlPdf"
+                           class="form-control"
+                           placeholder="Se llenará al subir el archivo o pegue la URL manualmente">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Subir archivo PDF</label>
+                    <div id="crear_dropzone_pdf" class="dropzone-upload">
+                        <div>Arrastra un PDF aquí o haz clic para seleccionar</div>
+                        <div class="small text-muted">Solo archivos .pdf. Máx ~10MB (depende de tu servidor).</div>
+                    </div>
+                    <input type="file" id="crear_FilePdf" accept="application/pdf" class="d-none">
+                    <div class="small mt-1 text-muted">
+                        Archivo seleccionado: <span id="crear_PdfNombre">Ningún archivo seleccionado</span>
+                    </div>
+                </div>
+
+                <div class="form-check mt-3">
+                    <input type="checkbox" id="crear_EstadoPdf" class="form-check-input" checked>
+                    <label class="form-check-label" for="crear_EstadoPdf">Activo</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" onclick="crearPdf()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

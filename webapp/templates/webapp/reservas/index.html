@@ -1,0 +1,436 @@
+{% extends "cabezal.html" %}
+{% load static %}
+
+{% block titulo_pagina %}
+    <title>Mis Reservas | Hotel Genérico</title>
+{% endblock %}
+
+{% block css_archivos %}
+    <style>
+        :root {
+            --color-principal: #3b82f6;
+            --color-secundario: #6c5ce7;
+            --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+        }
+
+        body {
+            background: #f5f7fb;
+        }
+
+        .reserva-card {
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #fff;
+            transition: .2s;
+        }
+
+        .reserva-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .reserva-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .badge-estado {
+            font-size: .85rem;
+            padding: .45rem .8rem;
+        }
+    </style>
+{% endblock %}
+
+{% block contenido_pagina %}
+    <section class="container py-5">
+
+        <h2 class="fw-bold mb-4">Mis Reservas</h2>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <div id="contenedor-reservas">
+
+            {% for r in reservas %}
+                <div class="reserva-card mb-4 p-3 shadow-sm" data-user="{{ r.idUsuario }}">
+
+                    <div class="row g-4">
+
+                        <!-- Imagen -->
+                        <div class="col-md-4">
+                            <img src="{{ r.imagen|default:'https://imageness3realdecuenca.s3.us-east-2.amazonaws.com/Imagen4.png' }}"
+                                 class="reserva-img rounded">
+                        </div>
+
+                        <!-- Información -->
+                        <div class="col-md-5">
+
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="titulo-reserva">{{ r.habitacion }}</h5>
+
+                                {% if r.estado == "PRE-RESERVA" or r.estado == "PRE-RESERVA ACTIVA" %}
+                                    <span class="badge bg-warning text-dark badge-estado">
+                                        <i class="bi bi-clock-history"></i> Pre-Reserva
+                                    </span>
+                                {% elif r.estado == "CONFIRMADA" %}
+                                    <span class="badge bg-success badge-estado">
+                                        <i class="bi bi-check-circle"></i> Confirmada
+                                    </span>
+                                {% elif r.estado == "CANCELADA" %}
+                                    <span class="badge bg-danger badge-estado">
+                                        <i class="bi bi-x-circle"></i> Cancelada
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary badge-estado">
+                                        <i class="bi bi-question-circle"></i> {{ r.estado|default:"Pendiente" }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-muted mb-1"><i
+                                    class="bi bi-geo-alt"></i> {{ r.hotel }} {{ r.ciudad }} {{ r.pais }}</p>
+                            <p class="mb-1"><strong>Fechas:</strong> {{ r.fecha_inicio }} → {{ r.fecha_fin }}</p>
+                            <p class="mb-1"><strong>Huéspedes:</strong> {{ r.huespedes }}</p>
+                            <p class="mb-1"><strong>Capacidad:</strong> {{ r.capacidad_escogida }}
+                                / {{ r.capacidad_habitacion }}</p>
+
+                            <div class="price-box mt-2 p-2 border rounded bg-light">
+                                <p class="mb-1"><strong>Subtotal:</strong> ${{ r.subtotal }}</p>
+                                <p class="mb-1 text-danger"><strong>Descuentos:</strong> -${{ r.total_descuentos }}</p>
+                                <p class="mb-1 text-info"><strong>Impuestos:</strong> +${{ r.total_impuestos }}</p>
+
+                                <p class="precio-total mt-2 fs-5 fw-bold text-success">Total: ${{ r.total }}</p>
+                            </div>
+
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="col-md-3 d-flex flex-column justify-content-between">
+
+
+                                {% if r.estado == "PRE-RESERVA" %}
+                                    <button class="btn btn-success w-100 mb-2 btn-confirmar"
+                                            data-reserva="{{ r.idReserva }}"
+                                            data-hab="{{ r.idHabitacion }}"
+                                            data-hold="{{ r.idHold }}"
+                                            data-fechai="{{ r.fecha_inicio }}"
+                                            data-fechaf="{{ r.fecha_fin }}"
+                                            data-hues="{{ r.huespedes }}"
+                                            data-correo="{{ r.correo }}"
+                                            data-documento="{{ r.documento }}">
+                                        <i class="bi bi-check2-circle"></i> Confirmar reserva
+                                    </button>
+                                {% endif %}
+                                {% if r.estado == "PRE-RESERVA"  %}
+                                    <button class="btn btn-outline-danger w-100 btn-cancelar"
+                                            data-id="{{ r.idReserva }}">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </button>
+
+                                {% endif %}
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </section>
+    <!-- Modal Confirmar Reserva Interna -->
+    <div class="modal fade" id="modalConfirmar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar reserva</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Por favor confirma tus datos antes de completar la reserva.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Correo</label>
+                        <input type="email" id="confCorreo" class="form-control" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Documento</label>
+                        <input type="text" id="confDocumento" class="form-control" disabled>
+                    </div>
+
+                    <!-- HIDDEN FIELDS -->
+                    <input type="hidden" id="confIdHabitacion">
+                    <input type="hidden" id="confIdHold">
+                    <input type="hidden" id="confFechaInicio">
+                    <input type="hidden" id="confFechaFin">
+                    <input type="hidden" id="confHuespedes">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnConfirmarSubmit" class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Confirmar reserva
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block jvscript_archivos_defer %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const usuario_id = localStorage.getItem("usuario_id");
+
+            // Filtrar reservas para mostrar solo las del usuario
+            document.querySelectorAll(".reserva-card").forEach(card => {
+                if (card.getAttribute("data-user") !== usuario_id) {
+                    card.remove();
+                }
+            });
+
+            // Botón pagar
+            const botonesPago = document.querySelectorAll(".btn-pagar");
+            const modalPagoElement = document.getElementById('modalPago');
+            let modal = null;
+            if (modalPagoElement) {
+                try {
+                    modal = new bootstrap.Modal(modalPagoElement);
+                } catch (e) {
+                    console.error("Error al inicializar modal de pago:", e);
+                }
+            }
+            const btnConfirmarPago = document.getElementById("btnConfirmarPago");
+
+            botonesPago.forEach(boton => {
+                boton.addEventListener("click", () => {
+                    const id = boton.getAttribute("data-id");
+                    if (btnConfirmarPago) {
+                        btnConfirmarPago.href = `/usuario/pago/?reserva=${id}`;
+                    }
+                    if (modal) {
+                        try {
+                            modal.show();
+                        } catch (e) {
+                            console.error("Error al mostrar modal de pago:", e);
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Verificar que el modal existe antes de inicializarlo
+    const modalElement = document.getElementById("modalConfirmar");
+    if (!modalElement) {
+        console.error("No se encontró el elemento modalConfirmar");
+        return;
+    }
+
+    let modalConfirmar;
+    try {
+        modalConfirmar = new bootstrap.Modal(modalElement);
+    } catch (e) {
+        console.error("Error al inicializar el modal:", e);
+        return;
+    }
+
+    const usuarioId = localStorage.getItem("usuario_id");
+
+    // Recuperar datos del usuario
+    const correoUsuario =
+        localStorage.getItem("usuario_correo") ||
+        localStorage.getItem("usuario_email") ||
+        localStorage.getItem("usuario_mail") ||
+        "";
+
+    const documentoUsuario =
+        localStorage.getItem("usuario_documento") ||
+        localStorage.getItem("usuario_doc") ||
+        "";
+
+    // CLICK EN BOTÓN "Confirmar reserva"
+    document.querySelectorAll(".btn-confirmar").forEach(btn => {
+        btn.addEventListener("click", () => {
+
+            // Validar que los elementos existan
+            const confCorreo = document.getElementById("confCorreo");
+            const confDocumento = document.getElementById("confDocumento");
+            const confIdHabitacion = document.getElementById("confIdHabitacion");
+            const confIdHold = document.getElementById("confIdHold");
+            const confFechaInicio = document.getElementById("confFechaInicio");
+            const confFechaFin = document.getElementById("confFechaFin");
+            const confHuespedes = document.getElementById("confHuespedes");
+
+            if (!confCorreo || !confDocumento || !confIdHabitacion || !confIdHold || 
+                !confFechaInicio || !confFechaFin || !confHuespedes) {
+                console.error("Algunos elementos del formulario no se encontraron");
+                alert("Error: No se pudo cargar el formulario de confirmación.");
+                return;
+            }
+
+            // 1) Llenar inputs del usuario
+            confCorreo.value = correoUsuario;
+            confDocumento.value = documentoUsuario;
+
+            // 2) Llenar campos ocultos
+            const hab = btn.dataset.hab;
+            const hold = btn.dataset.hold;
+            const fechai = btn.dataset.fechai;
+            const fechaf = btn.dataset.fechaf;
+            const hues = btn.dataset.hues;
+
+            // Validar que los datos necesarios estén presentes
+            if (!hab || !hold || !fechai || !fechaf || !hues) {
+                console.error("Datos incompletos en el botón:", {
+                    hab, hold, fechai, fechaf, hues
+                });
+                alert("Error: Faltan datos necesarios para confirmar la reserva. Por favor, recarga la página.");
+                return;
+            }
+
+            confIdHabitacion.value = hab;
+            confIdHold.value = hold;
+
+            // Ajustamos horas obligatorias por backend
+            // Si la fecha ya tiene formato ISO, usarla directamente; si no, agregar la hora
+            confFechaInicio.value = fechai.includes('T') ? fechai : fechai + "T15:00:00";
+            confFechaFin.value = fechaf.includes('T') ? fechaf : fechaf + "T11:00:00";
+            confHuespedes.value = hues;
+
+            // 3) Mostrar modal
+            if (modalConfirmar) {
+                try {
+                    modalConfirmar.show();
+                } catch (e) {
+                    console.error("Error al mostrar el modal:", e);
+                    alert("Error al abrir el modal de confirmación.");
+                }
+            }
+        });
+    });
+
+    // CLICK EN BOTÓN FINAL DEL MODAL
+    const btnConfirmarSubmit = document.getElementById("btnConfirmarSubmit");
+    if (btnConfirmarSubmit) {
+        btnConfirmarSubmit.addEventListener("click", () => {
+
+            // Validar que todos los campos estén llenos
+            const idHabitacion = document.getElementById("confIdHabitacion")?.value;
+            const idHold = document.getElementById("confIdHold")?.value;
+            const fechaInicio = document.getElementById("confFechaInicio")?.value;
+            const fechaFin = document.getElementById("confFechaFin")?.value;
+            const numeroHuespedes = document.getElementById("confHuespedes")?.value;
+
+            if (!idHabitacion || !idHold || !usuarioId || !fechaInicio || !fechaFin || !numeroHuespedes) {
+                alert("Por favor, complete todos los campos requeridos.");
+                return;
+            }
+
+            const payload = {
+                idHabitacion: idHabitacion,
+                idHold: idHold,
+                idUnicoUsuario: usuarioId,
+                fechaInicio: fechaInicio,
+                fechaFin: fechaFin,
+                numeroHuespedes: numeroHuespedes
+            };
+
+            console.log(">>> ENVIANDO:", payload);
+
+            fetch("/usuario/confirmar-reserva/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => {
+                        throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
+                    });
+                }
+                return r.json();
+            })
+            .then(res => {
+                if (res.ok) {
+                    alert("Reserva confirmada correctamente.");
+                    // Cerrar el modal antes de recargar
+                    if (modalConfirmar) {
+                        modalConfirmar.hide();
+                    }
+                    location.reload();
+                } else {
+                    alert("Error: " + (res.error || "Error desconocido"));
+                }
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Error inesperado: " + err.message);
+            });
+        });
+    }
+
+});
+
+
+// ==========================
+// Helper para obtener CSRF
+// ==========================
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".btn-cancelar").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const idReserva = btn.dataset.id;
+
+            if (!confirm("¿Deseas cancelar esta pre-reserva?")) return;
+
+            fetch("/usuario/cancelar-reserva/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ idReserva })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) {
+                    alert("Reserva cancelada correctamente.");
+                    location.reload();
+                } else {
+                    alert("Error: " + res.error);
+                }
+            });
+        });
+    });
+});
+</script>
+
+
+{% endblock %}
