@@ -2,11 +2,13 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
 
+            <!-- HEADER -->
             <div class="modal-header">
                 <h5 class="modal-title">Editar Reserva</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
+            <!-- BODY -->
             <div class="modal-body">
 
                 <div class="row">
@@ -19,10 +21,10 @@
                                readonly>
                     </div>
 
-                    <!-- Usuario interno -->
+                    <!-- Usuario interno (bloqueado) -->
                     <div class="col-md-4 mb-3">
                         <label class="form-label">ID Usuario Interno *</label>
-                        <select id="editar_IdUnicoUsuario" class="form-select">
+                        <select id="editar_IdUnicoUsuario" class="form-select" disabled>
                             <option value="">Buscar usuario interno...</option>
                         </select>
                     </div>
@@ -45,23 +47,16 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Costo Total</label>
                         <input type="number"
-                               step="0.01"
                                id="editar_CostoTotalReserva"
                                class="form-control"
-                               placeholder="0.00"
-                               oninput="
-                                // impedir valores negativos o cero
-                                let v = this.value.replace(',', '.');
-                                if (v === '') { return; }
-                                let n = parseFloat(v);
-                                if (isNaN(n) || n <= 0) {
-                                    this.value = '';
-                                } else {
-                                    this.value = v;
-                                }">
+                               step="0.01"
+                               placeholder="0.00">
+                        <small class="text-muted">
+                            Máximo permitido: 999999.99 (2 decimales).
+                        </small>
                     </div>
 
-                    <!-- Fecha registro (solo lectura, NO se edita) -->
+                    <!-- Fecha registro (solo lectura) -->
                     <div class="col-md-4 mb-1">
                         <label class="form-label">Fecha Registro</label>
                         <input type="text"
@@ -82,13 +77,17 @@
                                placeholder="Ej: 2025-11-26 - 2025-11-28">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <small class="text-muted">Seleccione el rango en el calendario.</small>
+                        <small class="text-muted">
+                            En edición solo puedes cambiar fechas desde la fecha de inicio original en adelante.
+                        </small>
                     </div>
 
+                    <!-- Hidden: fechas reales que se envían al backend -->
                     <input type="hidden" id="editar_FechaInicioReserva">
                     <input type="hidden" id="editar_FechaFinalReserva">
                 </div>
 
+                <!-- Activa / inactiva -->
                 <div class="form-check mt-2">
                     <input type="checkbox" id="editar_EstadoReserva" class="form-check-input">
                     <label class="form-check-label" for="editar_EstadoReserva">
@@ -98,6 +97,7 @@
 
             </div>
 
+            <!-- FOOTER -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button class="btn btn-primary" onclick="actualizarReserva()">Guardar Cambios</button>

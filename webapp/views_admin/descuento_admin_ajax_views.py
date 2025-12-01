@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError, Timeout, HTTPError
 
 from math import ceil
 
-from servicios.rest.gestion.DescuentosGestionRest import DescuentosGestionRest
+from servicios.soap.gestion.DescuentoGestionSoap import DescuentosGestionSoap as DescuentosGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

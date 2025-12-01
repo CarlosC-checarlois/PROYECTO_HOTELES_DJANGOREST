@@ -1,5 +1,4 @@
 from pprint import pprint
-
 import requests
 from zeep import Client, Transport
 from zeep.helpers import serialize_object
@@ -18,6 +17,9 @@ class AmenidadGestionSoap:
 
         self.client = Client(wsdl=self.wsdl, transport=transport)
 
+        self.DtoAmenidad = self.client.get_type("ns0:AmenidadDto")
+
+
     # -----------------------------
     # NORMALIZADOR
     # -----------------------------
@@ -28,14 +30,28 @@ class AmenidadGestionSoap:
         d = serialize_object(item)
 
         return {
-            "idAmenidad": d.get("IdAmenidad"),
-            "nombreAmenidad": d.get("NombreAmenidad"),
-            "estadoAmenidad": d.get("EstadoAmenidad"),
-            "fechaModificacionAmenidad": (
+            "IdAmenidad": d.get("IdAmenidad"),
+            "NombreAmenidad": d.get("NombreAmenidad"),
+            "EstadoAmenidad": d.get("EstadoAmenidad"),
+            "FechaModificacionAmenidad": (
                 d.get("FechaModificacionAmenidad").isoformat()
                 if d.get("FechaModificacionAmenidad") else None
             )
         }
+
+    # -----------------------------
+    # CREAR DTO COMPATIBLE REST
+    # -----------------------------
+    def _dto(self, idAmenidad, nombreAmenidad, estadoAmenidad=True):
+        """
+        Construye un DTO SOAP con la misma estructura lógica que el JSON REST.
+        """
+        return self.DtoAmenidad(
+            IdAmenidad=idAmenidad,
+            NombreAmenidad=nombreAmenidad,
+            EstadoAmenidad=estadoAmenidad,
+            FechaModificacionAmenidad=datetime.now()
+        )
 
     # -----------------------------
     # LISTAR
@@ -49,7 +65,7 @@ class AmenidadGestionSoap:
             raise Exception(f"Error SOAP al listar amenidades: {e}")
 
     # -----------------------------
-    # OBTENER
+    # OBTENER POR ID
     # -----------------------------
     def obtener_por_id(self, id_amenidad):
         try:
@@ -59,9 +75,12 @@ class AmenidadGestionSoap:
             raise Exception(f"Error SOAP al obtener amenidad {id_amenidad}: {e}")
 
     # -----------------------------
-    # CREAR
+    # CREAR (PARECIDO A POST REST)
     # -----------------------------
-    def crear(self, dto):
+    def crear_amenidad(self, id_amenidad, nombre, estado=True):
+
+        dto = self._dto(id_amenidad, nombre, estado)
+
         try:
             result = self.client.service.CrearAmenidad(dto)
             return self._normalize(result)
@@ -69,9 +88,12 @@ class AmenidadGestionSoap:
             raise Exception(f"Error SOAP al crear amenidad: {e}")
 
     # -----------------------------
-    # ACTUALIZAR
+    # ACTUALIZAR (PARECIDO A PUT REST)
     # -----------------------------
-    def actualizar(self, id_amenidad, dto):
+    def actualizar_amenidad(self, id_amenidad, nombre, estado=True):
+
+        dto = self._dto(id_amenidad, nombre, estado)
+
         try:
             result = self.client.service.ActualizarAmenidad(id_amenidad, dto)
             return self._normalize(result)
@@ -79,10 +101,16 @@ class AmenidadGestionSoap:
             raise Exception(f"Error SOAP al actualizar amenidad {id_amenidad}: {e}")
 
     # -----------------------------
-    # ELIMINAR
+    # ELIMINAR (PARECIDO A DELETE REST)
     # -----------------------------
-    def eliminar(self, id_amenidad):
+    def eliminar_amenidad(self, id_amenidad):
         try:
             return self.client.service.EliminarAmenidad(id_amenidad)
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar amenidad {id_amenidad}: {e}")
+
+
+c = AmenidadGestionSoap()
+c = c.obtener_amenidades()
+pprint(c)
+

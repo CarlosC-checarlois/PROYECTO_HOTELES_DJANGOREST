@@ -2,14 +2,15 @@ import requests
 from zeep import Client, Transport
 from zeep.helpers import serialize_object
 from zeep.exceptions import Fault
+from datetime import datetime
 
-class DescuentoGestionSoap:
+
+class DescuentosGestionSoap:
 
     def __init__(self):
-        # Cambia el puerto si tu SOAP usa otro
         self.wsdl = "https://gesoca-exd5cdh5fmc3hdf9.canadacentral-01.azurewebsites.net/DescuentoWS.asmx?wsdl"
 
-        # Desactivar SSL (IIS Express usa certificado auto-firmado)
+        # Permitir certificados autofirmados (Azure/IIS)
         session = requests.Session()
         session.verify = False
         requests.packages.urllib3.disable_warnings()
@@ -17,85 +18,115 @@ class DescuentoGestionSoap:
         transport = Transport(session=session)
         self.client = Client(wsdl=self.wsdl, transport=transport)
 
-    # ---------------------------------------------------------
-    # NORMALIZACIÓN (SOAP → JSON REST)
-    # ---------------------------------------------------------
-    def _normalize(self, item):
-        if item is None:
+        # Obtenemos el tipo DTO real
+        self.DescuentoDto = self.client.get_type("ns0:DescuentoDto")
+
+    # ============================================================
+    # NORMALIZACIÓN → Formato idéntico al REST
+    # ============================================================
+    def _normalize(self, d):
+        if d is None:
             return None
 
-        d = serialize_object(item)
+        d = serialize_object(d)
 
         return {
-            "idDescuento": d.get("IdDescuento"),
-            "nombreDescuento": d.get("NombreDescuento"),
-            "valorDescuento": float(d.get("ValorDescuento")) if d.get("ValorDescuento") is not None else None,
-            "fechaInicioDescuento": (
+            "IdDescuento": d.get("IdDescuento"),
+            "NombreDescuento": d.get("NombreDescuento"),
+            "ValorDescuento": float(d.get("ValorDescuento")) if d.get("ValorDescuento") else None,
+            "FechaInicioDescuento": (
                 d.get("FechaInicioDescuento").isoformat()
                 if d.get("FechaInicioDescuento") else None
             ),
-            "fechaFinDescuento": (
+            "FechaFinDescuento": (
                 d.get("FechaFinDescuento").isoformat()
                 if d.get("FechaFinDescuento") else None
             ),
-            "estadoDescuento": d.get("EstadoDescuento"),
-            "fechaModificacionDescuento": (
+            "EstadoDescuento": d.get("EstadoDescuento"),
+            "FechaModificacionDescuento": (
                 d.get("FechaModificacionDescuento").isoformat()
                 if d.get("FechaModificacionDescuento") else None
             )
         }
 
-    # ---------------------------------------------------------
-    # LISTAR DESCUENTOS
-    # ---------------------------------------------------------
-    def listar(self):
+    # ============================================================
+    # CONSTRUCTOR DTO → Igual que el payload REST
+    # ============================================================
+    def _build_dto(self, id_descuento, nombre, valor, fecha_inicio, fecha_fin, estado):
+        return self.DescuentoDto(
+            IdDescuento=id_descuento,
+            NombreDescuento=nombre,
+            ValorDescuento=valor,
+            FechaInicioDescuento=fecha_inicio if fecha_inicio else None,
+            FechaFinDescuento=fecha_fin if fecha_fin else None,
+            EstadoDescuento=estado,
+            FechaModificacionDescuento=datetime.now(),
+        )
+
+    # ============================================================
+    # GET → obtener_descuentos()
+    # ============================================================
+    def obtener_descuentos(self):
         try:
-            data = self.client.service.ObtenerDescuentos()
-            data = serialize_object(data)
-            return [self._normalize(item) for item in data]
+            resp = self.client.service.ObtenerDescuentos()
+            data = serialize_object(resp)
+
+            # Si ya viene como lista
+            if isinstance(data, list):
+                return [self._normalize(x) for x in data]
+
+            # Si viene como dict con key 'DescuentoDto'
+            if isinstance(data, dict) and "DescuentoDto" in data:
+                return [self._normalize(x) for x in data["DescuentoDto"]]
+
+            return []
 
         except Fault as e:
-            raise Exception(f"Error SOAP al listar descuentos: {e}")
+            raise Exception(f"Error SOAP al obtener descuentos: {e}")
 
-    # ---------------------------------------------------------
-    # OBTENER POR ID
-    # ---------------------------------------------------------
-    def obtener_por_id(self, id_descuento):
+    # ============================================================
+    # GET → obtener_descuento_por_id()
+    # ============================================================
+    def obtener_descuento_por_id(self, id_descuento):
         try:
-            res = self.client.service.ObtenerDescuentoPorId(id_descuento)
-            return self._normalize(res)
+            resp = self.client.service.ObtenerDescuentoPorId(id_descuento)
+            return self._normalize(resp)
 
         except Fault as e:
             raise Exception(f"Error SOAP al obtener descuento {id_descuento}: {e}")
 
-    # ---------------------------------------------------------
-    # CREAR DESCUENTO
-    # ---------------------------------------------------------
-    def crear(self, dto):
+    # ============================================================
+    # POST → crear_descuento()
+    # ============================================================
+    def crear_descuento(self, id_descuento, nombre, valor, fecha_inicio=None, fecha_fin=None, estado=True):
         try:
-            result = self.client.service.CrearDescuento(dto)
-            return self._normalize(result)
+            dto = self._build_dto(id_descuento, nombre, valor, fecha_inicio, fecha_fin, estado)
+            resp = self.client.service.CrearDescuento(dto)
+            return self._normalize(resp)
 
         except Fault as e:
             raise Exception(f"Error SOAP al crear descuento: {e}")
 
-    # ---------------------------------------------------------
-    # ACTUALIZAR DESCUENTO
-    # ---------------------------------------------------------
-    def actualizar(self, id_descuento, dto):
+    # ============================================================
+    # PUT → actualizar_descuento()
+    # ============================================================
+    def actualizar_descuento(self, id_descuento, nombre, valor, fecha_inicio, fecha_fin, estado):
         try:
-            result = self.client.service.ActualizarDescuento(id_descuento, dto)
-            return self._normalize(result)
+            dto = self._build_dto(id_descuento, nombre, valor, fecha_inicio, fecha_fin, estado)
+            resp = self.client.service.ActualizarDescuento(id_descuento, dto)
+            return self._normalize(resp)
 
         except Fault as e:
             raise Exception(f"Error SOAP al actualizar descuento {id_descuento}: {e}")
 
-    # ---------------------------------------------------------
-    # ELIMINAR DESCUENTO
-    # ---------------------------------------------------------
-    def eliminar(self, id_descuento):
+    # ============================================================
+    # DELETE → eliminar_descuento()
+    # ============================================================
+    def eliminar_descuento(self, id_descuento):
         try:
-            return self.client.service.EliminarDescuento(id_descuento)
+            result = self.client.service.EliminarDescuento(id_descuento)
+            return bool(result)
 
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar descuento {id_descuento}: {e}")
+        

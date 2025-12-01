@@ -1,7 +1,8 @@
 {% extends "cabezal.html" %}
 {% load static %}
-{% block bloquear_footer %}
-{% endblock %}
+
+{% block bloquear_footer %}{% endblock %}
+
 {% block css_archivos %}
 <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
 <style>
@@ -24,21 +25,22 @@
 
 <div class="container mt-4">
 
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold">Gestión de Tipos de Habitación</h2>
-        <button class="btn btn-primary" onclick="abrirModalCrearTipoHabitacion()">
-            <i class="bi bi-plus-lg"></i> Agregar Tipo
+        <h2 class="fw-bold">Gestión de Usuarios Internos</h2>
+        <button class="btn btn-primary" onclick="abrirModalCrearUsuarioInterno()">
+            <i class="bi bi-plus-lg"></i> Agregar Usuario
         </button>
     </div>
 
-    <!-- TABLA -->
     <div class="table-responsive shadow-sm">
-        <table class="table table-hover align-middle" id="tablaTiposHabitacion">
+        <table class="table table-hover align-middle" id="tablaUsuariosInternos">
             <thead class="table-dark">
                 <tr>
-                    <th>ID Tipo</th>
-                    <th>Nombre</th>
+                    <th>ID</th>
+                    <th>Nombre completo</th>
+                    <th>Correo</th>
+                    <th>Documento</th>
+                    <th>Rol</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
@@ -47,7 +49,6 @@
         </table>
     </div>
 
-    <!-- PAGINACIÓN -->
     <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
         <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
             ◀ Anterior
@@ -60,9 +61,8 @@
 
 </div>
 
-{# MODALES #}
-{% include "webapp/usuario/administrador/crud/tipo_habitacion/modal_crear.html" %}
-{% include "webapp/usuario/administrador/crud/tipo_habitacion/modal_editar.html" %}
+{% include "webapp/usuario/administrador/crud/usuarios_internos/modal_crear.html" %}
+{% include "webapp/usuario/administrador/crud/usuarios_internos/modal_editar.html" %}
 
 {% endblock %}
 
@@ -70,218 +70,200 @@
 <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
 
 <script>
-// ================== URLs backend ==================
-const URL_LIST_TIPO   = "/admin/tipos-habitacion/list/";
-const URL_CREATE_TIPO = "/admin/tipos-habitacion/create/";
-const URL_GET_TIPO    = id => `/admin/tipos-habitacion/get/${id}/`;
-const URL_UPDATE_TIPO = id => `/admin/tipos-habitacion/update/${id}/`;
-const URL_DELETE_TIPO = id => `/admin/tipos-habitacion/delete/${id}/`;
-const URL_NEXT_TIPO   = "/admin/tipos-habitacion/next-id/";
+// ================== URLs backend Django ==================
+const URL_LIST   = "/admin/usuarios-internos/list/";
+const URL_CREATE = "/admin/usuarios-internos/create/";
+const URL_GET    = id => `/admin/usuarios-internos/get/${id}/`;
+const URL_UPDATE = id => `/admin/usuarios-internos/update/${id}/`;
+const URL_DELETE = id => `/admin/usuarios-internos/delete/${id}/`;
+const URL_NEXTID = "/admin/usuario-interno/next-id/";
+
+// ================== ROL API REAL ==================
+const URL_ROLES_REST = "https://gereca-dgd0hedaedb2dge4.canadacentral-01.azurewebsites.net/api/gestion/rol";
 
 let currentPage = 1;
 let totalPages  = 1;
 
-// ================== Paginación ==================
+// ================== UTIL ==================
+function badgeEstado(activo){
+    return activo
+        ? '<span class="badge bg-success badge-estado">Activo</span>'
+        : '<span class="badge bg-secondary badge-estado">Inactivo</span>';
+}
+
+// ================== PAGINACIÓN ==================
 function actualizarControlesPaginacion(){
     $("#btnAnterior").prop("disabled", currentPage <= 1);
     $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
     $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
 }
+function irAPaginaAnterior(){ if(currentPage>1) cargarUsuarios(currentPage-1); }
+function irAPaginaSiguiente(){ if(currentPage<totalPages) cargarUsuarios(currentPage+1); }
 
-function irAPaginaAnterior(){
-    if(currentPage > 1) cargarTiposHabitacion(currentPage - 1);
-}
-
-function irAPaginaSiguiente(){
-    if(currentPage < totalPages) cargarTiposHabitacion(currentPage + 1);
-}
-
-// ================== Cargar tabla ==================
-function cargarTiposHabitacion(page = 1){
-
-    $.ajax({
-        url: `${URL_LIST_TIPO}?page=${page}`,
-        method: "GET",
-        success: function(resp){
-
-            const tbody = $("#tablaTiposHabitacion tbody");
-            tbody.empty();
-
-            (resp.data || []).forEach(t => {
-
-                // nombre robusto (por si el backend cambia la clave)
-                const nombre = t.NombreHabitacion
-                            || t.NombreTipoHabitacion
-                            || t.nombreTipoHabitacion
-                            || t.nombre
-                            || "";
-
-                const activo = (typeof t.EstadoTipoHabitacion !== "undefined")
-                    ? !!t.EstadoTipoHabitacion
-                    : !!t.estadoTipoHabitacion;
-
-                const rowClass = activo ? "" : "table-secondary";
-
-                const estadoBadge = activo
-                    ? '<span class="badge bg-success badge-estado">Activo</span>'
-                    : '<span class="badge bg-secondary badge-estado">Inactivo</span>';
-
-                const btnEliminar = activo
-                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarTipoHabitacion(${t.IdTipoHabitacion})">Eliminar</button>`
-                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
-
-                const rowHtml = `
-                    <tr class="${rowClass}">
-                        <td class="fw-bold">${t.IdTipoHabitacion}</td>
-                        <td>${nombre}</td>
-                        <td>${estadoBadge}</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm"
-                                    onclick="abrirModalEditarTipoHabitacion(${t.IdTipoHabitacion})">
-                                Editar
-                            </button>
-                            ${btnEliminar}
-                        </td>
-                    </tr>
-                `;
-                tbody.append(rowHtml);
-            });
-
-            currentPage = resp.page || 1;
-            totalPages  = resp.total_pages || 1;
-            actualizarControlesPaginacion();
-        },
-        error: function(xhr){
-            crudNotify(
-                "error",
-                xhr.responseJSON?.message || "No se pudo cargar la información de tipos de habitación."
-            );
-        }
-    });
-}
-
-// ================== Crear ==================
-function abrirModalCrearTipoHabitacion(){
-
-    // Obtener siguiente ID desde el endpoint next-id
-    $.get(URL_NEXT_TIPO, function(resp){
-        const nextId = resp.next_id || resp.next || "";
-        $("#crear_IdTipoHabitacion").val(nextId);
-    }).fail(() => {
-        $("#crear_IdTipoHabitacion").val("");
-    });
-
-    $("#crear_NombreHabitacion").val("");
-
-    $("#modalCrearTipoHabitacion").modal("show");
-}
-
-function crearTipoHabitacion(){
-
-    const idTipo = $("#crear_IdTipoHabitacion").val().trim();
-    const nombre = $("#crear_NombreHabitacion").val().trim();
-
-    if(!idTipo || !nombre){
-        crudNotify("warning","El ID y el Nombre son obligatorios.");
-        return;
-    }
-
-    if(isNaN(parseInt(idTipo))){
-        crudNotify("warning","El ID debe ser numérico.");
-        return;
-    }
-
-    // El view espera: id_tipo, nombre, descripcion, estado
-    crudCreate(
-        URL_CREATE_TIPO,
-        {
-            id_tipo: parseInt(idTipo),
-            nombre:  nombre,
-            descripcion: "",
-            estado:  true
-        },
-        () => {
-            $("#modalCrearTipoHabitacion").modal("hide");
-            cargarTiposHabitacion(currentPage);
-        }
-    );
-}
-
-// ================== Editar ==================
-function abrirModalEditarTipoHabitacion(id){
-
-    $.get(URL_GET_TIPO(id), function(resp){
+// ================== TABLA ==================
+function cargarUsuarios(page=1){
+    $.get(`${URL_LIST}?page=${page}`, function(resp){
 
         if(resp.status !== "ok"){
-            return crudNotify("error", resp.message || "No se pudo cargar el Tipo de Habitación.");
+            crudNotify("error", resp.message || "No se pudo cargar usuarios.");
+            return;
         }
 
-        const t = resp.data || {};
+        const tbody = $("#tablaUsuariosInternos tbody");
+        tbody.empty();
 
-        const nombre = t.NombreHabitacion
-                    || t.NombreTipoHabitacion
-                    || t.nombreTipoHabitacion
-                    || t.nombre
-                    || "";
+        (resp.data || []).forEach(u => {
 
-        const activo = (typeof t.EstadoTipoHabitacion !== "undefined")
-            ? !!t.EstadoTipoHabitacion
-            : !!t.estadoTipoHabitacion;
+            const nombre = `${u.Nombre || ""} ${u.Apellido || ""}`;
+            const doc = `${u.TipoDocumento || ""} ${u.Documento || ""}`.trim();
+            const estado = !!u.Estado;
 
-        $("#editar_IdTipoHabitacion").val(t.IdTipoHabitacion);
-        $("#editar_NombreHabitacion").val(nombre);
-        $("#editar_EstadoTipoHabitacion").prop("checked", activo);
+            const row = `
+                <tr class="${estado ? "" : "table-secondary"}">
+                    <td>${u.Id}</td>
+                    <td>${nombre}</td>
+                    <td>${u.Correo || ""}</td>
+                    <td>${doc}</td>
+                    <td>${u.IdRol || ""}</td>
+                    <td>${badgeEstado(estado)}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm"
+                                onclick="abrirModalEditarUsuarioInterno(${u.Id})">Editar</button>
+                        <button class="btn btn-danger btn-sm"
+                                onclick="eliminarUsuarioInterno(${u.Id})">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
 
-        $("#modalEditarTipoHabitacion").modal("show");
-    })
-    .fail(xhr => {
-        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+        currentPage = resp.page || 1;
+        totalPages = resp.total_pages || 1;
+        actualizarControlesPaginacion();
     });
 }
 
-function actualizarTipoHabitacion(){
+// ================== ROLES ==================
+function cargarRoles(selectId, selected=null){
 
-    const idTipo = $("#editar_IdTipoHabitacion").val();
-    const nombre = $("#editar_NombreHabitacion").val().trim();
-    const estado = $("#editar_EstadoTipoHabitacion").is(":checked");
+    const combo = $(selectId);
+    combo.empty();
+    combo.append("<option value=''>Seleccione rol...</option>");
 
-    if(!nombre){
-        crudNotify("warning", "El nombre es obligatorio.");
-        return;
-    }
+    $.get(URL_ROLES_REST, function(roles){
 
-    // el view espera nombre, descripcion, estado
-    crudUpdate(
-        URL_UPDATE_TIPO(idTipo),
-        {
-            nombre: nombre,
-            descripcion: "",
-            estado: estado
-        },
-        () => {
-            $("#modalEditarTipoHabitacion").modal("hide");
-            cargarTiposHabitacion(currentPage);
-        }
-    );
+        (roles || []).forEach(r => {
+
+            if(!r.EstadoRol) return;   // SOLO ACTIVOS ✅
+
+            const sel = (selected == r.IdRol) ? "selected" : "";
+
+            combo.append(`
+                <option value="${r.IdRol}" ${sel}>
+                    ${r.NombreRol}
+                </option>
+            `);
+        });
+    }).fail(() => {
+        crudNotify("error","No se pudieron cargar los roles.");
+    });
 }
 
-// ================== Eliminar ==================
-function eliminarTipoHabitacion(id){
-    crudConfirm("¿Está seguro de eliminar este Tipo de Habitación? Esto lo marcará como inactivo.")
-        .then(ok => {
-            if(!ok) return;
+// ================== CREAR ==================
+function abrirModalCrearUsuarioInterno(){
 
-            crudDelete(URL_DELETE_TIPO(id), () => {
-                cargarTiposHabitacion(currentPage);
-            });
-        });
+    $.get(URL_NEXTID, resp => {
+        $("#crear_IdUsuarioInterno").val(resp.next_id || "");
+    });
+
+    cargarRoles("#crear_idRol");
+
+    $("#modalCrearUsuario").modal("show");
+}
+
+function crearUsuarioInterno(){
+
+    const data = {
+        rol: $("#crear_idRol").val(),
+        nombre: $("#crear_nombre").val(),
+        apellido: $("#crear_apellido").val(),
+        correo: $("#crear_correo").val(),
+        clave: $("#crear_clave").val(),
+        fecha_nac: $("#crear_fechaNac").val(),
+        tipo_doc: $("#crear_tipoDoc").val(),
+        documento: $("#crear_documento").val(),
+        estado: $("#crear_estado").is(":checked") ? "true" : "false"
+    };
+
+    crudCreate(URL_CREATE, data, () => {
+        $("#modalCrearUsuario").modal("hide");
+        cargarUsuarios();
+    });
+}
+
+// ================== EDITAR ==================
+function abrirModalEditarUsuarioInterno(id){
+
+    $.get(URL_GET(id), function(resp){
+
+        if(resp.status !== "ok"){
+            crudNotify("error", resp.message);
+            return;
+        }
+
+        const u = resp.data;
+
+        $("#editar_IdUsuarioInterno").val(u.Id);
+        $("#editar_nombre").val(u.Nombre);
+        $("#editar_apellido").val(u.Apellido);
+        $("#editar_correo").val(u.Correo);
+        $("#editar_fechaNac").val(u.FechaNacimiento?.substring(0,10));
+        $("#editar_tipoDoc").val(u.TipoDocumento);
+        $("#editar_documento").val(u.Documento);
+        $("#editar_estado").prop("checked", !!u.Estado);
+
+        cargarRoles("#editar_idRol", u.IdRol);
+
+        $("#modalEditarUsuario").modal("show");
+    });
+}
+
+// ================== UPDATE ==================
+function actualizarUsuarioInterno(){
+
+    const id = $("#editar_IdUsuarioInterno").val();
+
+    const data = {
+        rol: $("#editar_idRol").val(),
+        nombre: $("#editar_nombre").val(),
+        apellido: $("#editar_apellido").val(),
+        correo: $("#editar_correo").val(),
+        clave: $("#editar_clave").val(),
+        fecha_nac: $("#editar_fechaNac").val(),
+        tipo_doc: $("#editar_tipoDoc").val(),
+        documento: $("#editar_documento").val(),
+        estado: $("#editar_estado").is(":checked") ? "true" : "false"
+    };
+
+    crudUpdate(URL_UPDATE(id), data, () => {
+        $("#modalEditarUsuario").modal("hide");
+        cargarUsuarios();
+    });
+}
+
+// ================== DELETE ==================
+function eliminarUsuarioInterno(id){
+    crudConfirm("¿Eliminar usuario?")
+    .then(ok => {
+        if(!ok) return;
+        crudDelete(URL_DELETE(id), () => cargarUsuarios());
+    });
 }
 
 // ================== INIT ==================
 $(document).ready(function(){
-    cargarTiposHabitacion(1);
-    $("#btnAnterior").on("click", irAPaginaAnterior);
-    $("#btnSiguiente").on("click", irAPaginaSiguiente);
+    cargarUsuarios(1);
 });
 </script>
+
 {% endblock %}

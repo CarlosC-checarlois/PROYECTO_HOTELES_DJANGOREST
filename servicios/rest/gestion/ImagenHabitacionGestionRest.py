@@ -123,6 +123,3 @@ class ImagenHabitacionGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar imagen: {e}")
 
-o = ImagenHabitacionGestionRest()
-o.obtener_imagenes()
-pprint(o.obtener_imagenes())

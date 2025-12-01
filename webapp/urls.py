@@ -215,6 +215,7 @@ urlpatterns = [
 
     path("register/", views_webapp.index_register, name="register"),
     path("register/post/", views_webapp.register_post, name="register_post"),
+path("api/mis-reservas/", views_webapp.api_mis_reservas),
 
     # ===============================
     # PERFIL DEL CLIENTE (READ-ONLY)
@@ -234,7 +235,7 @@ urlpatterns = [
     # PAGOS DEL CLIENTE
     # ===============================
     path("usuario/pagos/", views_webapp.mis_pagos, name="usuario_pagos"),
-
+    path("api/generar-pdf-reserva/", views_webapp.generar_pdf_factura, name="generar_pdf_reserva"),
     # ===============================
     # PANEL ADMINISTRATIVO
     # ===============================
@@ -444,7 +445,7 @@ urlpatterns = [
     path("admin/rol/create/", RolCreateAjaxView.as_view()),
     path("admin/rol/update/<int:id_rol>/", RolUpdateAjaxView.as_view()),
     path("admin/rol/delete/<int:id_rol>/", RolDeleteAjaxView.as_view()),
-path("admin/rol/next-id/", RolNextIdAjaxView.as_view(), name="rol_next_id"),
+    path("admin/rol/next-id/", RolNextIdAjaxView.as_view(), name="rol_next_id"),
 
     #############################
     ###################generar-pdf-reserva##########
@@ -471,7 +472,6 @@ path("admin/rol/next-id/", RolNextIdAjaxView.as_view(), name="rol_next_id"),
         UsuarioInternoSearchAjaxView.as_view(),
         name="usuario_interno_search",
     ),
-    path("api/generar-pdf-reserva/", views_webapp.generar_pdf_factura, name="generar_pdf_reserva"),
     #############################
     #############################
     #############################
@@ -484,4 +484,16 @@ path("admin/rol/next-id/", RolNextIdAjaxView.as_view(), name="rol_next_id"),
 
     path("admin/factura/search/", FacturaSearchAjaxView.as_view(), name="facturas_search"),
 
+    path(
+        "pago/",
+        views_webapp.vista_pago,
+        name="vista_pago"
+    ),
+
+    ########################################
+    path(
+        "banca/ejecutar-transaccion/",
+        views_webapp.ejecutar_pago_banca_interno,
+        name="ejecutar_transaccion",
+    ),
 ]

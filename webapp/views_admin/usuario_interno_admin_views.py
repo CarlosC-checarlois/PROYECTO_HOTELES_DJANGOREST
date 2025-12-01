@@ -10,8 +10,8 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
+from servicios.soap.gestion.UsuarioInternoGestionSoap import UsuarioInternoGestionSoap as UsuarioInternoGestionRest
 
-from servicios.rest.gestion.UsuarioInternoGestionRest import UsuarioInternoGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

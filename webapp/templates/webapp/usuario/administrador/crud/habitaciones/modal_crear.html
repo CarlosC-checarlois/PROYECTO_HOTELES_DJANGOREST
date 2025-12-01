@@ -1,3 +1,4 @@
+<!-- ======================= MODAL CREAR HABITACIÓN ======================= -->
 <div class="modal fade" id="modalCrearHabitacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content shadow">
@@ -48,19 +49,9 @@
                                 type="number"
                                 min="1"
                                 step="0.01"
-                                class="form-control"
-                                placeholder="0.00"
-                                oninput="
-                                // impedir valores negativos o cero
-                                let v = this.value.replace(',', '.');
-                                if (v === '') { return; }
-                                let n = parseFloat(v);
-                                if (isNaN(n) || n <= 0) {
-                                    this.value = '';
-                                } else {
-                                    this.value = v;
-                                }
-                           ">
+                                max="999999.99"
+                                class="form-control numeric-decimal"
+                                placeholder="0.00">
                     </div>
 
                     <!-- PRECIO ACTUAL -->
@@ -71,19 +62,9 @@
                                 type="number"
                                 min="1"
                                 step="0.01"
-                                class="form-control"
-                                placeholder="0.00"
-                                oninput="
-                                // impedir valores negativos o cero
-                                let v = this.value.replace(',', '.');
-                                if (v === '') { return; }
-                                let n = parseFloat(v);
-                                if (isNaN(n) || n <= 0) {
-                                    this.value = '';
-                                } else {
-                                    this.value = v;
-                                }"
-                        >
+                                max="999999.99"
+                                class="form-control numeric-decimal"
+                                placeholder="0.00">
                     </div>
 
                     <!-- CAPACIDAD -->
@@ -93,23 +74,13 @@
                                 id="crear_CapacidadHabitacion"
                                 type="number"
                                 min="1"
+                                max="10"
                                 step="1"
-                                class="form-control"
-                                placeholder="1"
-                                oninput="
-                                // impedir valores negativos o cero
-                                let v = this.value.replace(',', '.');
-                                if (v === '') { return; }
-                                let n = parseFloat(v);
-                                if (isNaN(n) || n <= 0) {
-                                    this.value = '';
-                                } else {
-                                    this.value = v;
-                                }
-                           ">
+                                class="form-control numeric-integer"
+                                placeholder="1">
                     </div>
 
-                    <!-- ESTADO TEXTO (OCULTO O RESERVADO, SI LO NECESITAS LUEGO) -->
+                    <!-- ESTADO TEXTO OCULTO -->
                     <input type="hidden" id="crear_EstadoHabitacion">
 
                     <!-- ACTIVO -->

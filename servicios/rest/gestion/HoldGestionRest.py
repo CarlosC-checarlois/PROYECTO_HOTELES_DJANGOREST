@@ -150,8 +150,3 @@ class HoldGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar HOLD: {e}")
-
-c = HoldGestionRest()
-c = c.obtener_hold()
-
-pprint(c)

@@ -10,8 +10,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-
-from servicios.rest.gestion.RolGestionRest import RolGestionRest
+from servicios.soap.gestion.RolGestionSoap import RolGestionSoap as RolGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

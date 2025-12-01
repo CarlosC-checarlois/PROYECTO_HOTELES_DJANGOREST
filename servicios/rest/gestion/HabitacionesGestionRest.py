@@ -157,6 +157,3 @@ class HabitacionesGestionRest:
             return True
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar habitación: {e}")
-api = HabitacionesGestionRest()
-api = api.obtener_habitaciones()
-pprint(api)

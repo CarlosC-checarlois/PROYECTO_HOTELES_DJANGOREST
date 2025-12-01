@@ -117,7 +117,3 @@ class AmexHabGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar AMEXHAB: {e}")
 
-c = AmexHabGestionRest()
-c.obtener_amexhab()
-print("\n📌 LISTA DE TIPOS")
-print(c.obtener_amexhab_por_id("HACA000001",2))

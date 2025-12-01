@@ -44,7 +44,128 @@
         font-weight: 600;
     }
 </style>
+<style>
+/* CONTENEDOR GENERAL DE MENSAJES */
+.messages-wrapper {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+/* CAJA BASE */
+.app-alert {
+    min-width: 260px;
+    max-width: 360px;
+    display: flex;
+    align-items: center;
+    padding: .75rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(20px);
+    animation: appAlertIn .25s ease forwards;
+}
+
+/* ICONO A LA IZQUIERDA */
+.app-alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: .5rem;
+    font-size: 1.1rem;
+}
+
+/* TEXTO */
+.app-alert-text {
+    flex: 1;
+}
+
+/* BOTÓN “X” OPCIONAL */
+.app-alert-close {
+    margin-left: .5rem;
+    cursor: pointer;
+    opacity: .8;
+    font-size: 1.1rem;
+}
+.app-alert-close:hover {
+    opacity: 1;
+}
+
+/* COLORES SEGÚN TIPO */
+.app-alert-success { background: #16a34a; }  /* verde */
+.app-alert-error   { background: #dc2626; }  /* rojo  */
+.app-alert-warning { background: #d97706; }  /* naranja */
+.app-alert-info    { background: #2563eb; }  /* azul */
+
+/* ANIMACIÓN ENTRADA */
+@keyframes appAlertIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* RESPONSIVE: EN MÓVIL QUE OCUPEN TODO EL ANCHO */
+@media (max-width: 576px) {
+    .messages-wrapper {
+        top: .5rem;
+        right: .5rem;
+        left: .5rem;
+    }
+    .app-alert {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+}
+
+</style>
+
 {% endblock %}
+
+{% block mensajes_personalizados %}
+<div class="messages-wrapper">
+    {% if messages %}
+        {% for message in messages %}
+            {% comment %}
+              message.tags en Django suele traer: success, error, warning, info
+            {% endcomment %}
+            <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <span class="app-alert-icon">
+                    {% if "success" in message.tags %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif "error" in message.tags %}
+                        <i class="bi bi-x-circle"></i>
+                    {% elif "warning" in message.tags %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                </span>
+                <span class="app-alert-text">
+                    {{ message }}
+                </span>
+                <!-- si quieres cerrar manualmente -->
+                <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    &times;
+                </span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}
+
 
 {% block contenido_pagina %}
 <div class="login-wrapper">
@@ -57,14 +178,6 @@
                 <h3 class="fw-bold mt-2">Iniciar sesión</h3>
                 <p class="text-muted">Accede a tu cuenta del Hotel</p>
             </div>
-
-            <!-- MENSAJE DE ERROR -->
-            {% if messages %}
-                {% for msg in messages %}
-                    <div class="alert alert-danger text-center p-2">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-
             <!-- FORMULARIO -->
             <form action="{% url 'login_post' %}" method="post">
                 {% csrf_token %}
@@ -91,23 +204,14 @@
                     </div>
                 </div>
 
-                <!-- Recordar + Olvidé contraseña -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="recordar">
-                        <label class="form-check-label" for="recordar">
-                            Recordarme
-                        </label>
-                    </div>
-                    <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
-                </div>
+
 
                 <div class="d-grid">
                     <button class="btn btn-primary">Ingresar</button>
                 </div>
 
                 <div class="text-center my-3">
-                    <span class="text-muted small">¿Aún no tienes cuenta?</span>
+                    <span class="text-muted small"></span>
                 </div>
 
                 <div class="d-grid">

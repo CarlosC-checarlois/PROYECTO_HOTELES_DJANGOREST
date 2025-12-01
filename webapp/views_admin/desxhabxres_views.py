@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 
-from servicios.rest.gestion.DesxHabxResGestionRest import DesxHabxResGestionRest
+from servicios.soap.gestion.DesxHabxResGestionSoap import DesxHabxResGestionSoap as DesxHabxResGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 
@@ -71,28 +71,108 @@ class DesxHabxResGetAjaxView(View):
 # ============================================================
 # CREAR
 # ============================================================
+# ============================================================
+# CREAR
+# ============================================================
+
 @method_decorator([csrf_exempt, admin_required_ajax], name='dispatch')
 class DesxHabxResCreateAjaxView(View):
     def post(self, request):
 
-        idDescuento = int(request.POST.get("IdDescuento"))
-        idHabxRes = int(request.POST.get("IdHabxRes"))
-
-        monto = request.POST.get("MontoDesxHabxRes")
-        monto = float(monto) if monto not in (None, "") else None
-
-        estado = request.POST.get("EstadoDesxHabxRes") == "true"
-
-        api = DesxHabxResGestionRest()
-
         try:
+            # ---------- IDs ----------
+            id_desc_raw = request.POST.get("IdDescuento")
+            id_habxres_raw = request.POST.get("IdHabxRes")
+
+            if not id_desc_raw:
+                return JsonResponse(
+                    {"status": "error", "message": "Debe seleccionar un descuento."},
+                    status=400
+                )
+
+            if not id_habxres_raw:
+                return JsonResponse(
+                    {"status": "error", "message": "Debe seleccionar una relación HabxRes."},
+                    status=400
+                )
+
+            idDescuento = int(id_desc_raw)
+            idHabxRes = int(id_habxres_raw)
+
+            # ---------- MONTO ----------
+            monto_raw = request.POST.get("MontoDesxHabxRes")
+            if not monto_raw:
+                return JsonResponse(
+                    {"status": "error", "message": "El monto es obligatorio."},
+                    status=400
+                )
+
+            try:
+                monto = float(monto_raw)
+            except ValueError:
+                return JsonResponse(
+                    {"status": "error", "message": "El monto debe ser un número válido."},
+                    status=400
+                )
+
+            if monto <= 0:
+                return JsonResponse(
+                    {"status": "error", "message": "El monto debe ser mayor a 0."},
+                    status=400
+                )
+
+            estado = request.POST.get("EstadoDesxHabxRes") == "true"
+
+            api = DesxHabxResGestionRest()
+
+            # ---------- VALIDAR DUPLICADO USANDO LA LISTA COMPLETA ----------
+            try:
+                lista = api.obtener_desxhabxres()  # devuelve todos, activos e inactivos
+            except Exception:
+                lista = []
+
+            if isinstance(lista, list):
+                ya_existe = any(
+                    int(r.get("IdDescuento", 0)) == idDescuento
+                    and int(r.get("IdHabxRes", 0)) == idHabxRes
+                    for r in lista
+                )
+            else:
+                ya_existe = False
+
+            if ya_existe:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Ya existe un descuento asociado a esa reserva/habitación."
+                    },
+                    status=400
+                )
+
+            # ---------- CREAR ----------
             api.crear_desxhabxres(idDescuento, idHabxRes, monto, estado)
-            return JsonResponse({"status": "ok", "message": "Descuento por Habitación creado exitosamente"})
+
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "message": "Descuento por habitación creado exitosamente."
+                }
+            )
+
+        except ValueError as ve:
+            return JsonResponse(
+                {"status": "error", "message": f"Datos inválidos: {ve}"},
+                status=400
+            )
 
         except Exception as e:
-            return JsonResponse({"status": "error", "message": f"Error al crear descuento por habitación: {str(e)}"}, status=400)
-
-
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": f"Error al crear registro: {e}"
+                },
+                status=500
+            )
 # ============================================================
 # ACTUALIZAR
 # ============================================================

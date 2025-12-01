@@ -3,12 +3,8 @@ from django.views import View
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
-from requests.exceptions import ConnectionError, Timeout, HTTPError
-
-from servicios.rest.gestion.AmenidadesGestionRest import AmenidadesGestionRest
+from servicios.soap.gestion.AmenidadGestionSoap import AmenidadGestionSoap as AmenidadesGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
-
 
 # ============================================================
 # VISTA HTML (CARGA LA PÁGINA)

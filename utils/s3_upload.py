@@ -55,7 +55,8 @@ def subir_imagen_habitacion_a_s3(file_obj: UploadedFile) -> str:
     ext = ext or ".png"
 
     # ruta tipo: imagenes/carlos/<uuid>.ext
-    key = f"imagenes/carlos/{uuid.uuid4().hex}{ext}"
+
+    key = settings.PDF_BASE_URL + f"{uuid.uuid4().hex}{ext}"
 
     s3.upload_fileobj(
         Fileobj=file_obj,

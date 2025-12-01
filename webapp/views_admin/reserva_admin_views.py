@@ -9,10 +9,34 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-
-from servicios.rest.gestion.ReservaGestionRest import ReservaGestionRest
+from servicios.soap.gestion.ReservaGestionSoap import ReservaGestionSoap as ReservaGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
+# arriba del archivo, por ejemplo debajo de los imports
+def normalizar_reserva_dict(r):
+    """Limpia y normaliza un diccionario de reserva recibido del API."""
+    if not isinstance(r, dict):
+        return r
+
+    # 1) Estado general sin espacios de relleno
+    estado = r.get("EstadoGeneralReserva")
+    if estado is not None:
+        r["EstadoGeneralReserva"] = estado.strip()
+
+    # 2) Costo como float (no string)
+    if r.get("CostoTotalReserva") is not None:
+        try:
+            r["CostoTotalReserva"] = float(r["CostoTotalReserva"])
+        except (TypeError, ValueError):
+            r["CostoTotalReserva"] = None
+
+    # 3) Fechas solo YYYY-MM-DD (sin la parte T00:00:00)
+    for campo in ["FechaRegistroReserva", "FechaInicioReserva", "FechaFinalReserva"]:
+        valor = r.get(campo)
+        if isinstance(valor, str) and "T" in valor:
+            r[campo] = valor.split("T")[0]
+
+    return r
 
 # ============================================================
 # VISTA PRINCIPAL (HTML)
@@ -35,22 +59,22 @@ class ReservaListAjaxView(View):
         try:
             data = api.obtener_reservas()  # lista de dicts
 
+            # 🔹 normalizamos todos
+            if isinstance(data, list):
+                data = [normalizar_reserva_dict(r) for r in data]
+
             page_number = int(request.GET.get("page", 1))
-            paginator = Paginator(data, 20)  # 20 registros por página
+            paginator = Paginator(data, 20)
             page_obj = paginator.get_page(page_number)
 
             return JsonResponse({
                 "status": "ok",
-                "data": list(page_obj),  # serializable
+                "data": list(page_obj),
                 "page": page_obj.number,
                 "total_pages": paginator.num_pages
             })
         except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": str(e)},
-                status=400
-            )
-
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 # ============================================================
 # OBTENER UNA RESERVA (AJAX)
@@ -61,12 +85,11 @@ class ReservaGetAjaxView(View):
         api = ReservaGestionRest()
         try:
             data = api.obtener_reserva_por_id(id_reserva)
+            data = normalizar_reserva_dict(data)   # 👈 aquí
             return JsonResponse({"status": "ok", "data": data})
         except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": str(e)},
-                status=400
-            )
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
 
 
 # ============================================================

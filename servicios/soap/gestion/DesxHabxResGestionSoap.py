@@ -1,19 +1,16 @@
 import requests
+from datetime import datetime
 from zeep import Client, Transport
 from zeep.helpers import serialize_object
 from zeep.exceptions import Fault
+from decimal import Decimal
 
 
 class DesxHabxResGestionSoap:
 
     def __init__(self):
-        # 🔥 WSDL PUBLICADO EN AZURE
-        self.wsdl = (
-            "https://gesoca-exd5cdh5fmc3hdf9.canadacentral-01.azurewebsites.net/"
-            "DesxHabxResWS.asmx?wsdl"
-        )
+        self.wsdl = "https://gesoca-exd5cdh5fmc3hdf9.canadacentral-01.azurewebsites.net/DesxHabxResWS.asmx?wsdl"
 
-        # Desactivar SSL (Azure usa certificado intermedio)
         session = requests.Session()
         session.verify = False
         requests.packages.urllib3.disable_warnings()
@@ -22,7 +19,7 @@ class DesxHabxResGestionSoap:
         self.client = Client(wsdl=self.wsdl, transport=transport)
 
     # =====================================================
-    # NORMALIZADOR → MISMO FORMATO QUE REST
+    # NORMALIZAR →
     # =====================================================
     def _normalize(self, item):
         if item is None:
@@ -30,30 +27,63 @@ class DesxHabxResGestionSoap:
 
         d = serialize_object(item)
 
+        # --- Convertir Decimal a float ---
+        def fix_numeric(v):
+            if isinstance(v, Decimal):
+                return float(v)
+            return v
+
+        monto = fix_numeric(d.get("MontoDesxHabxRes"))
+
+        fecha = d.get("FechaModificacionDesxHabxRes")
+        if hasattr(fecha, "isoformat"):
+            fecha = fecha.isoformat()
+
         return {
-            "idDescuento": d.get("IdDescuento"),
-            "idHabxRes": d.get("IdHabxRes"),
-            "montoDesxHabxRes": d.get("MontoDesxHabxRes"),
-            "estadoDesxHabxRes": d.get("EstadoDesxHabxRes"),
-            "fechaModificacionDesxHabxRes": (
-                d.get("FechaModificacionDesxHabxRes").isoformat()
-                if d.get("FechaModificacionDesxHabxRes") else None
-            )
+            "IdDescuento": d.get("IdDescuento"),
+            "IdHabxRes": d.get("IdHabxRes"),
+            "MontoDesxHabxRes": monto,
+            "EstadoDesxHabxRes": d.get("EstadoDesxHabxRes"),
+            "FechaModificacionDesxHabxRes": fecha
         }
 
     # =====================================================
-    # LISTAR
+    # DESNORMALIZAR 
     # =====================================================
-    def listar(self):
-        try:
-            result = self.client.service.ObtenerDesxHabxRes()
-            result = serialize_object(result)
-            return [self._normalize(item) for item in result]
-        except Fault as e:
-            raise Exception(f"Error SOAP al listar DesxHabxRes: {e}")
+    def _denormalize(self, id_descuento, id_habxres, monto, estado):
+        return {
+            "IdDescuento": id_descuento,
+            "IdHabxRes": id_habxres,
+            "MontoDesxHabxRes": monto,
+            "EstadoDesxHabxRes": estado,
+            "FechaModificacionDesxHabxRes": datetime.now()
+        }
 
     # =====================================================
-    # OBTENER POR ID COMPUESTO
+    # GET → Obtener lista completa
+    # =====================================================
+    def obtener_desxhabxres(self):
+        try:
+            result = self.client.service.ObtenerDesxHabxRes()
+            data = serialize_object(result)
+
+            # Si viene como lista
+            if isinstance(data, list):
+                return [self._normalize(x) for x in data]
+
+            # Si viene como dict con lista dentro
+            if isinstance(data, dict):
+                for k in data:
+                    if isinstance(data[k], list):
+                        return [self._normalize(x) for x in data[k]]
+
+            return []
+
+        except Fault as e:
+            raise Exception(f"Error SOAP al obtener lista: {e}")
+
+    # =====================================================
+    # GET → Obtener por ID compuesto 
     # =====================================================
     def obtener_por_id(self, id_descuento, id_habxres):
         try:
@@ -61,13 +91,15 @@ class DesxHabxResGestionSoap:
             return self._normalize(result)
         except Fault as e:
             raise Exception(
-                f"Error SOAP al obtener DesxHabxRes ({id_descuento}, {id_habxres}): {e}"
+                f"Error SOAP al obtener ({id_descuento}, {id_habxres}): {e}"
             )
 
     # =====================================================
-    # CREAR
+    # POST → Crear 
     # =====================================================
-    def crear(self, dto):
+    def crear_desxhabxres(self, id_descuento, id_habxres, monto=None, estado=True):
+        dto = self._denormalize(id_descuento, id_habxres, monto, estado)
+
         try:
             result = self.client.service.CrearDesxHabxRes(dto)
             return self._normalize(result)
@@ -75,24 +107,27 @@ class DesxHabxResGestionSoap:
             raise Exception(f"Error SOAP al crear DesxHabxRes: {e}")
 
     # =====================================================
-    # ACTUALIZAR
+    # PUT → Actualizar 
     # =====================================================
-    def actualizar(self, dto):
+    def actualizar_desxhabxres(self, id_descuento, id_habxres, monto, estado):
+        dto = self._denormalize(id_descuento, id_habxres, monto, estado)
+
         try:
             result = self.client.service.ActualizarDesxHabxRes(dto)
             return self._normalize(result)
         except Fault as e:
             raise Exception(
-                f"Error SOAP al actualizar DesxHabxRes ({dto.get('IdDescuento')}, {dto.get('IdHabxRes')}): {e}"
+                f"Error SOAP al actualizar ({id_descuento}, {id_habxres}): {e}"
             )
 
     # =====================================================
-    # ELIMINAR
+    # DELETE → Eliminación lógica 
     # =====================================================
-    def eliminar(self, id_descuento, id_habxres):
+    def eliminar_desxhabxres(self, id_descuento, id_habxres):
         try:
             return self.client.service.EliminarDesxHabxRes(id_descuento, id_habxres)
         except Fault as e:
             raise Exception(
-                f"Error SOAP al eliminar DesxHabxRes ({id_descuento}, {id_habxres}): {e}"
+                f"Error SOAP al eliminar ({id_descuento}, {id_habxres}): {e}"
             )
+

@@ -4,7 +4,7 @@ from webapp.decorators import admin_required, admin_required_ajax
 from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
-from servicios.rest.gestion.MetodoPagoGestionRest import MetodoPagoGestionRest
+from servicios.soap.gestion.MetodoPagoGestionSoap import MetodoPagoGestionSoap as MetodoPagoGestionRest
 from webapp.decorators import admin_required_ajax
 
 # ============================================================

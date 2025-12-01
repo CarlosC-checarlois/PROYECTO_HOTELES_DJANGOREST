@@ -164,8 +164,3 @@ def actualizar_usuario_admin():
     except Exception as e:
         print("\n❌ Error al actualizar usuario:")
         print(str(e))
-
-if __name__ == "__main__":
-    api = UsuarioInternoGestionRest()
-    api.listar()
-    pprint(api.listar())

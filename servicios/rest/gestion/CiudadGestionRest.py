@@ -1,4 +1,6 @@
 # ciudad_gestion_rest.py
+from smtpd import PureProxy
+
 import requests
 from datetime import datetime
 
@@ -130,8 +132,3 @@ class CiudadGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar ciudad: {e}")
 
-if __name__ == "__main__":
-    api = CiudadGestionRest()
-
-    # Listar ciudades
-    print(api.obtener_ciudades())

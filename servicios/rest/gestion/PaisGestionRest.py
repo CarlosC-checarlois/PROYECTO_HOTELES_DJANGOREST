@@ -12,7 +12,7 @@ class PaisGestionRest:
     https://gereca-dgd0hedaedb2dge4.canadacentral-01.azurewebsites.net/api/gestion/pais
     """
 
-    BASE_URL = "https://gereca-dgd0hedaedb2dge4.canadacentral-01.azurewebsites.net/api/gestion/pais"
+    BASE_URL = "http://allpahousenycrestgestion.runasp.net/api/gestion/pais"
 
     def __init__(self):
         self.headers = {"Content-Type": "application/json"}
@@ -118,6 +118,3 @@ class PaisGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar país: {e}")
 
-client = PaisGestionRest()
-
-print(client.obtener_paises())

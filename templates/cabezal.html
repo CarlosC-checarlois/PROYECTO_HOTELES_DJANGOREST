@@ -10,7 +10,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     {% block titulo_pagina %}
     {% endblock %}
+    
+    <style>
+        /* NAVBAR PERSONALIZADO */
+.navbar-lo-propio {
+    background: linear-gradient(90deg, #004AAD, #0077FF);
+    padding: 0.8rem 0;
+}
 
+/* Texto del navbar */
+.navbar-lo-propio .navbar-brand,
+.navbar-lo-propio .nav-link,
+.navbar-lo-propio .dropdown-toggle {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+/* hover */
+.navbar-lo-propio .nav-link:hover,
+.navbar-lo-propio .dropdown-item:hover {
+    color: #ffe066 !important;
+}
+
+/* Dropdown */
+.navbar-lo-propio .dropdown-menu {
+    background: #004AAD;
+    border-radius: 8px;
+    border: none;
+}
+
+.navbar-lo-propio .dropdown-item {
+    color: #ffffff;
+}
+
+.navbar-lo-propio .dropdown-item:hover {
+    background: #003680;
+}
+
+    </style>
     {% block sobreescribir_css_archivos %}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js"></script>
 
@@ -47,9 +84,10 @@
     <!-- MENU -->
     <!-- MENU -->
     <!-- MENU -->
-
+    {% block mensajes_personalizados %}
+    {% endblock %}
     <!-- MENU -->
-    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top">
+    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio">
         <div class="container menu_cabezal_general">
 
             <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
@@ -82,10 +120,12 @@
             <div class="container py-5">
 
                 <div class="row justify-content-center text-center">
-
+        <a class="navbar-brand fw-bold text-white" href="{% url 'inicio' %}">
+            <i class="bi bi-building-fill"></i> Hotel Lo Propio
+        </a>
                     <!-- Nombre del hotel -->
                     <div class="col-12 mb-3">
-                        <h4 class="fw-bold">Hotel Genérico</h4>
+                        <h4 class="fw-bold">Hotel LO PROPIO</h4>
                     </div>
 
                     <!-- Enlaces -->
@@ -99,7 +139,7 @@
                     <!-- Derechos -->
                     <div class="col-12">
                         <p class="mb-0 text-white-50">
-                            © 2025 Hotel Genérico — Todos los derechos reservados.
+                            © 2025 Hotel Lo propio
                         </p>
                     </div>
 

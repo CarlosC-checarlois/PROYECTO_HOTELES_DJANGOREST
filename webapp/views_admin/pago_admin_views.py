@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import render
@@ -7,8 +9,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-
-from servicios.rest.gestion.PagoGestionRest import PagoGestionRest
+from servicios.soap.gestion.PagoGestionSoap import PagoGestionSoap as PagoGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 
@@ -89,7 +90,8 @@ class PagoGetAjaxView(View):
 class PagoCreateAjaxView(View):
     def post(self, request):
         api = PagoGestionRest()
-        print(request.body)
+        print("*************************** PAGO ***************************")
+        pprint(request.POST)
         try:
             api.crear_pago(
                 id_pago=int(request.POST.get("IdPago")),
@@ -203,3 +205,4 @@ class PagoNextIdAjaxView(View):
         except Exception:
             # Si algo falla, devolvemos 1 para no romper el front
             return JsonResponse({"next": 1})
+

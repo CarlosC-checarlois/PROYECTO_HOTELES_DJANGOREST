@@ -8,13 +8,11 @@ import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
 
-from servicios.rest.gestion.HabxResGestionRest import HabxResGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 from django.views import View
 from django.http import JsonResponse
-from servicios.rest.gestion.HabxResGestionRest import HabxResGestionRest
-
+from servicios.soap.gestion.HabxResGestionSoap import HabxResGestionSoap as HabxResGestionRest
 class HabxResSearchAjaxView(View):
     def get(self, request):
         q = request.GET.get("q", "").strip().upper()

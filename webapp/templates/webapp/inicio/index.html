@@ -7,149 +7,173 @@
 
 {% block css_archivos %}
     <link rel="stylesheet" href="{% static 'webapp/css/inicio/inicio_index.css' %}">
+    <style>
+    .hero-section {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* Fondo con imagen de Guayaquil + filtro oscuro */
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
+        url("https://images.unsplash.com/photo-1605186164705-fc3f3b8a3c56?auto=format&fit=crop&w=1600&q=80")
+        center center / cover no-repeat;
+    z-index: -1;
+}
+
+.hero-content {
+    position: relative;
+    max-width: 650px;
+}
+
+    </style>
 {% endblock %}
-
 {% block contenido_pagina %}
-    <!-- ========================= -->
-    <!-- HERO / PORTADA PRINCIPAL -->
-    <!-- ========================= -->
-    <header class="hero-section text-white d-flex align-items-center">
-        <div class="container text-start hero-content">
-            <h1 class="fw-bold display-5 mb-3">Reserva tu estancia con facilidad</h1>
-            <p class="lead mb-4">
-                Elige fechas, tipo de habitación y completa tus datos.
-                Confirmación instantánea y cancelación flexible.
-            </p>
-        </div>
-    </header>
 
-    <!-- ========================= -->
-    <!-- SECCIÓN SOBRE NOSOTROS -->
-    <!-- ========================= -->
-    <section class="py-5 bg-light">
-        <div class="container text-center">
-            <h2 class="mb-4">Sobre Nosotros</h2>
-            <p class="lead">
-                En <strong>Hotel Genérico</strong> combinamos la hospitalidad tradicional con el confort moderno.
-                Nuestro objetivo es ofrecerte una experiencia única, ya sea que viajes por placer o negocios.
-            </p>
+<!-- HERO CON IMAGEN REAL -->
+<section class="position-relative" style="height: 90vh; overflow:hidden;">
 
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
-                         class="img-fluid rounded shadow-sm" alt="Hotel">
-                    <h5 class="mt-3">Ubicación privilegiada</h5>
-                    <p>Situado en el centro, cerca de los principales puntos turísticos y gastronómicos.</p>
-                </div>
+    <!-- IMAGEN LOCAL -->
+    <img src="{% static 'webapp/imagen/imagen_introduccion.png' %}"
+         alt="Hotel en Guayaquil"
+         style="width:100%; height:100%; object-fit:cover;">
 
-                <div class="col-md-4">
-                    <img src="https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800"
-                         class="img-fluid rounded shadow-sm" alt="Comodidad">
-                    <h5 class="mt-3">Comodidad garantizada</h5>
-                    <p>Habitaciones amplias y equipadas con todo lo que necesitas para tu descanso.</p>
-                </div>
+    <!-- CAPA OSCURA -->
+    <div class="position-absolute top-0 start-0 w-100 h-100"
+         style="background: rgba(0,0,0,0.55);"></div>
 
-                <div class="col-md-4">
-                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
-                         class="img-fluid rounded shadow-sm" alt="Experiencia">
-                    <h5 class="mt-3">Experiencia inolvidable</h5>
-                    <p>Atención personalizada y servicios diseñados para tu máxima satisfacción.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- TEXTO -->
+    <div class="position-absolute top-50 start-50 translate-middle text-white text-center container">
 
-    <!-- ========================= -->
-    <!-- SECCIÓN SERVICIOS -->
-    <!-- ========================= -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">Nuestros Servicios</h2>
-            <div class="row g-4">
-                <div class="col-md-3 text-center">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="card-body">
-                            <i class="bi bi-wifi display-5"></i>
-                            <h5 class="mt-3">Wi-Fi gratuito</h5>
-                            <p>Conéctate en todo momento, desde cualquier rincón del hotel.</p>
-                        </div>
-                    </div>
-                </div>
+        <h1 class="display-4 fw-bold">Tu hotel en el corazón de Guayaquil</h1>
 
-                <div class="col-md-3 text-center">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="card-body">
-                            <i class="bi bi-cup-hot display-5"></i>
-                            <h5 class="mt-3">Desayuno incluido</h5>
-                            <p>Empieza el día con energía con nuestro buffet variado.</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-md-3 text-center">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="card-body">
-                            <i class="bi bi-water display-5"></i>
-                            <h5 class="mt-3">Piscina</h5>
-                            <p>Relájate bajo el sol en nuestra piscina al aire libre.</p>
-                        </div>
-                    </div>
-                </div>
+        <a href="{% url 'habitaciones' %}" class="btn btn-warning btn-lg mt-3">Reservar ahora</a>
 
-                <div class="col-md-3 text-center">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="card-body">
-                            <i class="bi bi-car-front display-5"></i>
-                            <h5 class="mt-3">Estacionamiento</h5>
-                            <p>Amplio y seguro, disponible para todos nuestros huéspedes.</p>
-                        </div>
+    </div>
+</section>
+
+
+<!-- SERVICIOS -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Nuestros Servicios</h2>
+
+        <div class="row text-center g-4">
+
+            <div class="col-md-3">
+                <div class="card shadow h-100">
+                    <div class="card-body">
+                        <i class="bi bi-wifi fs-1 text-primary"></i>
+                        <h5>Wi-Fi gratis</h5>
+                        <p>Conéctate sin límites.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- ========================= -->
-    <!-- SECCIÓN HABITACIONES -->
-    <!-- ========================= -->
-    <section class="py-5 bg-light">
-        <div class="container text-center">
-            <h2 class="mb-4">Habitaciones</h2>
-            <p class="lead mb-5">Elegancia y confort en cada detalle.</p>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
-                             class="card-img-top" alt="Estándar">
-                        <div class="card-body">
-                            <h5>Habitación Estándar</h5>
-                            <p class="text-muted">Cama doble, baño privado y escritorio.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <img src="https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800"
-                             class="card-img-top" alt="Superior">
-                        <div class="card-body">
-                            <h5>Habitación Superior</h5>
-                            <p class="text-muted">Mayor espacio, vista al jardín y minibar.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
-                             class="card-img-top" alt="Suite">
-                        <div class="card-body">
-                            <h5>Suite Ejecutiva</h5>
-                            <p class="text-muted">Sala de estar, jacuzzi y balcón privado.</p>
-                        </div>
+            <div class="col-md-3">
+                <div class="card shadow h-100">
+                    <div class="card-body">
+                        <i class="bi bi-cup-hot fs-1 text-primary"></i>
+                        <h5>Desayuno incluido</h5>
+                        <p>Sabores costeños.</p>
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-3">
+                <div class="card shadow h-100">
+                    <div class="card-body">
+                        <i class="bi bi-geo-alt fs-1 text-primary"></i>
+                        <h5>Ubicación central</h5>
+                        <p>Fácil acceso al Malecón.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card shadow h-100">
+                    <div class="card-body">
+                        <i class="bi bi-airplane fs-1 text-primary"></i>
+                        <h5>Cerca del aeropuerto</h5>
+                        <p>Ideal para ejecutivos.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </section>
+    </div>
+</section>
+
+<!-- HABITACIONES -->
+<section class="py-5 bg-light">
+    <div class="container text-center">
+
+        <h2 class="mb-4">Habitaciones</h2>
+        <p class="lead">Elije el espacio perfecto para ti.</p>
+
+        <div class="row g-4">
+
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32"
+                         class="card-img-top">
+                    <div class="card-body">
+                        <h5>Habitación Guayas</h5>
+                        <p>Cómoda y funcional.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427"
+                         class="card-img-top">
+                    <div class="card-body">
+                        <h5>Habitación Malecón</h5>
+                        <p>Vista urbana y minibar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"
+                         class="card-img-top">
+                    <div class="card-body">
+                        <h5>Suite Puerto Principal</h5>
+                        <p>Lujo y amplitud.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- UBICACIÓN -->
+<section class="py-5">
+    <div class="container text-center">
+
+        <h2>A minutos de</h2>
+
+        <div class="row mt-4">
+            <div class="col-md-3">Malecón 2000</div>
+            <div class="col-md-3">Las Peñas</div>
+            <div class="col-md-3">Puerto Santa Ana</div>
+            <div class="col-md-3">Aeropuerto</div>
+        </div>
+
+    </div>
+</section>
+
 {% endblock %}

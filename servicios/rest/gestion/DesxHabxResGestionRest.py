@@ -121,7 +121,3 @@ class DesxHabxResGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar DesxHabxRes: {e}")
 
-if __name__ == '__main__':
-    c = DesxHabxResGestionRest()
-    c = c.obtener_desxhabxres()
-    print(c)

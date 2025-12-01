@@ -12,11 +12,26 @@ class ReservaGestionRest:
     api/gestion/reserva
     """
 
+
+
     BASE_URL = "https://gereca-dgd0hedaedb2dge4.canadacentral-01.azurewebsites.net/api/gestion/reservas"
 
     def __init__(self):
         self.headers = {"Content-Type": "application/json"}
-
+    def _normalizar_reserva(self, data: dict) -> dict:
+        """Convierte claves PascalCase del API a camelCase como en tu DTO."""
+        return {
+            "IdReserva": data.get("IdReserva"),
+            "IdUnicoUsuario": data.get("IdUnicoUsuario"),
+            "IdUnicoUsuarioExterno": data.get("IdUnicoUsuarioExterno"),
+            "CostoTotalReserva": data.get("CostoTotalReserva"),
+            "FechaRegistroReserva": data.get("FechaRegistroReserva"),
+            "FechaInicioReserva": data.get("FechaInicioReserva"),
+            "FechaFinalReserva": data.get("FechaFinalReserva"),
+            "FechaModificacionReserva": data.get("FechaModificacionReserva"),
+            "EstadoGeneralReserva": (data.get("EstadoGeneralReserva") or "").strip(),
+            "EstadoReserva": data.get("EstadoReserva"),
+        }
     # =====================================================================================
     # GET → Listar reservas
     # =====================================================================================
@@ -24,7 +39,10 @@ class ReservaGestionRest:
         try:
             resp = requests.get(self.BASE_URL, headers=self.headers)
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()  # normalmente es una lista
+
+            # Normalizar cada elemento
+            return [self._normalizar_reserva(item) for item in data]
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al obtener reservas: {e}")
@@ -45,7 +63,8 @@ class ReservaGestionRest:
                 return None
 
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            return self._normalizar_reserva(data)
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al obtener reserva: {e}")
@@ -202,6 +221,3 @@ class ReservaGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al buscar datos de reserva: {e}")
-
-cliente = ReservaGestionRest()
-pprint(cliente.obtener_reservas())

@@ -91,8 +91,87 @@
             font-size: 1rem;
         }
     </style>
+<style>
+#toast-container {
+    position: fixed !important;
+    top: 20px;
+    right: 20px;
+    z-index: 99999 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast-msg {
+    min-width: 260px;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+    color: #fff;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all .3s ease;
+    font-size: .9rem;
+    pointer-events: auto;
+}
+
+.toast-msg.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-msg .icon {
+    margin-right: .5rem;
+}
+
+.toast-success { background-color: #16a34a; }
+.toast-error   { background-color: #dc2626; }
+.toast-warning { background-color: #d97706; }
+.toast-info    { background-color: #2563eb; }
+
+</style>
 {% endblock %}
+
+
+
 {% block contenido_pagina %}
+<div class="messages-wrapper">
+    {% if messages %}
+        {% for message in messages %}
+            {% comment %}
+              message.tags en Django suele traer: success, error, warning, info
+            {% endcomment %}
+            <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <span class="app-alert-icon">
+                    {% if "success" in message.tags %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif "error" in message.tags %}
+                        <i class="bi bi-x-circle"></i>
+                    {% elif "warning" in message.tags %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                </span>
+                <span class="app-alert-text">
+                    {{ message }}
+                </span>
+                <!-- si quieres cerrar manualmente -->
+                <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    &times;
+                </span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+    <div id="toast-container"></div>
+
+
+
     <!-- GALERÍA -->
     <section class="galeria-section">
         <div class="container">
@@ -235,16 +314,41 @@
                     <hr class="my-4">
 
                     <h6 class="fw-bold text-secondary mb-3">Datos del cliente</h6>
+
                     <div class="row g-3">
-                        <div class="col-12">
-                            <input type="text" class="form-control form-control-lg input-soft"
-                                   placeholder="Nombre completo" disabled>
+
+                        <div class="col-md-6">
+                            <input id="modal-nombre" type="text"
+                                   class="form-control form-control-lg input-soft"
+                                   placeholder="Nombre" disabled>
                         </div>
-                        <div class="col-12">
-                            <input type="email" class="form-control form-control-lg input-soft"
+
+                        <div class="col-md-6">
+                            <input id="modal-apellido" type="text"
+                                   class="form-control form-control-lg input-soft"
+                                   placeholder="Apellido" disabled>
+                        </div>
+
+                        <div class="col-md-12">
+                            <input id="modal-correo" type="email"
+                                   class="form-control form-control-lg input-soft"
                                    placeholder="Correo electrónico" disabled>
                         </div>
+
+                        <div class="col-md-6">
+                            <input id="modal-tipo-doc" type="text"
+                                   class="form-control form-control-lg input-soft"
+                                   placeholder="Tipo de documento" disabled>
+                        </div>
+
+                        <div class="col-md-6">
+                            <input id="modal-documento" type="text"
+                                   class="form-control form-control-lg input-soft"
+                                   placeholder="Documento" disabled>
+                        </div>
+
                     </div>
+
 
                 </div>
 
@@ -265,7 +369,31 @@
 
 {% block jvscript_archivos_defer %}
     <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+    <script>
+        function mostrarToast(mensaje, tipo = "success") {
+            const contenedor = document.getElementById("toast-container");
+            if (!contenedor) return;
 
+            const toast = document.createElement("div");
+            toast.className = `toast-msg toast-${tipo}`;
+            toast.innerHTML = `
+        <span class="icon">
+            <i class="bi bi-check2-square"></i>
+        </span>
+        <span>${mensaje}</span>
+    `;
+
+            contenedor.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add("show"));
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+    </script>
     <script>
         function cambiarImagen(el) {
             document.getElementById("imagen-principal").src = el.src;
@@ -382,7 +510,7 @@
                             }
 
                             if (tieneDiaBloqueado) {
-                                alert(`Las fechas seleccionadas incluyen días que ya están ocupados (${fechaBloqueadaEncontrada}). Por favor, selecciona otras fechas.`);
+                                mostrarToast("Las fechas seleccionadas incluyen días que ya están ocupados, Por favor, selecciona otras fechas.", "warning");
                                 picker.clearSelection();
                                 document.getElementById('rango-fechas').value = '';
                                 return false;
@@ -416,17 +544,21 @@
                 const huespedes = document.getElementById("huespedes").value;
                 document.getElementById("resumen-huespedes").textContent = huespedes;
 
-                // AUTOCOMPLETAR
-                const inputNombre = document.querySelector('#modalReserva input[placeholder="Nombre completo"]');
-                const inputCorreo = document.querySelector('#modalReserva input[placeholder="Correo electrónico"]');
-                const inputTelefono = document.querySelector('#modalReserva input[placeholder="Teléfono"]');
+                const inputNombre = document.getElementById("modal-nombre");
+                const inputApellido = document.getElementById("modal-apellido");
+                const inputCorreo = document.getElementById("modal-correo");
+                const inputTipoDoc = document.getElementById("modal-tipo-doc");
+                const inputDocumento = document.getElementById("modal-documento");
 
                 const usuarioId = localStorage.getItem("usuario_id");
 
                 if (usuarioId) {
-                    inputNombre.value = `${localStorage.getItem("usuario_nombre") || ""} ${localStorage.getItem("usuario_apellido") || ""}`.trim();
+
+                    inputNombre.value = localStorage.getItem("usuario_nombre") || "";
+                    inputApellido.value = localStorage.getItem("usuario_apellido") || "";
                     inputCorreo.value = localStorage.getItem("usuario_correo") || "";
-                    inputTelefono.value = localStorage.getItem("usuario_telefono") || "";
+                    inputTipoDoc.value = localStorage.getItem("usuario_tipo_doc") || "";
+                    inputDocumento.value = localStorage.getItem("usuario_documento") || "";
                 }
             });
 
@@ -452,22 +584,34 @@
                 });
 
             } else {
-                // Usuario logueado
-                btn.textContent = "Continuar con reserva";
-                btn.classList.add("btn-primary");
 
-                btn.addEventListener("click", () => {
+                const rol = localStorage.getItem("usuario_rol");
 
-                    // VALIDACIÓN OBLIGATORIA
-                    if (!inputFechas.value.trim()) {
-                        alert("Por favor selecciona un rango de fechas antes de continuar.");
-                        return;
-                    }
+                // ADMINISTRADOR BLOQUEADO
+                if (rol === "2") {
 
-                    // Abrir modal manualmente (para evitar problemas con validación)
-                    const modal = new bootstrap.Modal(document.getElementById("modalReserva"));
-                    modal.show();
-                });
+                    btn.textContent = "Administradores no pueden reservar";
+                    btn.classList.remove("btn-primary");
+                    btn.classList.add("btn-secondary");
+                    btn.disabled = true;
+
+                } else {
+                    // USUARIO NORMAL
+                    btn.textContent = "Continuar con reserva";
+                    btn.classList.add("btn-primary");
+
+                    btn.addEventListener("click", () => {
+
+                        // VALIDACIÓN OBLIGATORIA
+                        if (!inputFechas.value.trim()) {
+                            mostrarToast("Por favor selecciona un rango de fechas antes de continuar.", "warning");
+                            return;
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById("modalReserva"));
+                        modal.show();
+                    });
+                }
             }
         });
     </script>
@@ -501,15 +645,25 @@
 
             btn.addEventListener("click", function () {
 
+                // BLOQUEO INMEDIATO
+                btn.disabled = true;
+                btn.innerHTML = 'Procesando...';
+                btn.classList.remove("btn-primary");
+                btn.classList.add("btn-secondary");
+
                 const usuarioId = localStorage.getItem("usuario_id");
+
                 if (!usuarioId) {
-                    alert("Debes iniciar sesión.");
+                    mostrarToast("Debes iniciar sesión", "warning");
+                    desbloquearBoton();
                     return;
                 }
 
                 const fechas = document.getElementById("rango-fechas").value.trim();
+
                 if (!fechas) {
-                    alert("Selecciona fechas antes.");
+                    mostrarToast("Selecciona fechas antes", "warning");
+                    desbloquearBoton();
                     return;
                 }
 
@@ -524,24 +678,31 @@
                 form.action = "/usuario/prereserva/";
 
                 form.innerHTML = `
-            {% csrf_token %}
-            <input type="hidden" name="usuarioId" value="${usuarioId}">
-            <input type="hidden" name="idHabitacion" value="{{ id }}">
-            <input type="hidden" name="fechaInicio" value="${fechaInicio}">
-            <input type="hidden" name="fechaFin" value="${fechaFin}">
-            <input type="hidden" name="numeroHuespedes" value="${huespedes}">
-            <input type="hidden" name="nombre" value="${localStorage.getItem("usuario_nombre")}">
-            <input type="hidden" name="apellido" value="${localStorage.getItem("usuario_apellido")}">
-            <input type="hidden" name="correo" value="${localStorage.getItem("usuario_correo")}">
-            <input type="hidden" name="tipoDocumento" value="${localStorage.getItem("usuario_tipo_doc")}">
-            <input type="hidden" name="documento" value="${localStorage.getItem("usuario_documento")}">
-            <input type="hidden" name="telefono" value="${localStorage.getItem("usuario_telefono") || ''}">
-            <input type="hidden" name="precioActual" value="{{ precio }}">
-        `;
+        {% csrf_token %}
+        <input type="hidden" name="usuarioId" value="${usuarioId}">
+        <input type="hidden" name="idHabitacion" value="{{ id }}">
+        <input type="hidden" name="fechaInicio" value="${fechaInicio}">
+        <input type="hidden" name="fechaFin" value="${fechaFin}">
+        <input type="hidden" name="numeroHuespedes" value="${huespedes}">
+        <input type="hidden" name="nombre" value="${localStorage.getItem("usuario_nombre")}">
+        <input type="hidden" name="apellido" value="${localStorage.getItem("usuario_apellido")}">
+        <input type="hidden" name="correo" value="${localStorage.getItem("usuario_correo")}">
+        <input type="hidden" name="tipoDocumento" value="${localStorage.getItem("usuario_tipo_doc")}">
+        <input type="hidden" name="documento" value="${localStorage.getItem("usuario_documento")}">
+        <input type="hidden" name="precioActual" value="{{ precio }}">
+    `;
 
                 document.body.appendChild(form);
                 form.submit();
             });
+
+            function desbloquearBoton() {
+                const btn = document.getElementById("btn-confirmar-reserva");
+                btn.disabled = false;
+                btn.innerHTML = "PRE RESERVA";
+                btn.classList.remove("btn-secondary");
+                btn.classList.add("btn-primary");
+            }
 
         });
     </script>

@@ -139,29 +139,42 @@ const URL_CREATE = "/admin/desxhabxres/create/";
 const URL_GET    = (d,h) => `/admin/desxhabxres/get/${d}/${h}/`;
 const URL_UPDATE = (d,h) => `/admin/desxhabxres/update/${d}/${h}/`;
 const URL_DELETE = (d,h) => `/admin/desxhabxres/delete/${d}/${h}/`;
-
+const MAX_MONTO = 9999.99;
 let PAGINA_ACTUAL = 1;
 
 /* ============================================================
    VALIDACIÓN con validate.js
 ============================================================ */
 function validarDatosDesxHabxRes(data, esEdicion = false) {
+    // Normalizar string -> número para poder revisar límites
+    let montoNum = null;
+    if (data.MontoDesxHabxRes !== undefined && data.MontoDesxHabxRes !== null) {
+        const v = String(data.MontoDesxHabxRes).replace(",", ".").trim();
+        montoNum = parseFloat(v);
+    }
+
+    // --------- si NO está validate.js (fallback) ----------
     if (typeof validate === "undefined") {
         console.warn("validate.js no está cargado; usando validación básica.");
-        // fallback mínimo
+
         if (!esEdicion) {
             if (!data.IdDescuento) return { _error: "Debe seleccionar un descuento." };
-            if (!data.IdHabxRes) return { _error: "Debe seleccionar una relación HabxRes." };
+            if (!data.IdHabxRes)   return { _error: "Debe seleccionar una relación HabxRes." };
         }
-        if (!data.MontoDesxHabxRes && data.MontoDesxHabxRes !== 0) {
+
+        if (montoNum === null || isNaN(montoNum)) {
             return { _error: "El monto es obligatorio." };
         }
-        if (Number(data.MontoDesxHabxRes) <= 0) {
+        if (montoNum <= 0) {
             return { _error: "El monto debe ser mayor a 0." };
+        }
+        if (montoNum > MAX_MONTO) {
+            return { _error: `El monto no puede superar ${MAX_MONTO.toFixed(2)}.` };
         }
         return null;
     }
 
+    // --------- con validate.js ----------
     const constraintsCrear = {
         IdDescuento: {
             presence: { allowEmpty: false, message: "^Debe seleccionar un descuento." }
@@ -173,7 +186,8 @@ function validarDatosDesxHabxRes(data, esEdicion = false) {
             presence: { allowEmpty: false, message: "^El monto es obligatorio." },
             numericality: {
                 greaterThan: 0,
-                message: "^El monto debe ser mayor a 0."
+                lessThanOrEqualTo: MAX_MONTO,
+                message: `^El monto debe ser mayor a 0 y no puede superar ${MAX_MONTO.toFixed(2)}.`
             }
         }
     };
@@ -183,13 +197,24 @@ function validarDatosDesxHabxRes(data, esEdicion = false) {
             presence: { allowEmpty: false, message: "^El monto es obligatorio." },
             numericality: {
                 greaterThan: 0,
-                message: "^El monto debe ser mayor a 0."
+                lessThanOrEqualTo: MAX_MONTO,
+                message: `^El monto debe ser mayor a 0 y no puede superar ${MAX_MONTO.toFixed(2)}.`
             }
         }
     };
 
     const constraints = esEdicion ? constraintsEditar : constraintsCrear;
-    return validate(data, constraints);  // null si no hay errores
+    const errors = validate(data, constraints);
+
+    // Además reforzamos con la variable montoNum por si entró algo raro
+    if (!errors && (montoNum === null || isNaN(montoNum))) {
+        return { _error: "El monto es obligatorio." };
+    }
+    if (!errors && montoNum > MAX_MONTO) {
+        return { _error: `El monto no puede superar ${MAX_MONTO.toFixed(2)}.` };
+    }
+
+    return errors;   // null si no hay errores
 }
 
 /* ============================================================
@@ -426,5 +451,57 @@ $(document).ready(function () {
     cargarDesxHabxRes(1);
 });
 </script>
+<script>
+// ================== BLOQUEAR LETRAS EN MONTO ==================
+document.addEventListener("DOMContentLoaded", () => {
+    const invalidChars = ["e", "E", "+", "-"];
+    const ids = ["crear_MontoDesxHabxRes", "editar_MontoDesxHabxRes"];
 
+    ids.forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        // bloquear e, +, -
+        input.addEventListener("keydown", function (e) {
+            if (invalidChars.includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // limpiar y limitar a DECIMAL(6,2)
+        input.addEventListener("input", function (e) {
+            let v = e.target.value.replace(",", ".");
+
+            // dejar solo dígitos y punto
+            v = v.replace(/[^0-9.]/g, "");
+
+            // solo un punto decimal
+            let parts = v.split(".");
+            if (parts.length > 2) {
+                v = parts[0] + "." + parts.slice(1).join("");
+                parts = v.split(".");
+            }
+
+            // máximo 2 decimales
+            if (parts.length === 2 && parts[1].length > 2) {
+                v = parts[0] + "." + parts[1].slice(0, 2);
+            }
+
+            let num = parseFloat(v);
+
+            // si no hay número o es <= 0 -> limpiar
+            if (isNaN(num) || num <= 0) {
+                v = "";
+            } else if (num > MAX_MONTO) {
+                // clamp al máximo permitido por DECIMAL(6,2)
+                num = MAX_MONTO;
+                v = MAX_MONTO.toFixed(2);
+            }
+
+            e.target.value = v;
+        });
+    });
+});
+
+</script>
 {% endblock %}

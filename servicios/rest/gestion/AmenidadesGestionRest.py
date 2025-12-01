@@ -112,6 +112,3 @@ class AmenidadesGestionRest:
             return True
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar amenidad: {e}")
-c = AmenidadesGestionRest()
-amenidades = c.obtener_amenidades()
-print(json.dumps(amenidades, indent=2))  # Esto convierte el diccionario Python en un string JSON legible

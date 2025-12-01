@@ -127,8 +127,3 @@ class PdfGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar PDF: {e}")
 
-
-client = PdfGestionRest()
-
-# Listar PDFs
-pprint(client.obtener_pdfs())

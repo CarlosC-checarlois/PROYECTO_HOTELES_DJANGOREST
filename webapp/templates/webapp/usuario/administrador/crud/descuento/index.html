@@ -276,6 +276,7 @@ const nombre=$("#crear_NombreDescuento").val().trim();
 const valor=parseFloat($("#crear_ValorDescuento").val());
 const inicio=$("#crear_fechaEntrada").val();
 const fin=$("#crear_fechaSalida").val();
+    if (valor > 100) return crudNotify("warning", "El descuento no puede ser mayor al 100%.");
 
 if(!nombre) return crudNotify("warning","Nombre obligatorio");
 if(isNaN(valor)||valor<=0) return crudNotify("warning","Valor inválido");
@@ -301,20 +302,19 @@ function abrirModalEditarDescuento(id) {
 
         const d = resp.data;
 
-        // Campos normales
         $("#editar_IdDescuento").val(d.IdDescuento);
         $("#editar_NombreDescuento").val(d.NombreDescuento);
         $("#editar_ValorDescuento").val(d.ValorDescuento);
         $("#editar_EstadoDescuento").prop("checked", d.EstadoDescuento);
 
-        // Fechas ocultas
+        // Fechas del backend (YYYY-MM-DD)
         const fechaInicio = d.FechaInicioDescuento?.split("T")[0];
         const fechaFin    = d.FechaFinDescuento?.split("T")[0];
 
         $("#editar_fechaEntrada").val(fechaInicio);
         $("#editar_fechaSalida").val(fechaFin);
 
-        // Mostrar texto
+        // Mostrar rango en el input de texto (DD/MM/YYYY — DD/MM/YYYY)
         $("#editar_rangoFechas").val(
             fechaInicio.split("-").reverse().join("/") + " — " +
             fechaFin.split("-").reverse().join("/")
@@ -325,45 +325,100 @@ function abrirModalEditarDescuento(id) {
             window.pickerEditar.destroy();
         }
 
-        // Crear nuevo Litepicker
-        window.pickerEditar = new Litepicker({
-            element: document.getElementById("editar_rangoFechas"),
-            singleMode: false,
-            autoApply: true,
-            format: "DD/MM/YYYY",
-            numberOfMonths: 2,
-            numberOfColumns: 2,
-            tooltipText: { one: 'noche', other: 'noches' },
-            tooltipNumber: total => total - 1,
-            setup: (picker) => {
+// Calculamos minDate = fechaInicio - 1 día
+const minDateObj = new Date(fechaInicio);   // fechaInicio viene en "YYYY-MM-DD"
+minDateObj.setDate(minDateObj.getDate() - 1);
 
-                picker.on('selected', (d1, d2) => {
-                    $("#editar_fechaEntrada").val(d1.format("YYYY-MM-DD"));
-                    $("#editar_fechaSalida").val(d2.format("YYYY-MM-DD"));
-                });
-
-                // ✅ Pintar fechas del backend en el calendario
-                picker.setDateRange(fechaInicio, fechaFin);
-            }
+window.pickerEditar = new Litepicker({
+    element: document.getElementById("editar_rangoFechas"),
+    singleMode: false,
+    autoApply: true,
+    format: "DD/MM/YYYY",
+    numberOfMonths: 2,
+    numberOfColumns: 2,
+    minDate: minDateObj,           // 👈 ahora permite el mismo día de inicio
+    tooltipText: { one: 'noche', other: 'noches' },
+    tooltipNumber: total => total - 1,
+    setup: (picker) => {
+        picker.on('selected', (d1, d2) => {
+            $("#editar_fechaEntrada").val(d1.format("YYYY-MM-DD"));
+            $("#editar_fechaSalida").val(d2.format("YYYY-MM-DD"));
         });
+
+        picker.setDateRange(fechaInicio, fechaFin);
+    }
+});
 
         $("#modalEditarDescuento").modal("show");
     });
 }
 
 
-function actualizarDescuento(){
-crudUpdate(URL_UPDATE($("#editar_IdDescuento").val()),{
-NombreDescuento:$("#editar_NombreDescuento").val(),
-ValorDescuento:parseFloat($("#editar_ValorDescuento").val()),
-FechaInicioDescuento:$("#editar_fechaEntrada").val()+"T00:00:00",
-FechaFinDescuento:$("#editar_fechaSalida").val()+"T00:00:00",
-EstadoDescuento:$("#editar_EstadoDescuento").is(":checked")
-},()=>{
-$("#modalEditarDescuento").modal("hide");
-cargarDescuentos(PAGINA_ACTUAL);
-});
+function actualizarDescuento() {
+    const id      = $("#editar_IdDescuento").val();
+    const nombre  = $("#editar_NombreDescuento").val().trim();
+    const valorStr= $("#editar_ValorDescuento").val();
+    const inicio  = $("#editar_fechaEntrada").val();
+    const fin     = $("#editar_fechaSalida").val();
+    const activo  = $("#editar_EstadoDescuento").is(":checked");
+
+    // ===== VALIDACIONES =====
+
+    if (!nombre) {
+        crudNotify("warning", "El nombre del descuento es obligatorio.");
+        return;
+    }
+
+    if (!valorStr) {
+        crudNotify("warning", "Ingresa el valor del descuento.");
+        return;
+    }
+
+    const valor = parseFloat(valorStr);
+
+    if (isNaN(valor)) {
+        crudNotify("warning", "El valor del descuento debe ser numérico.");
+        return;
+    }
+
+    if (valor <= 0) {
+        crudNotify("warning", "El valor del descuento debe ser mayor a 0.");
+        return;
+    }
+
+    if (valor > 100) {
+        crudNotify("warning", "El valor del descuento no puede ser mayor al 100%.");
+        return;
+    }
+
+    if (!inicio || !fin) {
+        crudNotify("warning", "Debes seleccionar el periodo de vigencia.");
+        return;
+    }
+
+    // Validar que fin no sea antes que inicio
+    if (new Date(fin) < new Date(inicio)) {
+        crudNotify("warning", "La fecha de fin no puede ser anterior a la fecha de inicio.");
+        return;
+    }
+
+    // ===== LLAMADA AJAX =====
+    crudUpdate(
+        URL_UPDATE(id),
+        {
+            NombreDescuento: nombre,
+            ValorDescuento: valor,
+            FechaInicioDescuento: inicio + "T00:00:00",
+            FechaFinDescuento:   fin    + "T00:00:00",
+            EstadoDescuento: activo
+        },
+        () => {
+            $("#modalEditarDescuento").modal("hide");
+            cargarDescuentos(PAGINA_ACTUAL);
+        }
+    );
 }
+
 
 /* ===== ELIMINAR ===== */
 function eliminarDescuento(id){
@@ -375,5 +430,51 @@ crudDelete(URL_DELETE(id),()=>cargarDescuentos(PAGINA_ACTUAL));
 }
 
 $(document).ready(()=>cargarDescuentos(1));
+</script>
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+    const invalidChars = ["e", "E", "+", "-"];
+
+    ["crear_ValorDescuento", "editar_ValorDescuento"].forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        // Bloquear teclas tipo e, +, -
+        input.addEventListener("keydown", function (e) {
+            if (invalidChars.includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Limpiar y limitar valor
+        input.addEventListener("input", function (e) {
+            let v = e.target.value;
+
+            // Solo dígitos y punto
+            v = v.replace(/[^0-9.]/g, "");
+
+            // Solo un punto decimal
+            const parts = v.split(".");
+            if (parts.length > 2) {
+                v = parts[0] + "." + parts.slice(1).join("");
+            }
+
+            // Máx 2 decimales
+            if (parts.length === 2 && parts[1].length > 2) {
+                v = parts[0] + "." + parts[1].slice(0, 2);
+            }
+
+            // Limitar a 100
+            const num = parseFloat(v);
+            if (!isNaN(num) && num > 100) {
+                v = "100";
+            }
+
+            e.target.value = v;
+        });
+    });
+});
+
 </script>
 {% endblock %}

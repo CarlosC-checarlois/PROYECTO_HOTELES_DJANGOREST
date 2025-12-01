@@ -12,7 +12,7 @@ import time
 import logging
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.rest.gestion.HabitacionesGestionRest import HabitacionesGestionRest
+from servicios.soap.gestion.HabitacionGestionSoap import HabitacionesGestionSoap as HabitacionesGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 logger = logging.getLogger(__name__)
@@ -30,10 +30,13 @@ class HabitacionesView(View):
 
 
 # ============================================================
-# LISTAR CON PAGINACIÓN
+# LISTAR CON PAGINACIÓN (CON LÍMITE DURO)
 # ============================================================
 @method_decorator(admin_required_ajax, name='dispatch')
 class HabitacionesListAjaxView(View):
+
+    PAGE_SIZE = 20
+    MAX_PAGES = 50  # 👉 Máximo de páginas que vamos a exponer (50 * 20 = 1000 registros)
 
     def get(self, request):
         api = HabitacionesGestionRest()
@@ -41,42 +44,77 @@ class HabitacionesListAjaxView(View):
         try:
             start_time = time.time()
 
-            page = int(request.GET.get("page", 1))
-            page_size = 20
+            # página solicitada
+            try:
+                page = int(request.GET.get("page", 1))
+            except ValueError:
+                page = 1
+            if page < 1:
+                page = 1
 
+            # Traer datos desde la API
             data = api.obtener_habitaciones()
-
             if not isinstance(data, list):
                 data = []
 
-            total = len(data)
-            total_pages = (total + page_size - 1) // page_size
+            total_real = len(data)  # cuántos vienen realmente de la API
 
-            start = (page - 1) * page_size
-            end = start + page_size
+            # ---- LÍMITE DURO DE REGISTROS ----
+            max_records = self.PAGE_SIZE * self.MAX_PAGES   # 1000
+            truncated = False
+
+            if total_real > max_records:
+                truncated = True
+                data = data[:max_records]  # solo trabajamos con los primeros 1000
+
+            total = len(data)  # puede ser <= total_real
+            total_pages = (total + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+
+            # Si piden página más grande que la disponible, ajustar
+            if page > total_pages:
+                page = total_pages or 1
+
+            start = (page - 1) * self.PAGE_SIZE
+            end = start + self.PAGE_SIZE
             paginados = data[start:end]
 
             elapsed = time.time() - start_time
-            logger.info(f"[HAB LIST] {len(paginados)} registros en {elapsed:.2f}s")
+            logger.info(
+                f"[HAB LIST] page={page}/{total_pages}{'+' if truncated else ''} "
+                f"registros_page={len(paginados)} total_real={total_real} "
+                f"procesado_en={elapsed:.2f}s"
+            )
 
             return JsonResponse({
                 "status": "ok",
                 "data": paginados,
                 "page": page,
-                "total_pages": total_pages,
-                "total_records": total
+                "total_pages": total_pages,      # hasta 50 máx
+                "total_records": total_real,     # lo que realmente hay en la API
+                "truncated": truncated           # True si hubo recorte
             })
 
         except ConnectionError:
-            return JsonResponse({"status": "error", "message": "No se pudo conectar al servidor"}, status=503)
+            return JsonResponse(
+                {"status": "error", "message": "No se pudo conectar al servidor"},
+                status=503
+            )
         except Timeout:
-            return JsonResponse({"status": "error", "message": "Timeout del servidor"}, status=504)
+            return JsonResponse(
+                {"status": "error", "message": "Timeout del servidor"},
+                status=504
+            )
         except HTTPError:
-            return JsonResponse({"status": "error", "message": "Error en el servidor externo"}, status=500)
+            return JsonResponse(
+                {"status": "error", "message": "Error en el servidor externo"},
+                status=500
+            )
         except Exception as e:
             logger.error(e)
-            return JsonResponse({"status": "error", "message": "Error interno"}, status=500)
-
+            return JsonResponse(
+                {"status": "error", "message": "Error interno"},
+                status=500
+            )
 
 # ============================================================
 # OBTENER UNO
@@ -241,7 +279,6 @@ class HabitacionesNextIdAjaxView(View):
 
             max_number = 0
             # Inicializamos best_prefix a None o cadena vacía, y el prefijo por defecto final
-            # será "HACA" si no se encuentra ningún registro válido.
             best_prefix = ""
             suffix_length = 6  # Longitud por defecto del sufijo (ej. 000001)
 
@@ -274,11 +311,6 @@ class HabitacionesNextIdAjaxView(View):
             # 3. Calcular el siguiente ID
             next_number = max_number + 1
 
-            # Si no se encontró ningún prefijo válido, usamos "HACA" y longitud 6
-            if not best_prefix:
-                best_prefix = "HACA"
-                suffix_length = 6
-
             # Formatear el sufijo
             next_id_suffix = str(next_number).zfill(suffix_length)
             next_id = f"{best_prefix}{next_id_suffix}"
@@ -293,7 +325,7 @@ class HabitacionesNextIdAjaxView(View):
         except Exception as e:
             logger.error(f"Error al generar siguiente ID: {e}")
             # Si hay un error, devolvemos un ID inicial de respaldo
-            return JsonResponse({"status": "error", "message": "Error al generar ID. Se sugiere HACA000001"},
+            return JsonResponse({"status": "error", "message": "Error al generar ID"},
                                 status=500)
 
 

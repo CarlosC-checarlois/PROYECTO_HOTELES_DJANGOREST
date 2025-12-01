@@ -14,12 +14,76 @@
             --color-principal: #2563eb;
             --color-secundario: #4f46e5;
             --color-fondo: #f5f7fb;
+            --color-borde: #e5e7eb;
+            --color-texto-suave: #6b7280;
         }
 
+        /* fondo general */
         body {
             background: var(--color-fondo);
         }
 
+        /* ===========================
+           TOASTS
+        ============================*/
+        #toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 3000;
+        }
+
+        .toast-msg {
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            padding: .75rem 1.25rem;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: .5rem;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all .25s ease;
+            font-size: .9rem;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-msg .icon {
+            margin-right: .5rem;
+            font-size: 1.1rem;
+        }
+
+        .toast-success { background-color: #16a34a; }
+        .toast-error   { background-color: #dc2626; }
+        .toast-warning { background-color: #d97706; }
+        .toast-info    { background-color: #2563eb; }
+
+        /* ===========================
+           LAYOUT STICKY FOOTER
+        ============================*/
+        .layout-body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .layout-main {
+            flex: 1 0 auto;
+        }
+
+        .layout-footer {
+            flex-shrink: 0;
+        }
+
+        /* ===========================
+           BUSCADOR
+        ============================*/
         .buscador-section {
             padding: 3rem 0 1rem 0;
         }
@@ -27,6 +91,13 @@
         .buscador-form {
             max-width: 1100px;
             margin: 0 auto;
+            background: #fff;
+            border-radius: 999px;
+            padding: .75rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
         }
 
         .buscador-form .form-control {
@@ -38,6 +109,115 @@
             cursor: pointer;
         }
 
+        /* cada campo */
+        .buscador-field {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: .4rem 1.25rem;
+            border-right: 1px solid var(--color-borde);
+            flex: 1 1 180px;
+            min-width: 0;
+            transition: background .15s ease, box-shadow .15s ease;
+        }
+
+        .buscador-field:last-of-type {
+            border-right: none;
+        }
+
+        /* label superior */
+        .buscador-label {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--color-texto-suave);
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            margin-bottom: .15rem;
+        }
+
+        /* texto / valor */
+        .buscador-input,
+        .buscador-input::placeholder {
+            font-size: .95rem;
+            color: #111827;
+        }
+
+        .buscador-input {
+            border: none !important;
+            padding: 0;
+            background: transparent;
+            box-shadow: none !important;
+        }
+
+        .buscador-input:focus {
+            outline: none;
+        }
+
+        /* línea inferior discreta para el foco */
+        .buscador-field::after {
+            content: "";
+            position: absolute;
+            left: 1.25rem;
+            right: 1.25rem;
+            bottom: 0;
+            height: 2px;
+            background: transparent;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .buscador-field:focus-within {
+            background: rgba(15, 23, 42, 0.02);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+        }
+
+        .buscador-field:focus-within::after {
+            background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
+            transform: scaleX(1);
+        }
+
+        /* iconos de cada campo con color suave */
+        .field-tipo .buscador-label i      { color: #fb923c; }
+        .field-fechas .buscador-label i    { color: #60a5fa; }
+        .field-capacidad .buscador-label i { color: #4ade80; }
+        .field-precio .buscador-label i    { color: #a855f7; }
+
+        .buscador-field:focus-within .buscador-label {
+            color: var(--color-principal);
+        }
+
+        /* CTA */
+        .buscador-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: .4rem .75rem .4rem .25rem;
+        }
+
+        .buscador-cta .btn-buscar {
+            border-radius: 999px;
+            padding: .6rem 1.9rem;
+            font-weight: 600;
+            border: none;
+            background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, .45);
+            transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+        }
+
+        .buscador-cta .btn-buscar:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+            box-shadow: 0 16px 35px rgba(37, 99, 235, .55);
+        }
+
+        /* ===========================
+           RESULTADOS
+        ============================*/
         .resultado-card {
             border-radius: 1rem;
             overflow: hidden;
@@ -54,98 +234,163 @@
             font-size: .8rem;
         }
 
+        /* responsive */
         @media (max-width: 768px) {
             .buscador-form {
-                border-radius: 1.5rem !important;
+                border-radius: 1.5rem;
             }
 
-            .buscador-form > div {
-                border-right: none !important;
-                border-bottom: 1px solid #e5e7eb;
+            .buscador-field {
+                border-right: none;
+                border-bottom: 1px solid var(--color-borde);
             }
 
-            .buscador-form > div:last-child {
-                border-bottom: none !important;
+            .buscador-field:last-of-type {
+                border-bottom: none;
+            }
+
+            .buscador-cta {
+                width: 100%;
+                justify-content: flex-end;
+                padding-top: .5rem;
             }
         }
     </style>
 {% endblock %}
+{% block mensajes_personalizados %}
 
-{% block contenido_pagina %}
+{% endblock %}
 
-    <section class="buscador-section d-flex align-items-center justify-content-center">
-        <div class="container text-center">
 
-            <form id="formBuscador"
-                  class="buscador-form bg-white rounded-pill p-2 shadow d-flex flex-wrap justify-content-between align-items-center">
 
-                <!-- Tipo habitación -->
-                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
-                    <i class="bi bi-building me-2 text-secondary"></i>
+{% block sobreescribir_contenido_pagina %}
+    <div class="layout-body">
 
-                    <select name="tipo_habitacion" class="form-control border-0">
-                        <option value="">Tipo de habitación / Destino</option>
-                        {% for t in tipos_habitacion %}
-                            {% if t.EstadoTipoHabitacion %}
-                                <option value="{{ t.NombreHabitacion }}">{{ t.NombreHabitacion }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
+    <!-- MENU -->
+    <!-- MENU -->
+    <!-- MENU -->
+    <div id="toast-container"></div>
+    <!-- MENU -->
+    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio">
+        <div class="container menu_cabezal_general">
 
-                <!-- Fechas (Litepicker rango) -->
-                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
-                    <i class="bi bi-calendar-event me-2 text-secondary"></i>
+            <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
+                Hotel Genérico
+            </a>
 
-                    <!-- Input visible que controla el calendar -->
-                    <input type="text"
-                           id="rangoFechas"
-                           class="form-control border-0"
-                           placeholder="Fecha de entrada — Fecha de salida"
-                           autocomplete="off"
-                           readonly>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
+                    aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                    <!-- Inputs ocultos que se mandan al backend -->
-                    <input type="hidden" name="fecha_entrada" id="fechaEntrada">
-                    <input type="hidden" name="fecha_salida" id="fechaSalida">
-                </div>
-
-                <!-- Capacidad -->
-                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
-                    <i class="bi bi-people-fill me-2 text-secondary"></i>
-                    <input type="number" name="capacidad" min="1" class="form-control border-0"
-                           placeholder="Capacidad">
-                </div>
-
-                <!-- Precios -->
-                <div class="d-flex align-items-center px-3 py-2 flex-grow-1 border-end">
-                    <i class="bi bi-cash me-2 text-secondary"></i>
-                    <input type="number"
-                           name="precio_min"
-                           min="0"
-                           step="0.01"
-                           class="form-control border-0"
-                           placeholder="Precio mínimo">
-                    <span class="mx-2 text-secondary">—</span>
-                    <input type="number"
-                           name="precio_max"
-                           min="0"
-                           step="0.01"
-                           class="form-control border-0"
-                           placeholder="Precio máximo">
-                </div>
-
-                <!-- Botón -->
-                <div class="d-flex align-items-center px-3 py-2">
-                    <button type="submit" class="btn btn-primary px-4 fw-semibold rounded-pill">
-                        Buscar
-                    </button>
-                </div>
-            </form>
-
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav ms-auto" id="menu-dinamico">
+                    <!-- Aquí JS insertará el menú según el rol -->
+                </ul>
+            </div>
         </div>
-    </section>
+    </nav>
+    <!-- FIN MENU -->
 
+
+    <!-- MENU -->
+    <!-- MENU -->
+    <!-- MENU -->
+<main class="layout-main">
+        <section class="buscador-section d-flex align-items-center justify-content-center">
+            <div class="container text-center">
+
+                <form id="formBuscador" novalidate class="buscador-form">
+
+                    <!-- Tipo habitación -->
+                    <div class="buscador-field field-tipo">
+                        <span class="buscador-label">
+                            <i class="bi bi-building"></i>
+                            Tipo de habitación / Destino
+                        </span>
+
+                        <select name="tipo_habitacion"
+                                class="buscador-input form-select border-0 p-0 bg-transparent">
+                            <option value="">Todos los tipos</option>
+                            {% for t in tipos_habitacion %}
+                                {% if t.EstadoTipoHabitacion %}
+                                    <option value="{{ t.NombreHabitacion }}">{{ t.NombreHabitacion }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="buscador-field field-fechas">
+                        <span class="buscador-label">
+                            <i class="bi bi-calendar-event"></i>
+                            Fechas
+                        </span>
+
+                        <input type="text"
+                               id="rangoFechas"
+                               class="buscador-input form-control"
+                               placeholder="Fecha de entrada — Fecha de salida"
+                               autocomplete="off"
+                               readonly>
+
+                        <input type="hidden" name="fecha_entrada" id="fechaEntrada">
+                        <input type="hidden" name="fecha_salida" id="fechaSalida">
+                    </div>
+
+                    <!-- Capacidad -->
+                    <div class="buscador-field field-capacidad">
+                        <span class="buscador-label">
+                            <i class="bi bi-people-fill"></i>
+                            Capacidad
+                        </span>
+
+                        <input type="number"
+                               name="capacidad"
+                               min="1"
+                               max="10"
+                               class="buscador-input form-control"
+                               placeholder="Número de personas">
+                    </div>
+
+                    <!-- Precios -->
+                    <div class="buscador-field field-precio">
+                        <span class="buscador-label">
+                            <i class="bi bi-cash"></i>
+                            Rango de precio
+                        </span>
+
+                        <div class="d-flex align-items-center gap-2 w-100">
+                            <input type="number"
+                                   name="precio_min"
+                                   min="0"
+                                   step="0.01"
+                                   max="99999.99"
+                                   class="buscador-input form-control"
+                                   placeholder="Mínimo">
+
+                            <span class="text-secondary">—</span>
+
+                            <input type="number"
+                                   name="precio_max"
+                                   min="0"
+                                   step="0.01"
+                                   max="99999.99"
+                                   class="buscador-input form-control"
+                                   placeholder="Máximo">
+                        </div>
+                    </div>
+
+                    <!-- Botón -->
+                    <div class="buscador-cta">
+                        <button type="submit" class="btn-buscar">
+                            Buscar
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </section>
     <section class="container py-5">
         <h3 class="fw-bold mb-4">Resultados encontrados</h3>
 
@@ -160,24 +405,89 @@
             No hay más resultados.
         </div>
     </section>
+    </main>
 
+        <footer class="footer-modern mt-5 text-white">
+            <div class="container py-5">
+
+                <div class="row justify-content-center text-center">
+
+                    <!-- Nombre del hotel -->
+                    <div class="col-12 mb-3">
+                        <h4 class="fw-bold">Hotel Genérico</h4>
+                    </div>
+
+                    <!-- Enlaces -->
+                    <div class="col-12 mb-3">
+                        <ul class="footer-links list-inline">
+                            <li class="list-inline-item mx-3"><a href="/" class="text-white-50">Inicio</a></li>
+                            <li class="list-inline-item mx-3"><a href="/habitaciones/"
+                                                                 class="text-white-50">Habitaciones</a></li>
+                        </ul>
+                    </div>
+                    <!-- Derechos -->
+                    <div class="col-12">
+                        <p class="mb-0 text-white-50">
+                            © 2025 Hotel Genérico — Todos los derechos reservados.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </footer>
+    </div>
 {% endblock %}
+
+
 
 {% block jvscript_archivos_defer %}
     <!-- Litepicker JS -->
     <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 
     <script>
+        // ==========================
+        // CONSTANTES GLOBALES
+        // ==========================
+        const MAX_PRECIO = 99999.99;
+
         let pagina = 1;
         let cargando = false;
         let fin = false;
         let filtros = {};
 
-        // -------------------------
+        // ==========================
+        // TOAST BONITO
+        // ==========================
+        function mostrarToast(mensaje, tipo = "success") {
+            const contenedor = document.getElementById("toast-container");
+            if (!contenedor) return;
+
+            const toast = document.createElement("div");
+            toast.className = `toast-msg toast-${tipo}`;
+            toast.innerHTML = `
+                <span class="icon">
+                    <i class="bi bi-check2-square"></i>
+                </span>
+                <span>${mensaje}</span>
+            `;
+
+            contenedor.appendChild(toast);
+
+            // animación
+            requestAnimationFrame(() => toast.classList.add("show"));
+
+            // ocultar
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+        // ==========================
         // RENDER DE LOS CARDS
-        // -------------------------
+        // ==========================
         function renderHabitacion(h) {
-            // Amenidades
             let serviciosArray = [];
 
             if (Array.isArray(h.amenidades)) {
@@ -193,17 +503,13 @@
             return `
                 <div class="card mb-4 shadow-sm resultado-card">
                     <div class="row g-0">
-
-                        <!-- Imagen -->
                         <div class="col-md-4">
                             <img src="${h.imagen || 'https://via.placeholder.com/400x250?text=Hotel'}"
                                  class="img-fluid rounded-start h-100"
                                  style="object-fit: cover;">
                         </div>
 
-                        <!-- Contenido -->
                         <div class="col-md-8 p-4">
-
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h4 class="fw-bold mb-1">${h.nombre}</h4>
@@ -213,7 +519,6 @@
                                     <p class="text-muted mb-2">
                                         <i class="bi bi-geo-alt"></i> ${h.ubicacion}
                                     </p>
-
                                     <p class="mb-1">
                                         <strong>Tipo:</strong> ${h.tipo_nombre || '—'}
                                     </p>
@@ -240,18 +545,16 @@
                                     Ver detalles
                                 </a>
                             </div>
-
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // -------------------------
+        // ==========================
         // CARGAR HABITACIONES (AJAX)
-        // -------------------------
+        // ==========================
         function cargarHabitaciones(reset = false) {
-            // Primero reseteamos si viene de un submit
             if (reset) {
                 pagina = 1;
                 fin = false;
@@ -259,7 +562,6 @@
                 document.getElementById("finResultados").classList.add("d-none");
             }
 
-            // Luego ya comprobamos si debemos seguir cargando
             if (cargando || fin) return;
 
             cargando = true;
@@ -270,6 +572,16 @@
             fetch(`/habitaciones/ajax/?${params.toString()}`)
                 .then(r => r.json())
                 .then(data => {
+                    // Si backend devolvió error
+                    if (data.success === false) {
+                        if (data.error) {
+                            mostrarToast(data.error, "error");
+                        } else {
+                            mostrarToast("Error al cargar habitaciones.", "error");
+                        }
+                        return;
+                    }
+
                     if (data.success && data.data.length > 0) {
                         data.data.forEach(h => {
                             document.getElementById("resultados")
@@ -293,6 +605,7 @@
                 })
                 .catch(err => {
                     console.error("Error al cargar habitaciones:", err);
+                    mostrarToast("Error al cargar habitaciones.", "error");
                 })
                 .finally(() => {
                     cargando = false;
@@ -300,48 +613,163 @@
                 });
         }
 
-        // -------------------------
-        // FORMULARIO BUSCADOR
-        // -------------------------
-        document.getElementById("formBuscador").addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const form = e.target;
-            const precioMin = form.precio_min.value.trim();
-            const precioMax = form.precio_max.value.trim();
-
-            // Validación: o ambos vacíos, o ambos con valor
-            if ((precioMin && !precioMax) || (!precioMin && precioMax)) {
-                alert("Debes ingresar tanto el precio mínimo como el precio máximo.");
-                return;
-            }
-            filtros = {
-                tipo_habitacion: form.tipo_habitacion.value,
-                fecha_entrada: form.fecha_entrada.value,
-                fecha_salida: form.fecha_salida.value,
-                capacidad: form.capacidad.value,
-                precio_min: form.precio_min.value,
-                precio_max: form.precio_max.value
-            };
-
-            cargarHabitaciones(true);
-        });
-
-        // -------------------------
-        // SCROLL INFINITO
-        // -------------------------
-        window.addEventListener("scroll", () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
-                cargarHabitaciones();
-            }
-        });
-
-        // -------------------------
-        // INIT LITEPICKER
-        // -------------------------
+        // ==========================
+        // INIT TODO CUANDO CARGA EL DOM
+        // ==========================
         document.addEventListener("DOMContentLoaded", () => {
 
+            // -------------------------
+            // BLOQUEAR letras raras en type="number"
+            // -------------------------
+            const invalidChars = ["e", "E", "+", "-"];
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener("keydown", function (e) {
+                    if (invalidChars.includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // -------------------------
+            // CAPACIDAD 1–10
+            // -------------------------
+            const capacidadInput = document.querySelector('input[name="capacidad"]');
+            if (capacidadInput) {
+                capacidadInput.addEventListener("input", function (e) {
+                    let v = e.target.value.replace(/[^\d]/g, "");
+                    if (v === "") {
+                        e.target.value = "";
+                        return;
+                    }
+
+                    let num = parseInt(v, 10);
+                    if (num < 1) num = 1;
+                    if (num > 10) {
+                        num = 10;
+                        mostrarToast("La capacidad máxima es 10 personas.", "warning");
+                    }
+                    e.target.value = num;
+                });
+            }
+
+            // -------------------------
+            // PRECIOS: solo números, un punto, máx 2 decimales y límite MAX_PRECIO
+            // -------------------------
+            ["precio_min", "precio_max"].forEach(name => {
+                const input = document.querySelector(`input[name="${name}"]`);
+                if (!input) return;
+
+                input.addEventListener("input", function (e) {
+                    let v = e.target.value;
+
+                    // quitar todo lo que no sea dígito o punto
+                    v = v.replace(/[^0-9.]/g, "");
+
+                    // solo un punto
+                    let parts = v.split(".");
+                    if (parts.length > 2) {
+                        v = parts[0] + "." + parts.slice(1).join("");
+                        parts = v.split(".");
+                    }
+
+                    // máx 2 decimales
+                    if (parts[1] && parts[1].length > 2) {
+                        parts[1] = parts[1].slice(0, 2);
+                        v = parts[0] + "." + parts[1];
+                    }
+
+                    // límite numérico
+                    const num = parseFloat(v);
+                    if (!isNaN(num) && num > MAX_PRECIO) {
+                        v = MAX_PRECIO.toFixed(2);
+                        mostrarToast(
+                            `El valor máximo permitido es ${MAX_PRECIO.toFixed(2)}.`,
+                            "warning"
+                        );
+                    }
+
+                    e.target.value = v;
+                });
+            });
+
+            // -------------------------
+            // SUBMIT DEL FORMULARIO
+            // -------------------------
+            const formBuscador = document.getElementById("formBuscador");
+            if (formBuscador) {
+                formBuscador.addEventListener("submit", function (e) {
+                    e.preventDefault();
+
+                    const precioMin = formBuscador.precio_min.value.trim();
+                    const precioMax = formBuscador.precio_max.value.trim();
+                    const capVal = formBuscador.capacidad.value.trim();
+
+                    // Capacidad máximo 10 (extra protección)
+                    if (capVal && parseInt(capVal, 10) > 10) {
+                        mostrarToast("La capacidad máxima es 10 personas.", "warning");
+                        formBuscador.capacidad.value = 10;
+                        return;
+                    }
+
+                    // --- VALIDACIONES DE PRECIOS ---
+                    // a) O ambos vacíos, o ambos con valor
+                    if ((precioMin && !precioMax) || (!precioMin && precioMax)) {
+                        mostrarToast("Debes ingresar tanto el precio mínimo como el precio máximo.", "warning");
+                        return;
+                    }
+
+                    // b) Si ambos tienen valor, validar rango y relación
+                    if (precioMin && precioMax) {
+                        const minVal = parseFloat(precioMin);
+                        const maxVal = parseFloat(precioMax);
+
+                        if (isNaN(minVal) || isNaN(maxVal)) {
+                            mostrarToast("Los precios deben ser numéricos.", "error");
+                            return;
+                        }
+
+                        if (minVal > MAX_PRECIO || maxVal > MAX_PRECIO) {
+                            mostrarToast(
+                                `Los precios no pueden ser mayores a ${MAX_PRECIO.toFixed(2)}.`,
+                                "error"
+                            );
+                            return;
+                        }
+
+                        if (minVal > maxVal) {
+                            mostrarToast("El precio mínimo no puede ser mayor que el precio máximo.", "error");
+                            return;
+                        }
+                    }
+
+                    // Filtros finales
+                    filtros = {
+                        tipo_habitacion: formBuscador.tipo_habitacion.value,
+                        fecha_entrada: formBuscador.fecha_entrada.value,
+                        fecha_salida: formBuscador.fecha_salida.value,
+                        capacidad: formBuscador.capacidad.value,
+                        precio_min: formBuscador.precio_min.value,
+                        precio_max: formBuscador.precio_max.value
+                    };
+
+                    cargarHabitaciones(true);
+                });
+            }
+
+            // -------------------------
+            // SCROLL INFINITO
+            // -------------------------
+            window.addEventListener("scroll", () => {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                    cargarHabitaciones();
+                }
+            });
+
+            // -------------------------
+            // INIT LITEPICKER
+            // -------------------------
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             const picker = new Litepicker({
                 element: document.getElementById('rangoFechas'),
@@ -349,15 +777,13 @@
                 numberOfMonths: 2,
                 numberOfColumns: 2,
                 format: 'YYYY-MM-DD',
-                minDate: today,            // 👈 NO PERMITE DÍAS ANTERIORES
+                minDate: today,
                 autoApply: true,
                 tooltipText: {
                     one: 'noche',
                     other: 'noches'
                 },
-                tooltipNumber: (totalDays) => {
-                    return totalDays - 1;   // noches = días - 1
-                },
+                tooltipNumber: (totalDays) => totalDays - 1,
                 lang: 'es-ES',
                 setup: (picker) => {
                     picker.on('selected', (date1, date2) => {
@@ -378,51 +804,8 @@
                 }
             });
 
-            // Primera carga de resultados sin filtros
+            // Primera carga sin filtros
             cargarHabitaciones(true);
         });
     </script>
-    <script>
-        // 1) Bloquear letras raras en TODOS los type="number"
-        const invalidChars = ["e", "E", "+", "-"];
-
-        document.querySelectorAll('input[type="number"]').forEach(input => {
-            input.addEventListener("keydown", function (e) {
-                if (invalidChars.includes(e.key)) {
-                    e.preventDefault();
-                }
-            });
-        });
-
-        // 2) Capacidad: solo enteros positivos
-        const capacidadInput = document.querySelector('input[name="capacidad"]');
-        if (capacidadInput) {
-            capacidadInput.addEventListener("input", function (e) {
-                // Elimina todo lo que no sean dígitos
-                e.target.value = e.target.value.replace(/[^\d]/g, "");
-            });
-        }
-
-        // 3) Precios: permitir solo números y UN punto decimal
-        ["precio_min", "precio_max"].forEach(name => {
-            const input = document.querySelector(`input[name="${name}"]`);
-            if (input) {
-                input.addEventListener("input", function (e) {
-                    let v = e.target.value;
-
-                    // Quitar todo lo que no sea dígito o punto
-                    v = v.replace(/[^0-9.]/g, "");
-
-                    // Solo permitir un punto
-                    const parts = v.split(".");
-                    if (parts.length > 2) {
-                        v = parts[0] + "." + parts.slice(1).join("");
-                    }
-
-                    e.target.value = v;
-                });
-            }
-        });
-    </script>
-
 {% endblock %}

@@ -164,30 +164,4 @@ class PagoGestionRest:
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar pago: {e}")
 
-def crear_pago_prueba():
-    api = PagoGestionRest()
 
-    try:
-
-        resp = api.crear_pago(
-            id_pago=122,                # ID del pago (usa uno que no exista aún)
-            id_metodo_pago=1,         # Ej: 1 = Visa
-            id_unico_usuario_externo=None,  # Sin usuario externo
-            id_unico_usuario=1,       # Usuario interno 1
-            id_factura=1,             # Factura 1
-            cuenta_origen="1234",
-            cuenta_destino="5678",
-            monto_total=100.46,       # Monto de prueba
-            fecha_emision=None,       # Deja que el backend maneje este campo
-            estado_pago=True          # Pago completo/activo
-        )
-        print("✅ Pago creado correctamente:")
-        print(resp)
-
-    except Exception as e:
-        print("❌ Error al crear pago:")
-        print(e)
-
-if __name__ == "__main__":
-
-    crear_pago_prueba()

@@ -123,8 +123,3 @@ class MetodoPagoGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar método de pago: {e}")
-
-client = MetodoPagoGestionRest()
-
-# Listar métodos de pago
-pprint(client.obtener_metodos_pago())

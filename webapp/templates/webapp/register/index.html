@@ -2,113 +2,318 @@
 {% load static %}
 
 {% block titulo_pagina %}
-<title>Crear Cuenta | Hotel Genérico</title>
+    <title>Crear Cuenta | Hotel Genérico</title>
 {% endblock %}
+{% block css_archivos %}
+<style>
+/* CONTENEDOR GENERAL DE MENSAJES */
+.messages-wrapper {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
 
+/* CAJA BASE */
+.app-alert {
+    min-width: 260px;
+    max-width: 360px;
+    display: flex;
+    align-items: center;
+    padding: .75rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(20px);
+    animation: appAlertIn .25s ease forwards;
+}
+
+/* ICONO A LA IZQUIERDA */
+.app-alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: .5rem;
+    font-size: 1.1rem;
+}
+
+/* TEXTO */
+.app-alert-text {
+    flex: 1;
+}
+
+/* BOTÓN “X” OPCIONAL */
+.app-alert-close {
+    margin-left: .5rem;
+    cursor: pointer;
+    opacity: .8;
+    font-size: 1.1rem;
+}
+.app-alert-close:hover {
+    opacity: 1;
+}
+
+/* COLORES SEGÚN TIPO */
+.app-alert-success { background: #16a34a; }  /* verde */
+.app-alert-error   { background: #dc2626; }  /* rojo  */
+.app-alert-warning { background: #d97706; }  /* naranja */
+.app-alert-info    { background: #2563eb; }  /* azul */
+
+/* ANIMACIÓN ENTRADA */
+@keyframes appAlertIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* RESPONSIVE: EN MÓVIL QUE OCUPEN TODO EL ANCHO */
+@media (max-width: 576px) {
+    .messages-wrapper {
+        top: .5rem;
+        right: .5rem;
+        left: .5rem;
+    }
+    .app-alert {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+}
+
+</style>
+
+{% endblock %}
+{% block mensajes_personalizados %}
+<div class="messages-wrapper">
+    {% if messages %}
+        {% for message in messages %}
+            {% comment %}
+              message.tags en Django suele traer: success, error, warning, info
+            {% endcomment %}
+            <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <span class="app-alert-icon">
+                    {% if "success" in message.tags %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif "error" in message.tags %}
+                        <i class="bi bi-x-circle"></i>
+                    {% elif "warning" in message.tags %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                </span>
+                <span class="app-alert-text">
+                    {{ message }}
+                </span>
+                <!-- si quieres cerrar manualmente -->
+                <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    &times;
+                </span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}
 {% block contenido_pagina %}
-<section class="min-vh-100 d-flex align-items-center justify-content-center" style="background: var(--degradado);">
-    <div class="container">
-        <div class="row justify-content-center">
+    <section class="min-vh-100 d-flex align-items-center justify-content-center" style="background: var(--degradado);">
+        <div class="container">
+            <div class="row justify-content-center">
 
-            <div class="col-md-7 col-lg-5">
-                <div class="card shadow-lg border-0 rounded-4">
-                    <div class="card-body p-4 p-md-5">
+                <div class="col-md-7 col-lg-5">
+                    <div class="card shadow-lg border-0 rounded-4">
+                        <div class="card-body p-4 p-md-5">
 
-                        <div class="text-center mb-4">
-                            <i class="bi bi-person-plus fs-1 text-primary"></i>
-                            <h3 class="fw-bold">Crear Cuenta</h3>
-                            <p class="text-muted mb-0">Regístrate para continuar</p>
+                            <div class="text-center mb-4">
+                                <i class="bi bi-person-plus fs-1 text-primary"></i>
+                                <h3 class="fw-bold">Crear Cuenta</h3>
+                                <p class="text-muted mb-0">Regístrate para continuar</p>
+                            </div>
+
+
+                            <form action="{% url 'register_post' %}" method="post" id="formRegister">
+                                {% csrf_token %}
+
+                                <!-- Nombre -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Nombre</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                        <input name="nombre" type="text" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <!-- Apellido -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Apellido</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                        <input name="apellido" type="text" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <!-- Correo -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Correo electrónico</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
+                                        <input name="correo"
+                                               type="email"
+                                               class="form-control"
+                                               required
+                                               pattern="[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.com"
+                                               title="Debe tener el formato usuario@dominio.com">
+                                    </div>
+                                </div>
+
+                                <!-- Tipo Documento -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Tipo de documento</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
+                                        <select name="tipo_documento" class="form-select">
+                                            <option value="CEDULA">Cédula</option>
+                                            <option value="PASAPORTE">Pasaporte</option>
+                                            <option value="OTRO">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Documento -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Número de documento</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-hash"></i></span>
+                                        <input name="documento"
+                                               type="text"
+                                               class="form-control"
+                                               required
+                                               maxlength="10"
+                                               pattern="\d{1,10}"
+                                               inputmode="numeric"
+                                               title="Solo números, máximo 10 dígitos">
+                                    </div>
+                                </div>
+
+                                <!-- Clave -->
+<!-- Clave -->
+<div class="mb-3">
+    <label class="form-label fw-semibold">Contraseña</label>
+    <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+        <input name="clave"
+               type="password"
+               class="form-control"
+               required
+               maxlength="40"
+               placeholder="Máximo 40 caracteres">
+    </div>
+</div>
+
+
+                                <!-- Botón -->
+                                <div class="d-grid mb-3">
+                                    <button type="submit" class="btn btn-primary fw-semibold py-2">
+                                        Crear cuenta
+                                    </button>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <span class="text-muted small">¿Ya tienes una cuenta?</span><br>
+                                    <a href="{% url 'login' %}"
+                                       class="text-primary fw-semibold small text-decoration-none">
+                                        Iniciar sesión
+                                    </a>
+                                </div>
+
+                            </form>
+
                         </div>
-
-                        <!-- MENSAJES -->
-                        {% if messages %}
-                            {% for msg in messages %}
-                                <div class="alert alert-danger text-center p-2">{{ msg }}</div>
-                            {% endfor %}
-                        {% endif %}
-
-                        <form action="{% url 'register_post' %}" method="post">
-                            {% csrf_token %}
-
-                            <!-- Nombre -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Nombre</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                                    <input name="nombre" type="text" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <!-- Apellido -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Apellido</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                                    <input name="apellido" type="text" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <!-- Correo -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Correo electrónico</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
-                                    <input name="correo" type="email" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <!-- Tipo Documento -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Tipo de documento</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
-                                    <select name="tipo_documento" class="form-select">
-                                        <option value="CEDULA">Cédula</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
-                                        <option value="OTRO">Otro</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Documento -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Número de documento</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-hash"></i></span>
-                                    <input name="documento" type="text" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <!-- Clave -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Contraseña</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
-                                    <input name="clave" type="password" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <!-- Botón -->
-                            <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-primary fw-semibold py-2">
-                                    Crear cuenta
-                                </button>
-                            </div>
-
-                            <div class="text-center mt-3">
-                                <span class="text-muted small">¿Ya tienes una cuenta?</span><br>
-                                <a href="{% url 'login' %}" class="text-primary fw-semibold small text-decoration-none">
-                                    Iniciar sesión
-                                </a>
-                            </div>
-
-                        </form>
-
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+{% endblock %}
+{% block jvscript_archivos_defer %}
+    <script>
+        // misma función de toast que en habitaciones
+        function mostrarToast(mensaje, tipo = "error") {
+            const contenedor = document.getElementById("toast-container");
+            if (!contenedor) return;
+
+            const toast = document.createElement("div");
+            toast.className = `toast-msg toast-${tipo}`;
+            toast.innerHTML = `
+            <span class="icon">
+                <i class="bi bi-check2-square"></i>
+            </span>
+            <span>${mensaje}</span>
+        `;
+
+            contenedor.appendChild(toast);
+
+            // animación
+            requestAnimationFrame(() => toast.classList.add("show"));
+
+            // ocultar
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("formRegister");
+            if (!form) return;
+
+            const docInput = form.querySelector('input[name="documento"]');
+            const emailInput = form.querySelector('input[name="correo"]');
+
+            // Documento: solo números, máx 10
+            if (docInput) {
+                docInput.addEventListener("input", function (e) {
+                    let v = e.target.value.replace(/\D/g, ""); // quitar no numéricos
+                    if (v.length > 10) {
+                        v = v.slice(0, 10);
+                    }
+                    e.target.value = v;
+                });
+            }
+
+            form.addEventListener("submit", function (e) {
+                const errores = [];
+
+                const correo = emailInput.value.trim();
+                const documento = docInput.value.trim();
+
+                // regex: [cuerpo]@[dominio].[tld]
+                const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+                if (!emailRegex.test(correo)) {
+                    errores.push("Ingresa un correo electrónico válido (ej: usuario@dominio.com).");
+                }
+
+                if (!/^\d{1,10}$/.test(documento)) {
+                    errores.push("El número de documento debe tener solo números y máximo 10 dígitos.");
+                }
+
+                if (errores.length > 0) {
+                    e.preventDefault(); // no enviar al backend
+                    errores.forEach(msg => mostrarToast(msg, "error"));
+                }
+            });
+        });
+    </script>
 {% endblock %}

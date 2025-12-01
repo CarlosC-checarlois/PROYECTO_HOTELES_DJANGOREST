@@ -65,7 +65,5 @@ class RolGestionRest:
         except Exception as e:
             raise ConnectionError(f"Error al eliminar rol {id_rol}: {e}")
 
-
 c = RolGestionRest()
-c = c.obtener_roles()
-pprint(c)
+pprint(c.obtener_roles())

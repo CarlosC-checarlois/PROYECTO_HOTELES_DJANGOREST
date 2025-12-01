@@ -128,9 +128,3 @@ class DescuentosGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar descuento: {e}")
-
-if __name__ == "__main__":
-    api = DescuentosGestionRest()
-
-    # Obtener todos
-    pprint(api.obtener_descuento_por_id(1))

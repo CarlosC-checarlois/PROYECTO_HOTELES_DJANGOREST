@@ -154,6 +154,3 @@ class HabxResGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar HabxRes: {e}")
-
-i = HabxResGestionRest().obtener_habxres()
-pprint(i)

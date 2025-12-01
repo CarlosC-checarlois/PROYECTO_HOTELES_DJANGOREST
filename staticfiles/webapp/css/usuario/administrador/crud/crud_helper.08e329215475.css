@@ -1,0 +1,155 @@
+/* ================== Inputs readonly ================== */
+.readonly-input {
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+}
+
+/* ================== TOASTS ================== */
+
+#crud-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 20000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.crud-toast {
+    min-width: 260px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: toastFadeIn 0.4s forwards;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+.crud-toast-icon {
+    font-size: 18px;
+}
+
+.crud-toast-success { background: #28a745; }
+.crud-toast-error   { background: #dc3545; }
+.crud-toast-warning { background: #ffc107; color: #000; }
+.crud-toast-info    { background: #0dcaf0; }
+
+/* Animaciones toast */
+@keyframes toastFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-20px); }
+}
+
+/* ================== MODAL DE CONFIRMACIÓN ================== */
+
+.crud-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 21000;
+    animation: confirmFadeIn 0.2s ease-out;
+}
+
+.crud-confirm-hide {
+    animation: confirmFadeOut 0.2s ease-out forwards;
+}
+
+.crud-confirm-modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 24px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+.crud-confirm-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.crud-confirm-message {
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.crud-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Animaciones confirm */
+@keyframes confirmFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes confirmFadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.95); }
+}
+.readonly-input {
+    background-color: #f0f0f0 !important;
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+}
+/* Centrar botones del modal de confirmación */
+.crud-confirm-actions {
+    display: flex;
+    justify-content: center; /* 🔥 Centra horizontalmente */
+    gap: 15px;               /* Separación entre botones */
+    margin-top: 20px;
+}
+
+/* Asegurar que los botones mantengan su estilo */
+.crud-confirm-actions .btn {
+    min-width: 120px;
+}
+/* CONTENEDOR DE LA LISTA AUTOCOMPLETE */
+.autocomplete-list {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* ITEM */
+.autocomplete-item {
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background: #f3f6ff;
+}
+
+/* NO RESULTS */
+.autocomplete-empty {
+    padding: 10px 14px;
+    text-align: center;
+    color: #777;
+}

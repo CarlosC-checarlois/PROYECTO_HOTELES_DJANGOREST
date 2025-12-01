@@ -40,6 +40,131 @@
             padding: .45rem .8rem;
         }
     </style>
+    <style>
+        .hold-countdown-badge {
+            font-size: .8rem;
+            padding: .3rem .7rem;
+            border-radius: 999px;
+            background: #0ea5e9;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+        }
+
+        .hold-countdown-badge.expired {
+            background: #6b7280;
+        }
+    </style>
+    <style>
+        /* ============================
+       BADGES ESTADO RESERVA
+    ============================ */
+
+        .badge-estado {
+            font-size: .75rem;
+            padding: .35rem .8rem;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: .2px;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .badge.bg-warning {
+            background: linear-gradient(135deg, #facc15, #f59e0b) !important;
+            color: #422006 !important;
+        }
+
+        .badge.bg-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+        }
+
+        .badge.bg-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+        }
+
+        .badge.bg-secondary {
+            background: #6b7280 !important;
+        }
+
+        /* ============================
+           HOLD COUNTDOWN BADGE
+        ============================ */
+
+        .hold-countdown-badge {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, .35);
+            white-space: nowrap;
+            transition: all .3s ease;
+        }
+
+        .hold-countdown-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(14, 165, 233, .45);
+        }
+
+        .hold-countdown-badge.expired {
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+            box-shadow: none;
+        }
+
+        /* ============================
+           BOTONES ACCIÓN
+        ============================ */
+
+        .btn-confirmar {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: .55rem 1rem;
+            transition: all .25s ease;
+            box-shadow: 0 6px 16px rgba(34, 197, 94, .35);
+        }
+
+        .btn-confirmar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(34, 197, 94, .45);
+        }
+
+        .btn-outline-danger {
+            border-radius: 999px;
+            font-weight: 600;
+            transition: all .25s ease;
+        }
+
+        .btn-outline-danger:hover {
+            box-shadow: 0 6px 14px rgba(220, 38, 38, .15);
+            transform: translateY(-1px);
+        }
+
+        /* ============================
+           MEJORA GENERAL TARJETA
+        ============================ */
+
+        .reserva-card {
+            border-radius: 1rem;
+            background: #fff;
+            transition: .25s ease;
+            border-left: 5px solid transparent;
+        }
+
+        .reserva-card:hover {
+            border-left: 5px solid #3b82f6;
+        }
+
+    </style>
 {% endblock %}
 
 {% block contenido_pagina %}
@@ -54,7 +179,10 @@
         <div id="contenedor-reservas">
 
             {% for r in reservas %}
-                <div class="reserva-card mb-4 p-3 shadow-sm" data-user="{{ r.idUsuario }}">
+                <div class="reserva-card mb-4 p-3 shadow-sm"
+                     data-user="{{ r.idUsuario }}"
+                     data-reserva="{{ r.idReserva }}"
+                     data-hold="{{ r.idHold }}">
 
                     <div class="row g-4">
 
@@ -71,21 +199,40 @@
                                 <h5 class="titulo-reserva">{{ r.habitacion }}</h5>
 
                                 {% if r.estado == "PRE-RESERVA" or r.estado == "PRE-RESERVA ACTIVA" %}
-                                    <span class="badge bg-warning text-dark badge-estado">
-                                        <i class="bi bi-clock-history"></i> Pre-Reserva
-                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-warning text-dark badge-estado">
+                <i class="bi bi-clock-history"></i> Pre-Reserva
+            </span>
+
+                                        {# Contador solo si el HOLD sigue vivo #}
+                                        {% if r.hold_restante_segundos and not r.hold_expirado %}
+                                            <span class="hold-countdown-badge hold-pill"
+                                                  data-reserva="{{ r.idReserva }}"
+                                                  data-segundos="{{ r.hold_restante_segundos }}">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span class="hold-countdown-text">
+                        Tiempo restante: …
+                    </span>
+                </span>
+                                        {% elif r.hold_expirado %}
+                                            <span class="hold-countdown-badge expired">
+                    <i class="bi bi-hourglass-top"></i>
+                    Expirado
+                </span>
+                                        {% endif %}
+                                    </div>
                                 {% elif r.estado == "CONFIRMADA" %}
                                     <span class="badge bg-success badge-estado">
-                                        <i class="bi bi-check-circle"></i> Confirmada
-                                    </span>
+            <i class="bi bi-check-circle"></i> Confirmada
+        </span>
                                 {% elif r.estado == "CANCELADA" %}
                                     <span class="badge bg-danger badge-estado">
-                                        <i class="bi bi-x-circle"></i> Cancelada
-                                    </span>
+            <i class="bi bi-x-circle"></i> Cancelada
+        </span>
                                 {% else %}
                                     <span class="badge bg-secondary badge-estado">
-                                        <i class="bi bi-question-circle"></i> {{ r.estado|default:"Pendiente" }}
-                                    </span>
+            <i class="bi bi-question-circle"></i> {{ r.estado|default:"Pendiente" }}
+        </span>
                                 {% endif %}
                             </div>
 
@@ -110,26 +257,26 @@
                         <div class="col-md-3 d-flex flex-column justify-content-between">
 
 
-                                {% if r.estado == "PRE-RESERVA" %}
-                                    <button class="btn btn-success w-100 mb-2 btn-confirmar"
-                                            data-reserva="{{ r.idReserva }}"
-                                            data-hab="{{ r.idHabitacion }}"
-                                            data-hold="{{ r.idHold }}"
-                                            data-fechai="{{ r.fecha_inicio }}"
-                                            data-fechaf="{{ r.fecha_fin }}"
-                                            data-hues="{{ r.huespedes }}"
-                                            data-correo="{{ r.correo }}"
-                                            data-documento="{{ r.documento }}">
-                                        <i class="bi bi-check2-circle"></i> Confirmar reserva
-                                    </button>
-                                {% endif %}
-                                {% if r.estado == "PRE-RESERVA"  %}
-                                    <button class="btn btn-outline-danger w-100 btn-cancelar"
-                                            data-id="{{ r.idReserva }}">
-                                        <i class="bi bi-x-circle"></i> Cancelar
-                                    </button>
+                            {% if r.estado == "PRE-RESERVA" %}
+                                <button class="btn btn-success w-100 mb-2 btn-confirmar"
+                                        data-reserva="{{ r.idReserva }}"
+                                        data-hab="{{ r.idHabitacion }}"
+                                        data-hold="{{ r.idHold }}"
+                                        data-fechai="{{ r.fecha_inicio }}"
+                                        data-fechaf="{{ r.fecha_fin }}"
+                                        data-hues="{{ r.huespedes }}"
+                                        data-correo="{{ r.correo }}"
+                                        data-documento="{{ r.documento }}">
+                                    <i class="bi bi-check2-circle"></i> Confirmar reserva
+                                </button>
+                            {% endif %}
+                            {% if r.estado == "PRE-RESERVA" %}
+                                <button class="btn btn-outline-danger w-100 btn-cancelar"
+                                        data-id="{{ r.idReserva }}">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
 
-                                {% endif %}
+                            {% endif %}
 
 
                         </div>
@@ -185,33 +332,112 @@
         </div>
     </div>
 
+<!-- MODAL CANCELAR RESERVA -->
+<div class="modal fade" id="modalCancelarReserva" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger fw-bold">
+                    <i class="bi bi-x-circle"></i> Cancelar pre-reserva
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas cancelar esta pre-reserva?</p>
+                <p class="text-muted small">Esta acción liberará la habitación para otros clientes.</p>
+            </div>
+
+            <div class="modal-footer border-0">
+                <button class="btn btn-light rounded-pill" data-bs-dismiss="modal">
+                    Volver
+                </button>
+                <button id="btnConfirmarCancelacion" class="btn btn-danger rounded-pill">
+                    Sí, cancelar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
+
 {% block jvscript_archivos_defer %}
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        // =========================
+        //  Helper CSRF
+        // =========================
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return null;
+        }
 
-            const usuario_id = localStorage.getItem("usuario_id");
+        // =========================
+        //  LÓGICA GENERAL RESERVAS
+        // =========================
+        document.addEventListener("DOMContentLoaded", () => {
+            const usuarioIdLS = localStorage.getItem("usuario_id");
 
-            // Filtrar reservas para mostrar solo las del usuario
-            document.querySelectorAll(".reserva-card").forEach(card => {
-                if (card.getAttribute("data-user") !== usuario_id) {
-                    card.remove();
-                }
-            });
+            // =========================
+            // 1) Leer parámetros descriptivos de la URL y guardar HOLD+RESERVA
+            // =========================
+            const params = new URLSearchParams(window.location.search);
 
-            // Botón pagar
+            const uidParam = params.get("uid");
+            const idReservaParam = params.get("id_reserva_reserva");
+            const fechaInicioHoldParam = params.get("fecha_inicio_hold_reserva");
+            const tiempoHoldParam = parseInt(params.get("tiempo_hold_reserva") || "0", 10);
+            const idHoldParam = params.get("id_hold_reserva");
+
+            if (uidParam && idReservaParam && idHoldParam) {
+                const holdInfo = {
+                    uid: uidParam,
+                    reservaId: idReservaParam,
+                    holdId: idHoldParam,
+                    fechaInicioHold: fechaInicioHoldParam,
+                    tiempoHold: tiempoHoldParam,
+                    storedAt: new Date().toISOString()
+                };
+
+                localStorage.setItem("hold_activo", JSON.stringify(holdInfo));
+                localStorage.setItem("ultima_reserva_id", idReservaParam);
+                localStorage.setItem("ultimo_hold_id", idHoldParam);
+
+                console.log("✅ HOLD+RESERVA almacenados en localStorage:", holdInfo);
+            }
+
+            // =========================
+            // 2) Mostrar solo reservas del usuario logueado
+            // =========================
+            if (usuarioIdLS) {
+                document.querySelectorAll(".reserva-card").forEach(card => {
+                    const cardUser = card.getAttribute("data-user");
+                    if (cardUser !== usuarioIdLS) {
+                        card.remove();
+                    }
+                });
+            }
+
+            // =========================
+            // 3) Botón Pagar (si existe)
+            // =========================
             const botonesPago = document.querySelectorAll(".btn-pagar");
             const modalPagoElement = document.getElementById('modalPago');
-            let modal = null;
+            let modalPago = null;
+
             if (modalPagoElement) {
                 try {
-                    modal = new bootstrap.Modal(modalPagoElement);
+                    modalPago = new bootstrap.Modal(modalPagoElement);
                 } catch (e) {
                     console.error("Error al inicializar modal de pago:", e);
                 }
             }
+
             const btnConfirmarPago = document.getElementById("btnConfirmarPago");
 
             botonesPago.forEach(boton => {
@@ -220,9 +446,9 @@
                     if (btnConfirmarPago) {
                         btnConfirmarPago.href = `/usuario/pago/?reserva=${id}`;
                     }
-                    if (modal) {
+                    if (modalPago) {
                         try {
-                            modal.show();
+                            modalPago.show();
                         } catch (e) {
                             console.error("Error al mostrar modal de pago:", e);
                         }
@@ -230,207 +456,240 @@
                 });
             });
 
+            // =========================
+            // 4) Confirmar reserva (modal + AJAX)
+// =========================
+            const modalConfirmarElement = document.getElementById("modalConfirmar");
+            let modalConfirmar = null;
+
+            if (modalConfirmarElement) {
+                try {
+                    modalConfirmar = new bootstrap.Modal(modalConfirmarElement);
+                } catch (e) {
+                    console.error("Error al inicializar modalConfirmar:", e);
+                }
+            }
+
+            // Datos de usuario para rellenar el modal
+            const correoUsuario =
+                localStorage.getItem("usuario_correo") ||
+                localStorage.getItem("usuario_email") ||
+                localStorage.getItem("usuario_mail") ||
+                "";
+
+            const documentoUsuario =
+                localStorage.getItem("usuario_documento") ||
+                localStorage.getItem("usuario_doc") ||
+                "";
+
+            // CLICK en cada botón "Confirmar reserva"
+            document.querySelectorAll(".btn-confirmar").forEach(btn => {
+                btn.addEventListener("click", () => {
+
+                    const confCorreo = document.getElementById("confCorreo");
+                    const confDocumento = document.getElementById("confDocumento");
+                    const confIdHabitacion = document.getElementById("confIdHabitacion");
+                    const confIdHold = document.getElementById("confIdHold");
+                    const confFechaInicio = document.getElementById("confFechaInicio");
+                    const confFechaFin = document.getElementById("confFechaFin");
+                    const confHuespedes = document.getElementById("confHuespedes");
+
+                    if (!confCorreo || !confDocumento || !confIdHabitacion || !confIdHold ||
+                        !confFechaInicio || !confFechaFin || !confHuespedes) {
+                        console.error("Algunos elementos del formulario de confirmación no se encontraron.");
+                        alert("Error: No se pudo cargar el formulario de confirmación.");
+                        return;
+                    }
+
+                    // 1) Inputs del usuario
+                    confCorreo.value = correoUsuario;
+                    confDocumento.value = documentoUsuario;
+
+                    // 2) Datos desde el botón
+                    const hab = btn.dataset.hab;
+                    const hold = btn.dataset.hold;
+                    const fechai = btn.dataset.fechai;
+                    const fechaf = btn.dataset.fechaf;
+                    const hues = btn.dataset.hues;
+
+                    if (!hab || !hold || !fechai || !fechaf || !hues) {
+                        console.error("Datos incompletos en el botón .btn-confirmar:", {
+                            hab, hold, fechai, fechaf, hues
+                        });
+                        alert("Error: Faltan datos para confirmar la reserva. Recarga la página.");
+                        return;
+                    }
+
+                    confIdHabitacion.value = hab;
+                    confIdHold.value = hold;
+
+                    // Asegurar formato ISO con hora
+                    confFechaInicio.value = fechai.includes("T") ? fechai : `${fechai}T15:00:00`;
+                    confFechaFin.value = fechaf.includes("T") ? fechaf : `${fechaf}T11:00:00`;
+                    confHuespedes.value = hues;
+
+                    if (modalConfirmar) {
+                        try {
+                            modalConfirmar.show();
+                        } catch (e) {
+                            console.error("Error al mostrar el modal de confirmación:", e);
+                            alert("Error al abrir el modal de confirmación.");
+                        }
+                    }
+                });
+            });
+
+            // CLICK en el botón final del modal "Confirmar reserva"
+            const btnConfirmarSubmit = document.getElementById("btnConfirmarSubmit");
+            if (btnConfirmarSubmit) {
+                btnConfirmarSubmit.addEventListener("click", () => {
+
+                    const idHabitacion = document.getElementById("confIdHabitacion")?.value;
+                    const idHold = document.getElementById("confIdHold")?.value;
+                    const fechaInicio = document.getElementById("confFechaInicio")?.value;
+                    const fechaFin = document.getElementById("confFechaFin")?.value;
+                    const numeroHuespedes = document.getElementById("confHuespedes")?.value;
+
+                    if (!idHabitacion || !idHold || !usuarioIdLS || !fechaInicio || !fechaFin || !numeroHuespedes) {
+                        alert("Por favor verifica que todos los datos estén completos.");
+                        return;
+                    }
+                    const correo = localStorage.getItem("usuario_correo") || "";
+                    const nombre = localStorage.getItem("usuario_nombre") || "";
+                    const apellido = localStorage.getItem("usuario_apellido") || "";
+                    const tipoDocumento = localStorage.getItem("usuario_tipo_doc") || "CEDULA";
+                    const documento = localStorage.getItem("usuario_documento") || "";
+                    const payload = {
+                        idHabitacion: idHabitacion,
+                        idHold: idHold,
+                        idUnicoUsuario: usuarioIdLS,
+                        fechaInicio: fechaInicio,
+                        fechaFin: fechaFin,
+                        numeroHuespedes: numeroHuespedes,
+                        nombre: nombre,
+                        apellido: apellido,
+                        correo: correo,
+                        tipoDocumento: tipoDocumento,
+                        documento: documento
+                    };
+
+                    console.log(">>> ENVIANDO CONFIRMAR RESERVA:", payload);
+
+                    fetch("/usuario/confirmar-reserva/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCookie("csrftoken")
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(r => {
+                            if (!r.ok) {
+                                return r.json().then(data => {
+                                    throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
+                                });
+                            }
+                            return r.json();
+                        })
+                        .then(res => {
+                            if (res.ok) {
+                                alert("Reserva confirmada correctamente.");
+                                if (modalConfirmar) {
+                                    modalConfirmar.hide();
+                                }
+                                location.reload();
+                            } else {
+                                alert("Error: " + (res.error || "Error desconocido"));
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Error confirmando reserva:", err);
+                            alert("Error inesperado: " + err.message);
+                        });
+                });
+            }
+
+            // =========================
+            // 5) Cancelar pre-reserva
+            // =========================
+            document.querySelectorAll(".btn-cancelar").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const idReserva = btn.dataset.id;
+
+                    if (!idReserva) {
+                        console.error("btn-cancelar sin data-id");
+                        return;
+                    }
+
+                    if (!confirm("¿Deseas cancelar esta pre-reserva?")) return;
+
+                    fetch("/usuario/cancelar-reserva/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCookie("csrftoken")
+                        },
+                        body: JSON.stringify({idReserva})
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.ok) {
+                                alert("Reserva cancelada correctamente.");
+                                location.reload();
+                            } else {
+                                alert("Error: " + (res.error || "No se pudo cancelar la reserva."));
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Error cancelando reserva:", err);
+                            alert("Error inesperado al cancelar la reserva.");
+                        });
+                });
+            });
+
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+            const correo = localStorage.getItem("usuario_correo");
 
-    // Verificar que el modal existe antes de inicializarlo
-    const modalElement = document.getElementById("modalConfirmar");
-    if (!modalElement) {
-        console.error("No se encontró el elemento modalConfirmar");
-        return;
-    }
-
-    let modalConfirmar;
-    try {
-        modalConfirmar = new bootstrap.Modal(modalElement);
-    } catch (e) {
-        console.error("Error al inicializar el modal:", e);
-        return;
-    }
-
-    const usuarioId = localStorage.getItem("usuario_id");
-
-    // Recuperar datos del usuario
-    const correoUsuario =
-        localStorage.getItem("usuario_correo") ||
-        localStorage.getItem("usuario_email") ||
-        localStorage.getItem("usuario_mail") ||
-        "";
-
-    const documentoUsuario =
-        localStorage.getItem("usuario_documento") ||
-        localStorage.getItem("usuario_doc") ||
-        "";
-
-    // CLICK EN BOTÓN "Confirmar reserva"
-    document.querySelectorAll(".btn-confirmar").forEach(btn => {
-        btn.addEventListener("click", () => {
-
-            // Validar que los elementos existan
-            const confCorreo = document.getElementById("confCorreo");
-            const confDocumento = document.getElementById("confDocumento");
-            const confIdHabitacion = document.getElementById("confIdHabitacion");
-            const confIdHold = document.getElementById("confIdHold");
-            const confFechaInicio = document.getElementById("confFechaInicio");
-            const confFechaFin = document.getElementById("confFechaFin");
-            const confHuespedes = document.getElementById("confHuespedes");
-
-            if (!confCorreo || !confDocumento || !confIdHabitacion || !confIdHold || 
-                !confFechaInicio || !confFechaFin || !confHuespedes) {
-                console.error("Algunos elementos del formulario no se encontraron");
-                alert("Error: No se pudo cargar el formulario de confirmación.");
+            if (!correo) {
+                alert("No hay sesión");
+                window.location.href = "/login/";
                 return;
             }
 
-            // 1) Llenar inputs del usuario
-            confCorreo.value = correoUsuario;
-            confDocumento.value = documentoUsuario;
+            const res = await fetch(`/api/mis-reservas/?correo=${correo}`);
+            const data = await res.json();
 
-            // 2) Llenar campos ocultos
-            const hab = btn.dataset.hab;
-            const hold = btn.dataset.hold;
-            const fechai = btn.dataset.fechai;
-            const fechaf = btn.dataset.fechaf;
-            const hues = btn.dataset.hues;
-
-            // Validar que los datos necesarios estén presentes
-            if (!hab || !hold || !fechai || !fechaf || !hues) {
-                console.error("Datos incompletos en el botón:", {
-                    hab, hold, fechai, fechaf, hues
-                });
-                alert("Error: Faltan datos necesarios para confirmar la reserva. Por favor, recarga la página.");
+            if (data.error) {
+                alert(data.error);
                 return;
             }
 
-            confIdHabitacion.value = hab;
-            confIdHold.value = hold;
-
-            // Ajustamos horas obligatorias por backend
-            // Si la fecha ya tiene formato ISO, usarla directamente; si no, agregar la hora
-            confFechaInicio.value = fechai.includes('T') ? fechai : fechai + "T15:00:00";
-            confFechaFin.value = fechaf.includes('T') ? fechaf : fechaf + "T11:00:00";
-            confHuespedes.value = hues;
-
-            // 3) Mostrar modal
-            if (modalConfirmar) {
-                try {
-                    modalConfirmar.show();
-                } catch (e) {
-                    console.error("Error al mostrar el modal:", e);
-                    alert("Error al abrir el modal de confirmación.");
-                }
-            }
+            console.log(data.reservas);   // ← aquí pintas tarjetas, tablas, etc.
         });
-    });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
 
-    // CLICK EN BOTÓN FINAL DEL MODAL
-    const btnConfirmarSubmit = document.getElementById("btnConfirmarSubmit");
-    if (btnConfirmarSubmit) {
-        btnConfirmarSubmit.addEventListener("click", () => {
+            // Si la web fue cargada sin correo en URL
+            if (!window.location.search.includes("correo=")) {
 
-            // Validar que todos los campos estén llenos
-            const idHabitacion = document.getElementById("confIdHabitacion")?.value;
-            const idHold = document.getElementById("confIdHold")?.value;
-            const fechaInicio = document.getElementById("confFechaInicio")?.value;
-            const fechaFin = document.getElementById("confFechaFin")?.value;
-            const numeroHuespedes = document.getElementById("confHuespedes")?.value;
+                const correo = localStorage.getItem("usuario_correo")
 
-            if (!idHabitacion || !idHold || !usuarioId || !fechaInicio || !fechaFin || !numeroHuespedes) {
-                alert("Por favor, complete todos los campos requeridos.");
-                return;
+                if (!correo) {
+                    alert("Sesión expirada. Vuelve a iniciar sesión.")
+                    window.location.href = "/login/"
+                    return
+                }
+
+                const nuevaUrl = `/usuario/reservas/?correo=${encodeURIComponent(correo)}`
+                window.location.replace(nuevaUrl)
             }
 
-            const payload = {
-                idHabitacion: idHabitacion,
-                idHold: idHold,
-                idUnicoUsuario: usuarioId,
-                fechaInicio: fechaInicio,
-                fechaFin: fechaFin,
-                numeroHuespedes: numeroHuespedes
-            };
-
-            console.log(">>> ENVIANDO:", payload);
-
-            fetch("/usuario/confirmar-reserva/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken")
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(r => {
-                if (!r.ok) {
-                    return r.json().then(data => {
-                        throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
-                    });
-                }
-                return r.json();
-            })
-            .then(res => {
-                if (res.ok) {
-                    alert("Reserva confirmada correctamente.");
-                    // Cerrar el modal antes de recargar
-                    if (modalConfirmar) {
-                        modalConfirmar.hide();
-                    }
-                    location.reload();
-                } else {
-                    alert("Error: " + (res.error || "Error desconocido"));
-                }
-            })
-            .catch(err => {
-                console.error("Error:", err);
-                alert("Error inesperado: " + err.message);
-            });
-        });
-    }
-
-});
-
-
-// ==========================
-// Helper para obtener CSRF
-// ==========================
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-}
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    document.querySelectorAll(".btn-cancelar").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const idReserva = btn.dataset.id;
-
-            if (!confirm("¿Deseas cancelar esta pre-reserva?")) return;
-
-            fetch("/usuario/cancelar-reserva/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken")
-                },
-                body: JSON.stringify({ idReserva })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.ok) {
-                    alert("Reserva cancelada correctamente.");
-                    location.reload();
-                } else {
-                    alert("Error: " + res.error);
-                }
-            });
-        });
-    });
-});
-</script>
-
+        })
+    </script>
 
 {% endblock %}

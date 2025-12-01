@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pago de Reserva</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        .contenedor {
+            width: 350px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 12px 0;
+            font-size: 16px;
+        }
+
+        button {
+            background: #007bff;
+            border: none;
+            color: white;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .resultado {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="contenedor">
+    <h2>Pago de prueba</h2>
+
+<form method="post" action="{% url 'ejecutar_transaccion' %}">
+    {% csrf_token %}
+
+    <input type="number" step="0.01" name="monto" placeholder="Monto">
+    <button type="submit">Pagar</button>
+</form>
+
+    {% if ok is not None %}
+        <div class="resultado {% if ok %}ok{% else %}error{% endif %}">
+            {{ mensaje }}
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
