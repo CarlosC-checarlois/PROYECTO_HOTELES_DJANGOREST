@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalEditarPais" tabindex="-1" aria-hidden="true">
+`<div class="modal fade" id="modalEditarPais" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
@@ -34,9 +34,15 @@
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-primary" onclick="actualizarPais()">Actualizar</button>
+                <button class="btn btn-primary"
+                        id="btnActualizarPais"
+                        onclick="actualizarPais(this)">
+                    Actualizar
+                </button>
+
             </div>
 
         </div>
     </div>
 </div>
+`

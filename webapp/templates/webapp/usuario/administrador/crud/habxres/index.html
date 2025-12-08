@@ -20,11 +20,96 @@
             width: 100% !important;
         }
     </style>
+    <style>
+        #toast-container {
+            position: fixed !important;
+            top: 20px;
+            right: 20px;
+            z-index: 99999 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            color: #fff;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all .3s ease;
+            font-size: .9rem;
+            pointer-events: auto;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-msg .icon {
+            margin-right: .5rem;
+        }
+
+        .toast-success {
+            background-color: #16a34a;
+        }
+
+        .toast-error {
+            background-color: #dc2626;
+        }
+
+        .toast-warning {
+            background-color: #d97706;
+        }
+
+        .toast-info {
+            background-color: #2563eb;
+        }
+
+    </style>
 {% endblock %}
 
 {% block contenido_pagina %}
+    <div class="messages-wrapper">
+        {% if messages %}
+            {% for message in messages %}
+                {% comment %}
+              message.tags en Django suele traer: success, error, warning, info
+            {% endcomment %}
+                <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <span class="app-alert-icon">
+                    {% if "success" in message.tags %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif "error" in message.tags %}
+                        <i class="bi bi-x-circle"></i>
+                    {% elif "warning" in message.tags %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                </span>
+                    <span class="app-alert-text">
+                    {{ message }}
+                </span>
+                    <!-- si quieres cerrar manualmente -->
+                    <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    &times;
+                </span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-    <div id="crud-toast-container"></div>
+
+    <div id="toast-container"></div>
+
 
     <div class="container mt-4">
 
@@ -74,106 +159,115 @@
 {% endblock %}
 
 {% block jvscript_archivos_defer %}
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    <script>
+        /* ======================= CONSTANTES / URLs ======================= */
+        const URL_LIST = "/admin/habxres/list/";
+        const URL_CREATE = "/admin/habxres/create/";
+        const URL_GET = id => `/admin/habxres/get/${id}/`;
+        const URL_UPDATE = id => `/admin/habxres/update/${id}/`;
+        const URL_DELETE = id => `/admin/habxres/delete/${id}/`;
+        const URL_NEXT_ID = "/admin/habxres/next-id/";
 
-<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+        const MAX_DECIMAL = 999999.99;   // 6 enteros + 2 decimales
+        const MAX_CAPACIDAD = 10;
 
-<script>
-    /* ======================= CONSTANTES / URLs ======================= */
-    const URL_LIST = "/admin/habxres/list/";
-    const URL_CREATE = "/admin/habxres/create/";
-    const URL_GET = id => `/admin/habxres/get/${id}/`;
-    const URL_UPDATE = id => `/admin/habxres/update/${id}/`;
-    const URL_DELETE = id => `/admin/habxres/delete/${id}/`;
-    const URL_NEXT_ID = "/admin/habxres/next-id/";
+        let currentPage = 1;
+        let totalPages = 1;
 
-    const MAX_DECIMAL = 999999.99;   // 6 enteros + 2 decimales
-    const MAX_CAPACIDAD = 10;
-
-    let currentPage = 1;
-    let totalPages = 1;
-
-    /* ======================= PAGINACIÓN ======================= */
-    function actualizarPaginacion() {
-        $("#btnAnterior").prop("disabled", currentPage <= 1);
-        $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
-        $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
-    }
-
-    function irAPaginaAnterior() {
-        if (currentPage > 1) cargarHabxRes(currentPage - 1);
-    }
-
-    function irAPaginaSiguiente() {
-        if (currentPage < totalPages) cargarHabxRes(currentPage + 1);
-    }
-
-    /* ================== VALIDACIÓN HABXRES ================== */
-    function validarHabxResFront(data) {
-        if (!data.IdReserva) {
-            return "Debe seleccionar una reserva.";
+        /* ======================= PAGINACIÓN ======================= */
+        function actualizarPaginacion() {
+            $("#btnAnterior").prop("disabled", currentPage <= 1);
+            $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+            $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
         }
 
-        if (!data.IdHabitacion) {
-            return "Debe seleccionar una habitación.";
+        function irAPaginaAnterior() {
+            if (currentPage > 1) cargarHabxRes(currentPage - 1);
         }
 
-        // Capacidad: entero 1..10 (opcional)
-        if (data.CapacidadReservaHabxRes !== "" && data.CapacidadReservaHabxRes != null) {
-            const cap = Number(data.CapacidadReservaHabxRes);
-            if (!Number.isInteger(cap) || cap < 1 || cap > MAX_CAPACIDAD) {
-                return `La capacidad debe ser un número entero entre 1 y ${MAX_CAPACIDAD}.`;
+        function irAPaginaSiguiente() {
+            if (currentPage < totalPages) cargarHabxRes(currentPage + 1);
+        }
+
+        /* ================== VALIDACIÓN HABXRES ================== */
+        function validarHabxResFront(data) {
+
+            // Validar selects
+            if (!data.IdReserva) return "Debe seleccionar una reserva.";
+            if (!data.IdHabitacion) return "Debe seleccionar una habitación.";
+
+            // CAMPOS A VALIDAR
+            const campos = [
+                {key: "CapacidadReservaHabxRes", label: "Capacidad", tipo: "entero"},
+                {key: "CostoCalculadoHabxRes", label: "Costo", tipo: "decimal"},
+                {key: "DescuentoHabxRes", label: "Descuento", tipo: "decimal"},
+                {key: "ImpuestosHabxRes", label: "Impuestos", tipo: "decimal"}
+            ];
+
+            const faltantes = [];
+
+            // 1. Detectar vacíos
+            campos.forEach(c => {
+                if (data[c.key] === "" || data[c.key] == null) {
+                    faltantes.push(c.label);
+                }
+            });
+
+            // 2. Si hay combinaciones vacías
+            if (faltantes.length > 0) {
+                return `Debe ingresar obligatoriamente: ${faltantes.join(", ")}.`;
             }
-        }
 
-        // Costo obligatorio: 0..MAX_DECIMAL
-        if (data.CostoCalculadoHabxRes === "" || data.CostoCalculadoHabxRes == null) {
-            return "El costo es obligatorio.";
-        }
-        const costo = Number(data.CostoCalculadoHabxRes);
-        if (Number.isNaN(costo) || costo < 0 || costo > MAX_DECIMAL) {
-            return `El costo debe ser un número entre 0 y ${MAX_DECIMAL}.`;
-        }
+            // 3. Validaciones de tipo y rango
+            for (let c of campos) {
 
-        // Descuento opcional: 0..MAX_DECIMAL
-        if (data.DescuentoHabxRes !== "" && data.DescuentoHabxRes != null) {
-            const des = Number(data.DescuentoHabxRes);
-            if (Number.isNaN(des) || des < 0 || des > MAX_DECIMAL) {
-                return `El descuento debe ser un número entre 0 y ${MAX_DECIMAL}.`;
+                let valor = String(data[c.key]).replace(",", ".");
+                let num = parseFloat(valor);
+
+                if (isNaN(num))
+                    return `${c.label} debe ser un número válido.`;
+
+                if (num <= 0)
+                    return `${c.label} debe ser mayor a 0.`;
+
+                if (num > MAX_DECIMAL)
+                    return `${c.label} no puede ser mayor a ${MAX_DECIMAL}.`;
+
+                // Capacidad específica
+                if (c.tipo === "entero") {
+                    if (!Number.isInteger(num))
+                        return `${c.label} debe ser un número entero.`;
+
+                    if (num < 1 || num > MAX_CAPACIDAD)
+                        return `${c.label} debe estar entre 1 y ${MAX_CAPACIDAD}.`;
+                }
             }
+
+            return null;
         }
 
-        // Impuestos opcional: 0..MAX_DECIMAL
-        if (data.ImpuestosHabxRes !== "" && data.ImpuestosHabxRes != null) {
-            const imp = Number(data.ImpuestosHabxRes);
-            if (Number.isNaN(imp) || imp < 0 || imp > MAX_DECIMAL) {
-                return `Los impuestos deben ser un número entre 0 y ${MAX_DECIMAL}.`;
-            }
-        }
+        /* ======================= TABLA ======================= */
+        function cargarHabxRes(page = 1) {
+            currentPage = page;
 
-        return null; // sin errores
-    }
+            $.get(`${URL_LIST}?page=${page}`, function (resp) {
+                const tbody = $("#tablaHabxRes tbody");
+                tbody.empty();
 
-    /* ======================= TABLA ======================= */
-    function cargarHabxRes(page = 1) {
-        currentPage = page;
+                (resp.data || []).forEach(r => {
+                    const estado = r.EstadoHabxRes
+                        ? `<span class="badge bg-success badge-estado">Activo</span>`
+                        : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
 
-        $.get(`${URL_LIST}?page=${page}`, function (resp) {
-            const tbody = $("#tablaHabxRes tbody");
-            tbody.empty();
+                    const filaClass = r.EstadoHabxRes ? "" : "table-secondary";
 
-            (resp.data || []).forEach(r => {
-                const estado = r.EstadoHabxRes
-                    ? `<span class="badge bg-success badge-estado">Activo</span>`
-                    : `<span class="badge bg-secondary badge-estado">Inactivo</span>`;
+                    const btnEliminar = r.EstadoHabxRes
+                        ? `<button class="btn btn-danger btn-sm" onclick="eliminarHabxRes(${r.IdHabxRes})">Eliminar</button>`
+                        : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
 
-                const filaClass = r.EstadoHabxRes ? "" : "table-secondary";
-
-                const btnEliminar = r.EstadoHabxRes
-                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarHabxRes(${r.IdHabxRes})">Eliminar</button>`
-                    : `<button class="btn btn-secondary btn-sm" disabled>Eliminado</button>`;
-
-                tbody.append(`
+                    tbody.append(`
                     <tr class="${filaClass}">
                         <td class="fw-bold">${r.IdHabxRes}</td>
                         <td>${r.IdHabitacion}</td>
@@ -188,382 +282,417 @@
                         </td>
                     </tr>
                 `);
+                });
+
+                currentPage = resp.page;
+                totalPages = resp.total_pages;
+                actualizarPaginacion();
+
+            }).fail(() => mostrarToast("warning", "No se pudo cargar HabxRes"));
+        }
+
+        /* ======================= SELECT2 ======================= */
+        function initSelectHabitacion(selector, reservaSelector) {
+            $(selector).select2({
+                dropdownParent: $(selector).closest(".modal"),
+                placeholder: "Seleccione habitación...",
+                width: "100%",
+                ajax: {
+                    url: "/admin/habitaciones/search/",
+                    dataType: "json",
+                    delay: 300,
+                    data: params => ({
+                        q: params.term,
+                        reserva: $(reservaSelector).val()
+                    }),
+                    processResults: r => ({
+                        results: (r.data || []).map(h => ({
+                            id: h.IdHabitacion,
+                            text: `${h.IdHabitacion} — ${h.NombreHabitacion || ""}`
+                        }))
+                    })
+                }
+            });
+        }
+
+        function initSelectReserva(selector) {
+            $(selector).select2({
+                dropdownParent: $(selector).closest(".modal"),
+                placeholder: "Buscar reserva...",
+                minimumInputLength: 1,
+                width: "100%",
+                ajax: {
+                    url: "/admin/reservas/search/",
+                    dataType: "json",
+                    delay: 250,
+                    data: params => ({q: params.term}),
+                    processResults: resp => ({
+                        results: (resp.data || []).map(r => ({
+                            id: r.IdReserva,
+                            text: `Reserva #${r.IdReserva}`
+                        }))
+                    })
+                }
+            });
+        }
+
+        /* ======================= CREAR ======================= */
+
+        function abrirModalCrearHabxRes() {
+            $("#crear_Capacidad,#crear_Costo,#crear_Descuento,#crear_Impuestos").val("");
+            $("#crear_Estado").prop("checked", true);
+
+            $.get(URL_NEXT_ID, function (resp) {
+                if (resp.next) {
+                    $("#crear_IdHabxRes").val(resp.next);
+                } else if (resp.next_id) {
+                    $("#crear_IdHabxRes").val(resp.next_id);
+                }
             });
 
-            currentPage  = resp.page;
-            totalPages   = resp.total_pages;
-            actualizarPaginacion();
+            initSelectReserva("#crear_IdReserva");
+            initSelectHabitacion("#crear_IdHabitacion", "#crear_IdReserva");
 
-        }).fail(() => crudNotify("error", "No se pudo cargar HabxRes"));
-    }
-
-    /* ======================= SELECT2 ======================= */
-    function initSelectHabitacion(selector, reservaSelector) {
-        $(selector).select2({
-            dropdownParent: $(selector).closest(".modal"),
-            placeholder: "Seleccione habitación...",
-            width: "100%",
-            ajax: {
-                url: "/admin/habitaciones/search/",
-                dataType: "json",
-                delay: 300,
-                data: params => ({
-                    q: params.term,
-                    reserva: $(reservaSelector).val()
-                }),
-                processResults: r => ({
-                    results: (r.data || []).map(h => ({
-                        id: h.IdHabitacion,
-                        text: `${h.IdHabitacion} — ${h.NombreHabitacion || ""}`
-                    }))
-                })
-            }
-        });
-    }
-
-    function initSelectReserva(selector) {
-        $(selector).select2({
-            dropdownParent: $(selector).closest(".modal"),
-            placeholder: "Buscar reserva...",
-            minimumInputLength: 1,
-            width: "100%",
-            ajax: {
-                url: "/admin/reservas/search/",
-                dataType: "json",
-                delay: 250,
-                data: params => ({ q: params.term }),
-                processResults: resp => ({
-                    results: (resp.data || []).map(r => ({
-                        id: r.IdReserva,
-                        text: `Reserva #${r.IdReserva}`
-                    }))
-                })
-            }
-        });
-    }
-
-    /* ======================= CREAR ======================= */
-
-    function abrirModalCrearHabxRes() {
-        $("#crear_Capacidad,#crear_Costo,#crear_Descuento,#crear_Impuestos").val("");
-        $("#crear_Estado").prop("checked", true);
-
-        $.get(URL_NEXT_ID, function (resp) {
-            if (resp.next) {
-                $("#crear_IdHabxRes").val(resp.next);
-            } else if (resp.next_id) {
-                $("#crear_IdHabxRes").val(resp.next_id);
-            }
-        });
-
-        initSelectReserva("#crear_IdReserva");
-        initSelectHabitacion("#crear_IdHabitacion", "#crear_IdReserva");
-
-        $("#crear_IdReserva").off("change").on("change", () => {
-            $("#crear_IdHabitacion").val(null).trigger("change");
-        });
-
-        $("#modalCrearHabxRes").modal("show");
-    }
-
-    function esDecimalPositivo(v) {
-        if (v == null) return false;
-        v = String(v).replace(",", ".").trim();
-        // hasta 6 enteros y 2 decimales
-        if (!/^\d{1,6}(\.\d{1,2})?$/.test(v)) return false;
-        const num = parseFloat(v);
-        return !isNaN(num) && num >= 0 && num <= MAX_DECIMAL;
-    }
-
-    function esEnteroPositivo(v) {
-        if (v == null) return false;
-        v = String(v).trim();
-        if (!/^\d+$/.test(v)) return false;
-        const num = parseInt(v, 10);
-        return Number.isInteger(num) && num > 0 && num <= MAX_CAPACIDAD;
-    }
-
-    function crearHabxRes() {
-        let capacidad = $("#crear_Capacidad").val().trim();
-        let costo     = $("#crear_Costo").val().trim();
-        let desc      = $("#crear_Descuento").val().trim();
-        let imp       = $("#crear_Impuestos").val().trim();
-
-        if (capacidad !== "" && !esEnteroPositivo(capacidad)) {
-            return crudNotify("error", `La capacidad debe ser un entero entre 1 y ${MAX_CAPACIDAD} (sin letras).`);
-        }
-        if (!esDecimalPositivo(costo)) {
-            return crudNotify("error", `El costo debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-        if (desc !== "" && !esDecimalPositivo(desc)) {
-            return crudNotify("error", `El descuento debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-        if (imp !== "" && !esDecimalPositivo(imp)) {
-            return crudNotify("error", `Los impuestos deben ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-
-        // Clamp al máximo y reescribir en los inputs
-        let costoNum = Math.min(MAX_DECIMAL, parseFloat(costo.replace(",", ".")));
-        $("#crear_Costo").val(costoNum.toFixed(2));
-        costo = costoNum.toFixed(2);
-
-        let descNum = null;
-        if (desc !== "") {
-            descNum = Math.min(MAX_DECIMAL, parseFloat(desc.replace(",", ".")));
-            $("#crear_Descuento").val(descNum.toFixed(2));
-            desc = descNum.toFixed(2);
-        }
-
-        let impNum = null;
-        if (imp !== "") {
-            impNum = Math.min(MAX_DECIMAL, parseFloat(imp.replace(",", ".")));
-            $("#crear_Impuestos").val(impNum.toFixed(2));
-            imp = impNum.toFixed(2);
-        }
-
-        const data = {
-            IdHabxRes: $("#crear_IdHabxRes").val(),
-            IdHabitacion: $("#crear_IdHabitacion").val(),
-            IdReserva: $("#crear_IdReserva").val(),
-            CapacidadReservaHabxRes: capacidad,
-            CostoCalculadoHabxRes: costo,
-            DescuentoHabxRes: desc,
-            ImpuestosHabxRes: imp,
-            EstadoHabxRes: $("#crear_Estado").is(":checked")
-        };
-
-        const error = validarHabxResFront(data);
-        if (error) {
-            crudNotify("error", error);
-            return;
-        }
-
-        crudCreate(URL_CREATE, data, () => {
-            $("#modalCrearHabxRes").modal("hide");
-            cargarHabxRes(currentPage);
-        });
-    }
-
-    /* ======================= EDITAR ======================= */
-
-    async function abrirModalEditarHabxRes(id) {
-        try {
-            const resp = await $.get(URL_GET(id));
-
-            if (resp.status !== "ok") {
-                return crudNotify("error", resp.message || "No se pudo cargar el registro");
-            }
-
-            const r = resp.data;
-
-            $("#editar_IdHabxRes").val(r.IdHabxRes);
-            $("#editar_IdHabitacion").val(r.IdHabitacion);
-            $("#editar_IdReserva").val(r.IdReserva);
-            $("#editar_Capacidad").val(r.CapacidadReservaHabxRes);
-            $("#editar_Costo").val(r.CostoCalculadoHabxRes);
-            $("#editar_Descuento").val(r.DescuentoHabxRes);
-            $("#editar_Impuestos").val(r.ImpuestosHabxRes);
-            $("#editar_Estado").prop("checked", !!r.EstadoHabxRes);
-
-            $("#modalEditarHabxRes").modal("show");
-
-        } catch (e) {
-            console.error(e);
-            crudNotify("error", "Error al cargar el registro");
-        }
-    }
-
-    function actualizarHabxRes() {
-        let id   = $("#editar_IdHabxRes").val();
-        let cap  = $("#editar_Capacidad").val().trim();
-        let costo = $("#editar_Costo").val().trim();
-        let desc  = $("#editar_Descuento").val().trim();
-        let imp   = $("#editar_Impuestos").val().trim();
-
-        if (cap !== "" && !esEnteroPositivo(cap)) {
-            return crudNotify("error", `La capacidad debe ser un entero entre 1 y ${MAX_CAPACIDAD} (sin letras).`);
-        }
-        if (!esDecimalPositivo(costo)) {
-            return crudNotify("error", `El costo debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-        if (desc !== "" && !esDecimalPositivo(desc)) {
-            return crudNotify("error", `El descuento debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-        if (imp !== "" && !esDecimalPositivo(imp)) {
-            return crudNotify("error", `Los impuestos deben ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
-        }
-
-        // Clamp y escribir en los inputs
-        let costoNum = Math.min(MAX_DECIMAL, parseFloat(costo.replace(",", ".")));
-        $("#editar_Costo").val(costoNum.toFixed(2));
-        costo = costoNum.toFixed(2);
-
-        let descNum = null;
-        if (desc !== "") {
-            descNum = Math.min(MAX_DECIMAL, parseFloat(desc.replace(",", ".")));
-            $("#editar_Descuento").val(descNum.toFixed(2));
-            desc = descNum.toFixed(2);
-        }
-
-        let impNum = null;
-        if (imp !== "") {
-            impNum = Math.min(MAX_DECIMAL, parseFloat(imp.replace(",", ".")));
-            $("#editar_Impuestos").val(impNum.toFixed(2));
-            imp = impNum.toFixed(2);
-        }
-
-        const data = {
-            IdHabitacion: $("#editar_IdHabitacion").val(),
-            IdReserva: $("#editar_IdReserva").val(),
-            CapacidadReservaHabxRes: cap,
-            CostoCalculadoHabxRes: costo,
-            DescuentoHabxRes: desc,
-            ImpuestosHabxRes: imp,
-            EstadoHabxRes: $("#editar_Estado").is(":checked")
-        };
-
-        const error = validarHabxResFront(data);
-        if (error) {
-            crudNotify("error", error);
-            return;
-        }
-
-        crudUpdate(URL_UPDATE(id), data, () => {
-            $("#modalEditarHabxRes").modal("hide");
-            cargarHabxRes(currentPage);
-        });
-    }
-
-    /* ======================= ELIMINAR ======================= */
-    function eliminarHabxRes(id) {
-        crudConfirm("¿Desea desactivar esta relación?")
-            .then(ok => {
-                if (!ok) return;
-                crudDelete(URL_DELETE(id), () => cargarHabxRes(currentPage));
-            });
-    }
-
-    /* ======================= INIT ======================= */
-    $(document).ready(function () {
-        $("#modalCrearHabxRes, #modalEditarHabxRes")
-            .on("input", "input[type=number]", function () {
-                const v = parseFloat(this.value);
-                if (!isNaN(v) && v < 0) this.value = "";
+            $("#crear_IdReserva").off("change").on("change", () => {
+                $("#crear_IdHabitacion").val(null).trigger("change");
             });
 
-        cargarHabxRes(1);
-    });
-</script>
-
-<script>
-    /* ======================= HELPERS NUMÉRICOS ======================= */
-    function limpiarDecimal(v) {
-        if (v == null) return "";
-        v = String(v).replace(",", ".").trim();
-        v = v.replace(/[^0-9.]/g, "");
-        const partes = v.split(".");
-        if (partes.length > 2) {
-            v = partes[0] + "." + partes[1];
+            $("#modalCrearHabxRes").modal("show");
         }
-        return v;
-    }
 
-    function limpiarEntero(v) {
-        if (v == null) return "";
-        v = String(v).trim();
-        return v.replace(/[^0-9]/g, "");
-    }
+        function esDecimalPositivo(v) {
+            if (v == null) return false;
+            v = String(v).replace(",", ".").trim();
+            // hasta 6 enteros y 2 decimales
+            if (!/^\d{1,6}(\.\d{1,2})?$/.test(v)) return false;
+            const num = parseFloat(v);
+            return !isNaN(num) && num >= 0 && num <= MAX_DECIMAL;
+        }
 
-    function decimalKeyDown(e) {
-        const controlKeys = ["Backspace","Tab","ArrowLeft","ArrowRight","Delete","Home","End"];
-        if (controlKeys.includes(e.key)) return;
-        if (e.ctrlKey || e.metaKey) return;
+        function esEnteroPositivo(v) {
+            if (v == null) return false;
+            v = String(v).trim();
+            if (!/^\d+$/.test(v)) return false;
+            const num = parseInt(v, 10);
+            return Number.isInteger(num) && num > 0 && num <= MAX_CAPACIDAD;
+        }
 
-        if (e.key === "." || e.key === ",") {
-            if (this.value.includes(".") || this.value.includes(",")) {
+        function crearHabxRes() {
+            let capacidad = $("#crear_Capacidad").val().trim();
+            let costo = $("#crear_Costo").val().trim();
+            let desc = $("#crear_Descuento").val().trim();
+            let imp = $("#crear_Impuestos").val().trim();
+            const data_pre = {
+                IdReserva: $("#crear_IdReserva").val(),
+                IdHabitacion: $("#crear_IdHabitacion").val(),
+                CapacidadReservaHabxRes: capacidad,
+                CostoCalculadoHabxRes: costo,
+                DescuentoHabxRes: desc,
+                ImpuestosHabxRes: imp
+            };
+
+            const error_crear = validarHabxResFront(data_pre);
+            if (error_crear) {
+                mostrarToast("warning", error_crear);   // USAMOS TU TOAST NUEVO
+                return;
+            }
+
+
+            // Clamp al máximo y reescribir en los inputs
+            let costoNum = Math.min(MAX_DECIMAL, parseFloat(costo.replace(",", ".")));
+            $("#crear_Costo").val(costoNum.toFixed(2));
+            costo = costoNum.toFixed(2);
+
+            let descNum = null;
+            if (desc !== "") {
+                descNum = Math.min(MAX_DECIMAL, parseFloat(desc.replace(",", ".")));
+                $("#crear_Descuento").val(descNum.toFixed(2));
+                desc = descNum.toFixed(2);
+            }
+
+            let impNum = null;
+            if (imp !== "") {
+                impNum = Math.min(MAX_DECIMAL, parseFloat(imp.replace(",", ".")));
+                $("#crear_Impuestos").val(impNum.toFixed(2));
+                imp = impNum.toFixed(2);
+            }
+
+            const data = {
+                IdHabxRes: $("#crear_IdHabxRes").val(),
+                IdHabitacion: $("#crear_IdHabitacion").val(),
+                IdReserva: $("#crear_IdReserva").val(),
+                CapacidadReservaHabxRes: capacidad,
+                CostoCalculadoHabxRes: costo,
+                DescuentoHabxRes: desc,
+                ImpuestosHabxRes: imp,
+                EstadoHabxRes: $("#crear_Estado").is(":checked")
+            };
+
+            const error_crear_1 = validarHabxResFront(data);
+            if (error_crear_1) {
+                mostrarToast("warning", error_crear_1);
+                return;
+            }
+            const btn = document.getElementById("btnCrearHabxRes");
+            bloquearBoton(btn, "Guardando...");
+
+            crudCreate(URL_CREATE, data, () => {
+                $("#modalCrearHabxRes").modal("hide");
+                cargarHabxRes(currentPage);
+                desbloquearBoton(btn);
+            });
+
+
+        }
+
+        /* ======================= EDITAR ======================= */
+
+        async function abrirModalEditarHabxRes(id) {
+            try {
+                const resp = await $.get(URL_GET(id));
+
+                if (resp.status !== "ok") {
+                    return mostrarToast("warning", resp.message || "No se pudo cargar el registro");
+                }
+
+                const r = resp.data;
+
+                $("#editar_IdHabxRes").val(r.IdHabxRes);
+                $("#editar_IdHabitacion").val(r.IdHabitacion);
+                $("#editar_IdReserva").val(r.IdReserva);
+                $("#editar_Capacidad").val(r.CapacidadReservaHabxRes);
+                $("#editar_Costo").val(r.CostoCalculadoHabxRes);
+                $("#editar_Descuento").val(r.DescuentoHabxRes);
+                $("#editar_Impuestos").val(r.ImpuestosHabxRes);
+                $("#editar_Estado").prop("checked", !!r.EstadoHabxRes);
+
+                $("#modalEditarHabxRes").modal("show");
+
+            } catch (e) {
+                mostrarToast("warning", "e");
+            }
+        }
+
+        function actualizarHabxRes() {
+            let id = $("#editar_IdHabxRes").val();
+            let cap = $("#editar_Capacidad").val().trim();
+            let costo = $("#editar_Costo").val().trim();
+            let desc = $("#editar_Descuento").val().trim();
+            let imp = $("#editar_Impuestos").val().trim();
+
+            if (cap !== "" && !esEnteroPositivo(cap)) {
+                return mostrarToast("warning", `La capacidad debe ser un entero entre 1 y ${MAX_CAPACIDAD} (sin letras).`);
+            }
+            if (!esDecimalPositivo(costo)) {
+                return mostrarToast("warning", `El costo debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
+            }
+            if (desc !== "" && !esDecimalPositivo(desc)) {
+                return mostrarToast("warning", `El descuento debe ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
+            }
+            if (imp !== "" && !esDecimalPositivo(imp)) {
+                return mostrarToast("warning", `Los impuestos deben ser un número entre 0 y ${MAX_DECIMAL}, con máximo 6 enteros y 2 decimales.`);
+            }
+
+            // Clamp y escribir en los inputs
+            let costoNum = Math.min(MAX_DECIMAL, parseFloat(costo.replace(",", ".")));
+            $("#editar_Costo").val(costoNum.toFixed(2));
+            costo = costoNum.toFixed(2);
+
+            let descNum = null;
+            if (desc !== "") {
+                descNum = Math.min(MAX_DECIMAL, parseFloat(desc.replace(",", ".")));
+                $("#editar_Descuento").val(descNum.toFixed(2));
+                desc = descNum.toFixed(2);
+            }
+
+            let impNum = null;
+            if (imp !== "") {
+                impNum = Math.min(MAX_DECIMAL, parseFloat(imp.replace(",", ".")));
+                $("#editar_Impuestos").val(impNum.toFixed(2));
+                imp = impNum.toFixed(2);
+            }
+
+            const data = {
+                IdHabitacion: $("#editar_IdHabitacion").val(),
+                IdReserva: $("#editar_IdReserva").val(),
+                CapacidadReservaHabxRes: cap,
+                CostoCalculadoHabxRes: costo,
+                DescuentoHabxRes: desc,
+                ImpuestosHabxRes: imp,
+                EstadoHabxRes: $("#editar_Estado").is(":checked")
+            };
+
+            const error_actualizar = validarHabxResFront(data);
+            if (error_actualizar) {
+                mostrarToast("warning", error_actualizar);
+                return;
+            }
+
+            const btn = document.getElementById("btnActualizarHabxRes");
+            bloquearBoton(btn, "Actualizando...");
+
+            crudUpdate(URL_UPDATE(id), data, () => {
+                $("#modalEditarHabxRes").modal("hide");
+                cargarHabxRes(currentPage);
+                desbloquearBoton(btn);
+            });
+
+
+        }
+
+        /* ======================= ELIMINAR ======================= */
+        function eliminarHabxRes(id) {
+            crudConfirm("¿Desea desactivar esta relación?")
+                .then(ok => {
+                    if (!ok) return;
+                    crudDelete(URL_DELETE(id), () => cargarHabxRes(currentPage));
+                });
+        }
+
+        /* ======================= INIT ======================= */
+        $(document).ready(function () {
+            $("#modalCrearHabxRes, #modalEditarHabxRes")
+                .on("input", "input[type=number]", function () {
+                    const v = parseFloat(this.value);
+                    if (!isNaN(v) && v < 0) this.value = "";
+                });
+
+            cargarHabxRes(1);
+        });
+    </script>
+    <script>
+        /* ======================= HELPERS NUMÉRICOS ======================= */
+        function limpiarDecimal(v) {
+            if (v == null) return "";
+            v = String(v).replace(",", ".").trim();
+            v = v.replace(/[^0-9.]/g, "");
+            const partes = v.split(".");
+            if (partes.length > 2) {
+                v = partes[0] + "." + partes[1];
+            }
+            return v;
+        }
+
+        function limpiarEntero(v) {
+            if (v == null) return "";
+            v = String(v).trim();
+            return v.replace(/[^0-9]/g, "");
+        }
+
+        function decimalKeyDown(e) {
+            const controlKeys = ["Backspace", "Tab", "ArrowLeft", "ArrowRight", "Delete", "Home", "End"];
+            if (controlKeys.includes(e.key)) return;
+            if (e.ctrlKey || e.metaKey) return;
+
+            if (e.key === "." || e.key === ",") {
+                if (this.value.includes(".") || this.value.includes(",")) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            if (!/^[0-9]$/.test(e.key)) {
                 e.preventDefault();
             }
-            return;
         }
 
-        if (!/^[0-9]$/.test(e.key)) {
+        function decimalInput(e) {
+            let v = limpiarDecimal(this.value);
+            let partes = v.split(".");
+
+            // máximo 6 enteros
+            if (partes[0].length > 6) {
+                partes[0] = partes[0].slice(0, 6);
+            }
+            // máximo 2 decimales
+            if (partes.length === 2 && partes[1].length > 2) {
+                partes[1] = partes[1].slice(0, 2);
+            }
+            v = partes.length === 2 ? partes[0] + "." + partes[1] : partes[0];
+
+            if (this.value !== v) {
+                this.value = v;
+            }
+        }
+
+        function decimalPaste(e) {
             e.preventDefault();
+            let txt = (e.clipboardData || window.clipboardData).getData("text");
+            this.value = txt;
+            decimalInput.call(this);
         }
-    }
 
-    function decimalInput(e) {
-        let v = limpiarDecimal(this.value);
-        let partes = v.split(".");
-
-        // máximo 6 enteros
-        if (partes[0].length > 6) {
-            partes[0] = partes[0].slice(0, 6);
+        function enteroKeyDown(e) {
+            const controlKeys = ["Backspace", "Tab", "ArrowLeft", "ArrowRight", "Delete", "Home", "End"];
+            if (controlKeys.includes(e.key)) return;
+            if (e.ctrlKey || e.metaKey) return;
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+            }
         }
-        // máximo 2 decimales
-        if (partes.length === 2 && partes[1].length > 2) {
-            partes[1] = partes[1].slice(0, 2);
-        }
-        v = partes.length === 2 ? partes[0] + "." + partes[1] : partes[0];
 
-        if (this.value !== v) {
+        function enteroInput(e) {
+            let v = limpiarEntero(this.value);
+            if (v.length > 2) v = v.slice(0, 2); // para 1..10
             this.value = v;
         }
-    }
 
-    function decimalPaste(e) {
-        e.preventDefault();
-        let txt = (e.clipboardData || window.clipboardData).getData("text");
-        this.value = txt;
-        decimalInput.call(this);
-    }
-
-    function enteroKeyDown(e) {
-        const controlKeys = ["Backspace","Tab","ArrowLeft","ArrowRight","Delete","Home","End"];
-        if (controlKeys.includes(e.key)) return;
-        if (e.ctrlKey || e.metaKey) return;
-        if (!/^[0-9]$/.test(e.key)) {
+        function enteroPaste(e) {
             e.preventDefault();
+            let txt = (e.clipboardData || window.clipboardData).getData("text");
+            this.value = txt;
+            enteroInput.call(this);
         }
-    }
 
-    function enteroInput(e) {
-        let v = limpiarEntero(this.value);
-        if (v.length > 2) v = v.slice(0, 2); // para 1..10
-        this.value = v;
-    }
+        function configurarNumericosHabxRes() {
+            const decimalIds = [
+                "crear_Costo", "crear_Descuento", "crear_Impuestos",
+                "editar_Costo", "editar_Descuento", "editar_Impuestos"
+            ];
+            const enteroIds = ["crear_Capacidad", "editar_Capacidad"];
 
-    function enteroPaste(e) {
-        e.preventDefault();
-        let txt = (e.clipboardData || window.clipboardData).getData("text");
-        this.value = txt;
-        enteroInput.call(this);
-    }
+            decimalIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("keydown", decimalKeyDown);
+                el.addEventListener("input", decimalInput);
+                el.addEventListener("paste", decimalPaste);
+            });
 
-    function configurarNumericosHabxRes() {
-        const decimalIds = [
-            "crear_Costo","crear_Descuento","crear_Impuestos",
-            "editar_Costo","editar_Descuento","editar_Impuestos"
-        ];
-        const enteroIds = ["crear_Capacidad","editar_Capacidad"];
+            enteroIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("keydown", enteroKeyDown);
+                el.addEventListener("input", enteroInput);
+                el.addEventListener("paste", enteroPaste);
+            });
+        }
 
-        decimalIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener("keydown", decimalKeyDown);
-            el.addEventListener("input", decimalInput);
-            el.addEventListener("paste", decimalPaste);
-        });
+        document.addEventListener("DOMContentLoaded", configurarNumericosHabxRes);
+    </script>
+    <script>
+        function mostrarToast(tipo = "success", mensaje) {
+            const contenedor = document.getElementById("toast-container");
+            if (!contenedor) return;
 
-        enteroIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener("keydown", enteroKeyDown);
-            el.addEventListener("input", enteroInput);
-            el.addEventListener("paste", enteroPaste);
-        });
-    }
+            const toast = document.createElement("div");
+            toast.className = `toast-msg toast-${tipo}`;
+            toast.innerHTML = `
+        <span class="icon">
+            <i class="bi bi-check2-square"></i>
+        </span>
+        <span>${mensaje}</span>
+    `;
 
-    document.addEventListener("DOMContentLoaded", configurarNumericosHabxRes);
-</script>
+            contenedor.appendChild(toast);
 
+            requestAnimationFrame(() => toast.classList.add("show"));
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+    </script>
 {% endblock %}

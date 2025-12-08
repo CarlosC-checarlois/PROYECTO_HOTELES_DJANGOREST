@@ -1,12 +1,10 @@
-from pprint import pprint
-
 import requests
 
 class TipoHabitacionGestionRest:
 
     def __init__(self):
         # URL BASE DEL SERVICIO EN AZURE
-        self.base_url = "http://allpahousenycrestgestion.runasp.net/api/gestion/tipos-habitacion"
+        self.base_url = "https://gereca-dgd0hedaedb2dge4.canadacentral-01.azurewebsites.net/api/gestion/tipos-habitacion"
 
     # ================================================================
     # GET: obtener todos los tipos de habitación
@@ -66,5 +64,3 @@ class TipoHabitacionGestionRest:
             return True
         except Exception as e:
             raise ConnectionError(f"Error al eliminar tipo de habitación {id_tipo}: {e}")
-
-

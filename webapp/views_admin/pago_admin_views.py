@@ -1,4 +1,3 @@
-from pprint import pprint
 
 from django.http import JsonResponse
 from django.views import View
@@ -90,8 +89,6 @@ class PagoGetAjaxView(View):
 class PagoCreateAjaxView(View):
     def post(self, request):
         api = PagoGestionRest()
-        print("*************************** PAGO ***************************")
-        pprint(request.POST)
         try:
             api.crear_pago(
                 id_pago=int(request.POST.get("IdPago")),
@@ -114,6 +111,7 @@ class PagoCreateAjaxView(View):
             return JsonResponse({"status": "error", "message": f"Datos inválidos: {str(ve)}"}, status=400)
         except Exception:
             return JsonResponse({"status": "error", "message": "No se pudo crear el registro. Verifique los datos ingresados"}, status=500)
+
 
 
 # ============================================================

@@ -1,4 +1,3 @@
-from pprint import pprint
 
 from django.http import JsonResponse
 from django.views import View
@@ -73,7 +72,6 @@ class DescuentoGetAjaxView(View):
 class DescuentoCreateAjaxView(View):
     def post(self, request):
         try:
-            pprint(request.POST)
             id_descuento = request.POST.get("IdDescuento")
             nombre_descuento = request.POST.get("NombreDescuento")
             

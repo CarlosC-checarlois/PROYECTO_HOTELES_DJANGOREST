@@ -140,25 +140,36 @@ function abrirModalCrearAmexHab() {
 // ===============================
 function crearAmexHab() {
 
+    const btn = document.getElementById("btnCrearAmexHab");
+
     const idH = $("#crear_IdHabitacion").val();
     const idA = $("#crear_IdAmenidad").val();
 
-    if (!idH || !idA)
-        return crudNotify("warning", "Debe seleccionar habitación y amenidad.");
+    if (!idH || !idA) {
+        crudNotify("warning", "Debe seleccionar habitación y amenidad.");
+        return;
+    }
 
-    crudCreate(
-        URL_CREATE,
-        {
-            IdHabitacion: idH,
-            IdAmenidad: idA,
-            EstadoAmexHab: $("#crear_EstadoAmexHab").is(":checked")
-        },
-        () => {
-            $("#modalCrearAmexHab").modal("hide");
-            cargarAmexHab(PAGINA_ACTUAL);
-        }
-    );
+    bloquearBoton(btn, "Guardando...");
+
+    $.post(URL_CREATE, {
+        IdHabitacion: idH,
+        IdAmenidad: idA,
+        EstadoAmexHab: $("#crear_EstadoAmexHab").is(":checked")
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Relación creada.");
+        $("#modalCrearAmexHab").modal("hide");
+        cargarAmexHab(PAGINA_ACTUAL);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al crear.");
+    })
+    .always(() => {
+        desbloquearBoton(btn);
+    });
 }
+
 
 // ===============================
 // Abrir modal EDITAR
@@ -185,20 +196,29 @@ function abrirModalEditarAmexHab(hab, amen) {
 // ===============================
 function actualizarAmexHab() {
 
+    const btn = document.getElementById("btnActualizarAmexHab");
+
     const idH = $("#editar_IdHabitacion").val();
     const idA = $("#editar_IdAmenidad").val();
 
-    crudUpdate(
-        URL_UPDATE(idH, idA),
-        {
-            EstadoAmexHab: $("#editar_EstadoAmexHab").is(":checked")
-        },
-        () => {
-            $("#modalEditarAmexHab").modal("hide");
-            cargarAmexHab(PAGINA_ACTUAL);
-        }
-    );
+    bloquearBoton(btn, "Actualizando...");
+
+    $.post(URL_UPDATE(idH, idA), {
+        EstadoAmexHab: $("#editar_EstadoAmexHab").is(":checked")
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Relación actualizada.");
+        $("#modalEditarAmexHab").modal("hide");
+        cargarAmexHab(PAGINA_ACTUAL);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al actualizar.");
+    })
+    .always(() => {
+        desbloquearBoton(btn);
+    });
 }
+
 
 // ===============================
 // Eliminar — con confirmación animada

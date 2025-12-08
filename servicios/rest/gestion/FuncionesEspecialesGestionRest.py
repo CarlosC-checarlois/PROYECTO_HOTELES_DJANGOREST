@@ -1,6 +1,4 @@
 # funciones_especiales_gestion_rest.py
-from pprint import pprint
-
 import requests
 from datetime import datetime
 
@@ -320,5 +318,3 @@ def main():
         print("\n❌ ERROR AL CONFIRMAR RESERVA (REST):\n")
         print(e)
 
-if __name__ == "__main__":
-    main()

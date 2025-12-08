@@ -160,23 +160,43 @@ ${c.EstadoCiudad
             $("#modalCrearCiudad").modal("show");
         }
 
-        function crearCiudad() {
+function crearCiudad() {
 
-            const data = {
-                IdCiudad: $("#crear_IdCiudad").val(),
-                IdPais: $("#crear_IdPais").val(),
-                NombreCiudad: $("#crear_NombreCiudad").val(),
-                EstadoCiudad: $("#crear_EstadoCiudad").is(":checked")
-            };
+    const btn = document.getElementById("btnCrearCiudad");
 
-            if (!data.IdPais) return crudNotify("warning", "Seleccione país");
-            if (!data.NombreCiudad.trim()) return crudNotify("warning", "Nombre requerido");
+    const data = {
+        IdCiudad: $("#crear_IdCiudad").val(),
+        IdPais: $("#crear_IdPais").val(),
+        NombreCiudad: $("#crear_NombreCiudad").val(),
+        EstadoCiudad: $("#crear_EstadoCiudad").is(":checked")
+    };
 
-            crudCreate(URL_CREATE, data, () => {
-                $("#modalCrearCiudad").modal("hide");
-                cargarCiudad(PAGINA_ACTUAL);
-            });
-        }
+    if (!data.IdPais) {
+        crudNotify("warning", "Seleccione país");
+        return;
+    }
+
+    if (!data.NombreCiudad.trim()) {
+        crudNotify("warning", "Nombre requerido");
+        return;
+    }
+
+    bloquearBoton(btn, "Guardando...");
+
+    $.post(URL_CREATE, data)
+        .done(resp => {
+            crudNotify("success", resp.message || "Ciudad creada.");
+            $("#modalCrearCiudad").modal("hide");
+            cargarCiudad(PAGINA_ACTUAL);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al crear.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
+}
+
 
         // ==========================
         // EDITAR
@@ -205,23 +225,38 @@ ${c.EstadoCiudad
             });
         }
 
-        function actualizarCiudad() {
+function actualizarCiudad() {
 
-            const id = $("#editar_IdCiudad").val();
+    const btn = document.getElementById("btnActualizarCiudad");
 
-            const data = {
-                IdPais: $("#editar_IdPais").val(),
-                NombreCiudad: $("#editar_NombreCiudad").val(),
-                EstadoCiudad: $("#editar_EstadoCiudad").is(":checked")
-            };
+    const id = $("#editar_IdCiudad").val();
 
-            if (!data.NombreCiudad.trim()) return crudNotify("warning", "Nombre requerido");
+    const data = {
+        IdPais: $("#editar_IdPais").val(),
+        NombreCiudad: $("#editar_NombreCiudad").val(),
+        EstadoCiudad: $("#editar_EstadoCiudad").is(":checked")
+    };
 
-            crudUpdate(URL_UPDATE(id), data, () => {
-                $("#modalEditarCiudad").modal("hide");
-                cargarCiudad(PAGINA_ACTUAL);
-            });
-        }
+    if (!data.NombreCiudad.trim()) {
+        crudNotify("warning", "Nombre requerido");
+        return;
+    }
+
+    bloquearBoton(btn, "Actualizando...");
+
+    $.post(URL_UPDATE(id), data)
+        .done(resp => {
+            crudNotify("success", resp.message || "Ciudad actualizada.");
+            $("#modalEditarCiudad").modal("hide");
+            cargarCiudad(PAGINA_ACTUAL);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al actualizar.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
+}
 
         // ==========================
         // ELIMINAR

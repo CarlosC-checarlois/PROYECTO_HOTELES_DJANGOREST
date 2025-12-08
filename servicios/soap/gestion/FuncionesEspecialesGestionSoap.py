@@ -1,4 +1,4 @@
-# funciones_especiales_gestion_soap.py
+
 import requests
 from datetime import datetime
 from decimal import Decimal
@@ -108,6 +108,7 @@ class FuncionesEspecialesGestionSoap:
         fechaFin,
         numeroHuespedes,
     ):
+        history = None
         """
         SOAP:
         ConfirmarReservaInterna(
@@ -167,8 +168,17 @@ class FuncionesEspecialesGestionSoap:
             print("FECHA INICIO:", fechaInicio)
             print("FECHA FIN:", fechaFin)
             print("HUESPEDES:", numeroHuespedes)
+            from zeep.plugins import HistoryPlugin
 
-            result = self.client.service.ConfirmarReservaInterna(
+            history = HistoryPlugin()
+            self.client = Client(wsdl=self.wsdl, plugins=[history])
+
+            service = self.client.bind(
+                "GestionFuncionesEspecialesWS",
+                "GestionFuncionesEspecialesWSSoap12"
+            )
+
+            result = service.ConfirmarReservaInterna(
                 idHabitacion,
                 idHold,
                 nombre,
@@ -178,7 +188,7 @@ class FuncionesEspecialesGestionSoap:
                 documento,
                 fechaInicio,
                 fechaFin,
-                numeroHuespedes,
+                numeroHuespedes
             )
 
             data = serialize_object(result)  # dict con Decimals y datetimes
@@ -232,6 +242,16 @@ class FuncionesEspecialesGestionSoap:
             return salida
 
         except Fault as e:
+
+            print("\n📨 SOAP REQUEST ENVIADO:")
+            from lxml import etree
+
+            print("\n📨 SOAP REQUEST ENVIADO:")
+            print(etree.tostring(history.last_sent["envelope"], pretty_print=True).decode())
+
+            print("\n📩 SOAP RESPONSE RECIBIDO:")
+            print(etree.tostring(history.last_received["envelope"], pretty_print=True).decode())
+
             raise Exception(f"Error SOAP confirmar_reserva_interna: {e}")
 
     # ============================================================
@@ -275,11 +295,15 @@ class FuncionesEspecialesGestionSoap:
 
             # Normalización simple tipo REST
             # Ajusta estos campos según lo que retorne tu API
+            def fix_decimal(v):
+                if isinstance(v, Decimal):
+                    return float(v)
+                return v
             out = {}
             if isinstance(data, dict):
                 for k, v in data.items():
                     key = k[0].lower() + k[1:] if k and k[0].isupper() else k
-                    out[key] = v
+                    out[key] = fix_decimal(v)
                 return out
 
             return data
@@ -314,3 +338,5 @@ class FuncionesEspecialesGestionSoap:
             }
         except Fault as e:
             raise Exception(f"Error SOAP cancelar_prereserva: {e}")
+
+

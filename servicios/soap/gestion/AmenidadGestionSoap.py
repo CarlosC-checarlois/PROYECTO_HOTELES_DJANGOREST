@@ -1,4 +1,3 @@
-from pprint import pprint
 import requests
 from zeep import Client, Transport
 from zeep.helpers import serialize_object
@@ -67,7 +66,7 @@ class AmenidadGestionSoap:
     # -----------------------------
     # OBTENER POR ID
     # -----------------------------
-    def obtener_por_id(self, id_amenidad):
+    def obtener_amenidad_por_id(self, id_amenidad):
         try:
             result = self.client.service.ObtenerAmenidadPorId(id_amenidad)
             return self._normalize(result)
@@ -109,8 +108,4 @@ class AmenidadGestionSoap:
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar amenidad {id_amenidad}: {e}")
 
-
-c = AmenidadGestionSoap()
-c = c.obtener_amenidades()
-pprint(c)
 

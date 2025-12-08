@@ -345,18 +345,24 @@ function abrirModalCrearImagenHabitacion(){
     $("#modalCrearImagenHabitacion").modal("show");
 }
 
-function crearImagenHabitacion(){
+function crearImagenHabitacion(btn){
+
+    // Bloqueamos botón
+    if (btn) bloquearBoton(btn, "Guardando...");
 
     const idHabitacion = $("#crear_IdHabitacion").val();
     const urlImagen    = ($("#crear_UrlImagen").val() || "").trim();
     const file         = $("#crear_FileImagen")[0].files[0];
 
+    // ===== VALIDACIONES =====
     if(!idHabitacion){
+        if (btn) desbloquearBoton(btn);
         crudNotify("warning","Debe seleccionar una habitación.");
         return;
     }
 
     if(!file && !urlImagen){
+        if (btn) desbloquearBoton(btn);
         crudNotify("warning","Debe subir un archivo o ingresar una URL de imagen.");
         return;
     }
@@ -378,17 +384,20 @@ function crearImagenHabitacion(){
         success: function(resp){
             if(resp.status !== "ok"){
                 crudNotify("error", resp.message || "No se pudo crear la imagen.");
+                if (btn) desbloquearBoton(btn);
                 return;
             }
             crudNotify("success", resp.message || "Imagen creada exitosamente.");
             $("#modalCrearImagenHabitacion").modal("hide");
             cargarImagenes(currentPage);
+            if (btn) desbloquearBoton(btn);
         },
         error: function(xhr){
             crudNotify(
                 "error",
                 xhr.responseJSON?.message || "Error al crear la imagen."
             );
+            if (btn) desbloquearBoton(btn);
         }
     });
 }
@@ -434,19 +443,24 @@ function abrirModalEditarImagen(id){
     });
 }
 
-function actualizarImagenHabitacion(){
+function actualizarImagenHabitacion(btn){
+
+    if (btn) bloquearBoton(btn, "Actualizando...");
 
     const idImagen     = $("#editar_IdImagen").val();
     const idHabitacion = $("#editar_IdHabitacion").val();
     const urlImagen    = ($("#editar_UrlImagen").val() || "").trim();
     const file         = $("#editar_FileImagen")[0].files[0];
 
+    // ===== VALIDACIONES =====
     if(!idHabitacion){
+        if (btn) desbloquearBoton(btn);
         crudNotify("warning","Debe seleccionar una habitación.");
         return;
     }
 
     if(!file && !urlImagen){
+        if (btn) desbloquearBoton(btn);
         crudNotify("warning","Debe subir un archivo o ingresar una URL de imagen.");
         return;
     }
@@ -454,7 +468,10 @@ function actualizarImagenHabitacion(){
     const formData = new FormData();
     formData.append("IdHabitacion", idHabitacion);
     formData.append("UrlImagen", urlImagen);
-    formData.append("EstadoImagen", $("#editar_EstadoImagen").is(":checked") ? "true" : "false");
+    formData.append(
+        "EstadoImagen",
+        $("#editar_EstadoImagen").is(":checked") ? "true" : "false"
+    );
     if(file){
         formData.append("file", file);
     }
@@ -468,17 +485,20 @@ function actualizarImagenHabitacion(){
         success: function(resp){
             if(resp.status !== "ok"){
                 crudNotify("error", resp.message || "No se pudo actualizar la imagen.");
+                if (btn) desbloquearBoton(btn);
                 return;
             }
             crudNotify("success", resp.message || "Imagen actualizada exitosamente.");
             $("#modalEditarImagenHabitacion").modal("hide");
             cargarImagenes(currentPage);
+            if (btn) desbloquearBoton(btn);
         },
         error: function(xhr){
             crudNotify(
                 "error",
                 xhr.responseJSON?.message || "Error al actualizar la imagen."
             );
+            if (btn) desbloquearBoton(btn);
         }
     });
 }

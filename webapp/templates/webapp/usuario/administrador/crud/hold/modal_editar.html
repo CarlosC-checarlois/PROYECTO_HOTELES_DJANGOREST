@@ -50,7 +50,7 @@
                 <!-- FILA 2: TIEMPO + RANGO FECHAS -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Tiempo Hold (minutos, opcional)</label>
+                        <label class="form-label fw-bold">Tiempo Hold (segundos, opcional)</label>
                         <input type="number"
                                id="editar_TiempoHold"
                                class="form-control"
@@ -111,9 +111,11 @@
                 </button>
                 <button type="button"
                         class="btn btn-primary"
-                        onclick="actualizarHold()">
+                        id="btnActualizarHold"
+                        onclick="actualizarHold(this)">
                     Actualizar
                 </button>
+
             </div>
 
         </div>

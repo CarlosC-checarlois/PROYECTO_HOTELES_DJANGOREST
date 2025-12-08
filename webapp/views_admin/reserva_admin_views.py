@@ -5,10 +5,6 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
-import requests
-from requests.exceptions import ConnectionError, Timeout, HTTPError
-
 from servicios.soap.gestion.ReservaGestionSoap import ReservaGestionSoap as ReservaGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
@@ -214,9 +210,7 @@ class ReservaDeleteAjaxView(View):
 # ================================
 # BUSCADOR AJAX PARA SELECT2 (RESERVAS)
 # ================================
-from django.utils.decorators import method_decorator
-from webapp.decorators import admin_required_ajax
-from servicios.rest.gestion.ReservaGestionRest import ReservaGestionRest
+
 
 @method_decorator(admin_required_ajax, name='dispatch')
 class ReservaSearchAjaxView(View):

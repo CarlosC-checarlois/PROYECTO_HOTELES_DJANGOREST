@@ -65,7 +65,7 @@
     {% endif %}
 
     {% if pagos|length == 0 %}
-        <div class="alert alert-info">No tienes pagos registrados.</div>
+        <div class="alert alert-info">Cargando tu informacion de pagos</div>
     {% endif %}
 
     <div class="row g-4">
@@ -89,16 +89,10 @@
                 <p class="mb-1"><strong>Monto:</strong> ${{ p.monto }}</p>
 
                 <!-- Fecha -->
-                <p class="mb-1"><strong>Fecha:</strong> {{ p.fecha }}</p>
 
                 <!-- Método -->
-                <p class="mb-1"><strong>Método Pago ID:</strong> {{ p.metodo }}</p>
+                <p class="mb-1"><strong>Método Pago Tipo:</strong> {{ p.metodo }}</p>
 
-                <!-- Cuentas -->
-                <p class="small-label text-muted mb-1">
-                    <strong>Cuenta Origen:</strong> {{ p.cuenta_origen }} <br>
-                    <strong>Cuenta Destino:</strong> {{ p.cuenta_destino }}
-                </p>
 
                 <!-- Estado -->
                 {% if p.estado == "Pagado" %}
@@ -136,7 +130,8 @@
 </section>
 
 {% endblock %}
-
+    {% block bloquear_footer %}
+{% endblock %}
 {% block jvscript_archivos_defer %}
 <script>
     // Si el usuario está logeado, agregamos ?uid=ID automáticamente
@@ -207,6 +202,4 @@ function getCookie(name) {
 
 </script>
 
-{% endblock %}
-    {% block bloquear_footer %}
 {% endblock %}

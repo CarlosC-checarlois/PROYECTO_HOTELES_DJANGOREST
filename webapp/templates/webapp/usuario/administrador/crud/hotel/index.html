@@ -162,18 +162,21 @@ function abrirModalCrearHotel(){
         });
 }
 
-function crearHotel(){
+function crearHotel(btn){
+
+    bloquearBoton(btn);
 
     const idHotel  = $("#crear_IdHotel").val().trim();
     const nombre   = $("#crear_NombreHotel").val().trim();
     const estado   = $("#crear_EstadoHotel").is(":checked");
 
     if (!idHotel || !nombre){
+        desbloquearBoton(btn);
         return crudNotify("warning","ID y Nombre del hotel son obligatorios.");
     }
 
     const payload = {
-        IdHotel:     idHotel,   // lo tratamos como string (no parseInt)
+        IdHotel: idHotel,
         NombreHotel: nombre,
         EstadoHotel: estado
     };
@@ -181,6 +184,7 @@ function crearHotel(){
     crudCreate(URL_CREATE_HOTEL, payload, () => {
         $("#modalCrearHotel").modal("hide");
         cargarHoteles(currentPage);
+        desbloquearBoton(btn);
     });
 }
 
@@ -206,13 +210,16 @@ function abrirModalEditarHotel(id){
     });
 }
 
-function actualizarHotel(){
+function actualizarHotel(btn){
+
+    bloquearBoton(btn);
 
     const id      = $("#editar_IdHotel").val();
     const nombre  = $("#editar_NombreHotel").val().trim();
     const estado  = $("#editar_EstadoHotel").is(":checked");
 
-    if(!nombre){
+    if (!nombre){
+        desbloquearBoton(btn);
         return crudNotify("warning","El nombre del hotel es obligatorio.");
     }
 
@@ -224,6 +231,7 @@ function actualizarHotel(){
     crudUpdate(URL_UPDATE_HOTEL(id), payload, () => {
         $("#modalEditarHotel").modal("hide");
         cargarHoteles(currentPage);
+        desbloquearBoton(btn);
     });
 }
 

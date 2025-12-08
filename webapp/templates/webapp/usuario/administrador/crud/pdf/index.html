@@ -327,17 +327,23 @@ function abrirModalCrearPdf(){
     $("#modalCrearPdf").modal("show");
 }
 
-function crearPdf(){
+function crearPdf(btn){
+    // Bloquear botón mientras se procesa
+    bloquearBoton(btn, "Guardando...");
+
     const idPdf     = $("#crear_IdPdf").val().trim();
     const idFactura = $("#crear_IdFactura").val();
     const urlPdf    = $("#crear_UrlPdf").val().trim();
 
     if(!idPdf){
         crudNotify("warning","No se pudo generar el ID del PDF.");
+        desbloquearBoton(btn);
         return;
     }
+
     if(!urlPdf){
         crudNotify("warning","La URL del PDF es obligatoria (suba un archivo o ingrese la URL).");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -354,12 +360,15 @@ function crearPdf(){
             $("#modalCrearPdf").modal("hide");
             crudNotify("success", resp.message || "PDF creado exitosamente");
             cargarPdfs(currentPage);
+            desbloquearBoton(btn);
         },
         error: function(xhr){
             crudNotify("error", xhr.responseJSON?.message || "Error al crear el PDF.");
+            desbloquearBoton(btn);
         }
     });
 }
+
 
 // ================== Editar ==================
 function abrirModalEditarPdf(id){
@@ -401,12 +410,16 @@ function abrirModalEditarPdf(id){
     });
 }
 
-function actualizarPdf(){
+function actualizarPdf(btn){
+    // Bloquear botón mientras se procesa
+    bloquearBoton(btn, "Actualizando...");
+
     const idPdf  = $("#editar_IdPdf").val();
     const urlPdf = $("#editar_UrlPdf").val().trim();
 
     if(!urlPdf){
         crudNotify("warning","La URL del PDF es obligatoria.");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -422,9 +435,11 @@ function actualizarPdf(){
             $("#modalEditarPdf").modal("hide");
             crudNotify("success", resp.message || "PDF actualizado exitosamente");
             cargarPdfs(currentPage);
+            desbloquearBoton(btn);
         },
         error: function(xhr){
             crudNotify("error", xhr.responseJSON?.message || "Error al actualizar el PDF.");
+            desbloquearBoton(btn);
         }
     });
 }

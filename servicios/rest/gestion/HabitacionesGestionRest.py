@@ -1,5 +1,3 @@
-# habitaciones_gestion_rest.py
-from pprint import pprint
 
 import requests
 from datetime import datetime

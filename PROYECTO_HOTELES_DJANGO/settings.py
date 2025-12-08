@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_wt-+p&z^3v2payok$xbe#^oh@y2$4go!qx&lr1xqxi6#z_b7&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -70,8 +70,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'PROYECTO_HOTELES_DJANGO.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
 
 
 # Password validation
@@ -116,3 +115,18 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 
+AWS_ACCESS_KEY_ID = "AKIA3HKC222IHHQWV6FQ"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "imageness3realdecuenca"
+AWS_REGION = "us-east-2"
+PDF_BASE_URL = 'imagenes/checarlos'
+"""
+CREDENCIALES DE PAGO PARA LA BANCA
+"""
+# CREDENCIALES DE PAGO PARA LA BANCA
+CUENTA_ADMIN_ID = '260'
+CUENTA_USUARIO_ID = '261'
+URL_BANCA_APP = "http://mibanca.runasp.net"
+X_FRAME_OPTIONS = 'ALLOWALL'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

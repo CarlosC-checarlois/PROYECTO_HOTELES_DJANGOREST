@@ -1,5 +1,4 @@
 # views_hold.py
-from pprint import pprint
 from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import render
@@ -114,8 +113,6 @@ class HoldGetAjaxView(View):
 class HoldCreateAjaxView(View):
     def post(self, request):
         api = HoldGestionRest()
-        print("*****************************    EJECUCION DE CREATE POST     *****************************")
-        pprint(request.POST)
 
         try:
             data_post = request.POST.dict()
@@ -203,8 +200,6 @@ class HoldCreateAjaxView(View):
 class HoldUpdateAjaxView(View):
     def post(self, request, id_hold):
         api = HoldGestionRest()
-        print("*****************************    EJECUCION DE UPDATE POST     *****************************")
-        pprint(request.POST)
 
         try:
             data_post = request.POST.dict()

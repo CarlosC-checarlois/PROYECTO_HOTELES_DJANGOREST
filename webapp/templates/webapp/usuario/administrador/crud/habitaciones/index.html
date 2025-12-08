@@ -305,6 +305,9 @@ function abrirModalCrearHabitacion() {
 }
 
 function crearHabitacion() {
+
+    const btn = document.getElementById("btnCrearHabitacion");
+
     const precioNormal = $("#crear_PrecioNormalHabitacion").val();
     const precioActual = $("#crear_PrecioActualHabitacion").val();
     const capacidad    = $("#crear_CapacidadHabitacion").val();
@@ -328,14 +331,26 @@ function crearHabitacion() {
         return;
     }
 
+    // Normalización
     data.PrecioNormalHabitacion = parseFloat(limpiarDecimal(precioNormal));
     data.PrecioActualHabitacion = parseFloat(limpiarDecimal(precioActual));
     data.CapacidadHabitacion    = parseInt(limpiarEntero(capacidad), 10);
 
-    crudCreate(URL_CREATE, data, () => {
-        $("#modalCrearHabitacion").modal("hide");
-        cargarHabitaciones(CURRENT_PAGE);
-    });
+    // 🔒 BLOQUEAR BOTÓN
+    bloquearBoton(btn, "Guardando...");
+
+    $.post(URL_CREATE, data)
+        .done(resp => {
+            crudNotify("success", resp.message || "Habitación creada.");
+            $("#modalCrearHabitacion").modal("hide");
+            cargarHabitaciones(CURRENT_PAGE);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al crear habitación.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
 }
 
 // ===================== EDITAR =====================
@@ -360,8 +375,10 @@ function abrirModalEditarHabitacion(id) {
         $("#modalEditarHabitacion").modal("show");
     });
 }
-
 function actualizarHabitacion() {
+
+    const btn = document.getElementById("btnActualizarHabitacion");
+
     const id = $("#editar_IdHabitacion").val();
 
     const precioNormal = $("#editar_PrecioNormalHabitacion").val();
@@ -386,14 +403,26 @@ function actualizarHabitacion() {
         return;
     }
 
+    // Normalización
     data.PrecioNormalHabitacion = parseFloat(limpiarDecimal(precioNormal));
     data.PrecioActualHabitacion = parseFloat(limpiarDecimal(precioActual));
     data.CapacidadHabitacion    = parseInt(limpiarEntero(capacidad), 10);
 
-    crudUpdate(URL_UPDATE(id), data, () => {
-        $("#modalEditarHabitacion").modal("hide");
-        cargarHabitaciones(CURRENT_PAGE);
-    });
+    // 🔒 BLOQUEAR
+    bloquearBoton(btn, "Actualizando...");
+
+    $.post(URL_UPDATE(id), data)
+        .done(resp => {
+            crudNotify("success", resp.message || "Habitación actualizada.");
+            $("#modalEditarHabitacion").modal("hide");
+            cargarHabitaciones(CURRENT_PAGE);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al actualizar habitación.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
 }
 
 // ===================== ELIMINAR =====================

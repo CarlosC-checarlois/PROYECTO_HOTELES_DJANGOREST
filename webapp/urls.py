@@ -1,4 +1,3 @@
-from django.urls import path
 from webapp import views as views_webapp
 from webapp.views_admin.amenidades_admin_ajax_views import (
     AmenidadesView,
@@ -215,7 +214,7 @@ urlpatterns = [
 
     path("register/", views_webapp.index_register, name="register"),
     path("register/post/", views_webapp.register_post, name="register_post"),
-path("api/mis-reservas/", views_webapp.api_mis_reservas),
+    path("api/mis-reservas/", views_webapp.api_mis_reservas),
 
     # ===============================
     # PERFIL DEL CLIENTE (READ-ONLY)
@@ -226,6 +225,8 @@ path("api/mis-reservas/", views_webapp.api_mis_reservas),
     # RESERVAS DEL CLIENTE
     # ===============================
     path("usuario/reservas/", views_webapp.MisReservasView.as_view(), name="usuario_reservas"),
+    path("api/mis-reservas-full/", views_webapp.MisReservasAjaxView.as_view(), name="mis_reservas_ajax"),
+
     path("usuario/prereserva/", views_webapp.crear_prereserva, name="crear_prereserva"),
     path("usuario/confirmar-reserva/", views_webapp.ConfirmarReservaInternaAjax.as_view(),
          name="confirmar_reserva_interna"),
@@ -240,6 +241,8 @@ path("api/mis-reservas/", views_webapp.api_mis_reservas),
     # PANEL ADMINISTRATIVO
     # ===============================
     path("admin/", views_webapp.usuario_gestion_administrador, name="admin_dashboard"),
+    path("admin/perfil/actualizar/", views_webapp.usuario_actualizar_administrador, name="admin_perfil_actualizar"),
+
     # ===============================
     # PANEL ADMINISTRATIVO - CRUDS
     # ===============================
@@ -484,16 +487,16 @@ path("api/mis-reservas/", views_webapp.api_mis_reservas),
 
     path("admin/factura/search/", FacturaSearchAjaxView.as_view(), name="facturas_search"),
 
-    path(
-        "pago/",
-        views_webapp.vista_pago,
-        name="vista_pago"
-    ),
+    path("pago/", views_webapp.vista_pago, name="vista_pago"),
 
     ########################################
-    path(
-        "banca/ejecutar-transaccion/",
-        views_webapp.ejecutar_pago_banca_interno,
-        name="ejecutar_transaccion",
+    path("banca/ejecutar-transaccion/",views_webapp.ejecutar_pago_banca_interno, name="ejecutar_transaccion",
     ),
+    path("api/hold-tiempo/<str:id_hold>/", views_webapp.tiempo_hold, name="tiempo_hold"),
+    path("cuentas-xml/", views_webapp.ListaCuentasXMLView.as_view(), name="cuentas-xml"),
+
 ]
+
+def custom_404_view(request, exception):
+    return render(request, '404.html', status=404)
+handler404 = custom_404_view

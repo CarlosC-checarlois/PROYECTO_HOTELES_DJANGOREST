@@ -1,4 +1,3 @@
-from pprint import pprint
 
 from django.http import JsonResponse
 from django.views import View

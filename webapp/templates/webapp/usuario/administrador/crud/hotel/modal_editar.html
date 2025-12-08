@@ -1,47 +1,53 @@
 <div class="modal fade" id="modalEditarHotel" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-      <!-- HEADER -->
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title fw-bold">Editar Hotel</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
+            <!-- HEADER -->
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">Editar Hotel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
 
-      <!-- BODY -->
-      <div class="modal-body">
+            <!-- BODY -->
+            <div class="modal-body">
 
-        <div class="mb-3">
-          <label class="form-label fw-bold">ID Hotel</label>
-          <input type="text"
-                 id="editar_IdHotel"
-                 class="form-control readonly-input"
-                 readonly>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">ID Hotel</label>
+                    <input type="text"
+                           id="editar_IdHotel"
+                           class="form-control readonly-input"
+                           readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre del Hotel</label>
+                    <input type="text"
+                           id="editar_NombreHotel"
+                           class="form-control"
+                           placeholder="Ej: Hotel Genérico">
+                </div>
+
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="editar_EstadoHotel">
+                    <label class="form-check-label fw-bold" for="editar_EstadoHotel">
+                        Activo
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button"
+                        class="btn btn-primary"
+                        id="btnActualizarHotel"
+                        onclick="actualizarHotel(this)">
+                    Actualizar
+                </button>
+
+            </div>
+
         </div>
-
-        <div class="mb-3">
-          <label class="form-label fw-bold">Nombre del Hotel</label>
-          <input type="text"
-                 id="editar_NombreHotel"
-                 class="form-control"
-                 placeholder="Ej: Hotel Genérico">
-        </div>
-
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="checkbox" id="editar_EstadoHotel">
-          <label class="form-check-label fw-bold" for="editar_EstadoHotel">
-            Activo
-          </label>
-        </div>
-
-      </div>
-
-      <!-- FOOTER -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="actualizarHotel()">Actualizar</button>
-      </div>
-
     </div>
-  </div>
 </div>

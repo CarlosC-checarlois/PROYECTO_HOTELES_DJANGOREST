@@ -55,6 +55,7 @@
 
 
 {% block jvscript_archivos_defer %}
+
     <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
 
     <script>
@@ -115,89 +116,130 @@
         }
 
         // ================== CREAR ==================
-// ================== CREAR ==================
-function abrirModalCrearAmenidad() {
+        // ================== CREAR ==================
+        function abrirModalCrearAmenidad() {
 
-    // Pedimos el siguiente ID directamente al endpoint /next-id/
-    $.get(URL_NEXT_ID, function (resp) {
+            // Pedimos el siguiente ID directamente al endpoint /next-id/
+            $.get(URL_NEXT_ID, function (resp) {
 
-        const nextId = (resp && typeof resp.next !== "undefined")
-            ? resp.next
-            : "";
+                const nextId = (resp && typeof resp.next !== "undefined")
+                    ? resp.next
+                    : "";
 
-        $("#crear_IdAmenidad").val(nextId);
-        $("#crear_NombreAmenidad").val("");
+                $("#crear_IdAmenidad").val(nextId);
+                $("#crear_NombreAmenidad").val("");
 
-        $("#modalCrearAmenidad").modal("show");
+                $("#modalCrearAmenidad").modal("show");
 
-    }).fail(function () {
-        // Si falla, dejamos el ID vacío y mostramos el modal igual
-        $("#crear_IdAmenidad").val("");
-        $("#crear_NombreAmenidad").val("");
+            }).fail(function () {
+                // Si falla, dejamos el ID vacío y mostramos el modal igual
+                $("#crear_IdAmenidad").val("");
+                $("#crear_NombreAmenidad").val("");
 
-        crudNotify("error", "No se pudo obtener el siguiente ID de amenidad.");
-        $("#modalCrearAmenidad").modal("show");
-    });
-}
-
-        function crearAmenidad() {
-
-            const nombre = $("#crear_NombreAmenidad").val().trim();
-
-            if (!nombre)
-                return crudNotify("warning", "El nombre es obligatorio.");
-
-            crudCreate(
-                URL_CREATE,
-                {
-                    IdAmenidad: $("#crear_IdAmenidad").val(),
-                    NombreAmenidad: nombre,
-                    EstadoAmenidad: true
-                },
-                () => {
-                    $("#modalCrearAmenidad").modal("hide");
-                    cargarAmenidades(PAGINA_ACTUAL);
-                }
-            );
-        }
-
-        // ================== EDITAR ==================
-        function abrirModalEditarAmenidad(id) {
-
-            $.get(URL_GET(id), function (resp) {
-
-                if (resp.status !== "ok")
-                    return crudNotify("error", resp.message || "No se pudo cargar");
-
-                const a = resp.data;
-
-                $("#editar_IdAmenidad").val(a.IdAmenidad);
-                $("#editar_NombreAmenidad").val(a.NombreAmenidad);
-                $("#editar_EstadoAmenidad").prop("checked", !!a.EstadoAmenidad);
-
-                $("#modalEditarAmenidad").modal("show");
+                crudNotify("error", "No se pudo obtener el siguiente ID de amenidad.");
+                $("#modalCrearAmenidad").modal("show");
             });
         }
 
+function crearAmenidad() {
+
+    const btn = document.getElementById("btnCrearAmenidad");
+    const nombre = $("#crear_NombreAmenidad").val().trim();
+
+    if (!nombre) {
+        crudNotify("warning", "El nombre es obligatorio.");
+        return;
+    }
+
+    bloquearBoton(btn, "Guardando...");
+
+    $.post(URL_CREATE, {
+        IdAmenidad: $("#crear_IdAmenidad").val(),
+        NombreAmenidad: nombre,
+        EstadoAmenidad: true
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Creado correctamente.");
+        $("#modalCrearAmenidad").modal("hide");
+        cargarAmenidades(PAGINA_ACTUAL);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al crear.");
+    })
+    .always(() => {
+        desbloquearBoton(btn);
+    });
+}
+
+        function abrirModalEditarAmenidad(id) {
+
+            $.get(URL_GET(id))
+                .done(function (resp) {
+
+                    console.log("Respuesta GET amenidad:", resp);  // para que veas qué llega
+
+                    // 1) Validar status
+                    if (!resp || resp.status !== "ok") {
+                        crudNotify("error", resp && resp.message ? resp.message : "No se pudo cargar la amenidad.");
+                        return;
+                    }
+
+                    // 2) Validar que EXISTE data
+                    if (!resp.data) {
+                        crudNotify("error", "No se encontró la amenidad solicitada.");
+                        return;
+                    }
+
+                    const a = resp.data;
+
+                    // 3) Asignar campos, usando las llaves que realmente devuelve la API
+                    $("#editar_IdAmenidad").val(a.IdAmenidad);
+                    $("#editar_NombreAmenidad").val(a.NombreAmenidad);
+                    $("#editar_EstadoAmenidad").prop("checked", !!a.EstadoAmenidad);
+
+                    // 4) Mostrar modal
+                    $("#modalEditarAmenidad").modal("show");  // si usas Bootstrap 4
+
+                    // Si estás en Bootstrap 5 y $(...).modal no existe, usa esto:
+                    // const modalEl = document.getElementById('modalEditarAmenidad');
+                    // const modalEditar = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    // modalEditar.show();
+                })
+                .fail(function (xhr) {
+                    console.error("Error en GET amenidad:", xhr);
+                    crudNotify("error", "Error al consultar la amenidad.");
+                });
+        }
+
+
         function actualizarAmenidad() {
 
+            const btn = document.getElementById("btnActualizarAmenidad");
             const id = $("#editar_IdAmenidad").val();
             const nombre = $("#editar_NombreAmenidad").val().trim();
 
-            if (!nombre)
-                return crudNotify("warning", "El nombre es obligatorio.");
+            if (!nombre) {
+                crudNotify("warning", "El nombre es obligatorio.");
+                return;
+            }
 
-            crudUpdate(
-                URL_UPDATE(id),
-                {
-                    NombreAmenidad: nombre,
-                    EstadoAmenidad: $("#editar_EstadoAmenidad").is(":checked")
-                },
-                () => {
+            bloquearBoton(btn, "Actualizando...");
+
+            $.post(URL_UPDATE(id), {
+                NombreAmenidad: nombre,
+                EstadoAmenidad: $("#editar_EstadoAmenidad").is(":checked")
+            })
+                .done(resp => {
+                    crudNotify("success", resp.message || "Actualizado correctamente.");
                     $("#modalEditarAmenidad").modal("hide");
                     cargarAmenidades(PAGINA_ACTUAL);
-                }
-            );
+                })
+                .fail(xhr => {
+                    crudNotify("error", xhr.responseJSON?.message || "Error al actualizar.");
+                })
+                .always(() => {
+                    desbloquearBoton(btn);
+                });
         }
 
         // ================== ELIMINAR ==================

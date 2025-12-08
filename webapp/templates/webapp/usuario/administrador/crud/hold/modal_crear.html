@@ -44,7 +44,7 @@
                 <!-- FILA 2: TIEMPO + RANGO FECHAS -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Tiempo Hold (minutos, opcional)</label>
+                        <label class="form-label fw-bold">Tiempo Hold (segundos, opcional)</label>
                         <input type="number"
                                id="crear_TiempoHold"
                                class="form-control"
@@ -107,9 +107,11 @@
                 </button>
                 <button type="button"
                         class="btn btn-success"
-                        onclick="crearHold()">
+                        id="btnCrearHold"
+                        onclick="crearHold(this)">
                     Guardar Hold
                 </button>
+
             </div>
 
         </div>

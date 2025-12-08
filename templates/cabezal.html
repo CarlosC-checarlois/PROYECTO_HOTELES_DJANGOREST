@@ -10,7 +10,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     {% block titulo_pagina %}
     {% endblock %}
-    
+    <style>
+        .footer-modern {
+    background: linear-gradient(135deg, #3b82f6, #6c5ce7);
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+}
+
+.footer-modern h4 {
+    letter-spacing: .3px;
+}
+
+.footer-links a {
+    color: rgba(255,255,255,.75);
+    text-decoration: none;
+    font-weight: 500;
+    transition: .2s ease;
+}
+
+.footer-links a:hover {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255,255,255,.4);
+    transform: translateY(-1px);
+}
+
+.footer-divider {
+    border-color: rgba(255,255,255,.15);
+}
+
+    </style>
     <style>
         /* NAVBAR PERSONALIZADO */
 .navbar-lo-propio {
@@ -91,7 +119,7 @@
         <div class="container menu_cabezal_general">
 
             <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
-                Hotel Genérico
+                Hotel LO PROPIO - GUAYAQUIL
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
@@ -116,37 +144,57 @@
     {% block contenido_pagina %}
     {% endblock %}
     {% block bloquear_footer %}
-        <footer class="footer-modern mt-5 text-white">
-            <div class="container py-5">
+<footer class="footer-modern text-white mt-5">
+    <div class="container py-5">
 
-                <div class="row justify-content-center text-center">
-        <a class="navbar-brand fw-bold text-white" href="{% url 'inicio' %}">
-            <i class="bi bi-building-fill"></i> Hotel Lo Propio
-        </a>
-                    <!-- Nombre del hotel -->
-                    <div class="col-12 mb-3">
-                        <h4 class="fw-bold">Hotel LO PROPIO</h4>
-                    </div>
+        <div class="row gy-4 text-center text-md-start align-items-center">
 
-                    <!-- Enlaces -->
-                    <div class="col-12 mb-3">
-                        <ul class="footer-links list-inline">
-                            <li class="list-inline-item mx-3"><a href="/" class="text-white-50">Inicio</a></li>
-                            <li class="list-inline-item mx-3"><a href="/habitaciones/"
-                                                                 class="text-white-50">Habitaciones</a></li>
-                        </ul>
-                    </div>
-                    <!-- Derechos -->
-                    <div class="col-12">
-                        <p class="mb-0 text-white-50">
-                            © 2025 Hotel Lo propio
-                        </p>
-                    </div>
-
-                </div>
-
+            <!-- LOGO Y NOMBRE -->
+            <div class="col-md-4">
+                <h4 class="fw-bold mb-2">
+                    <i class="bi bi-building-fill"></i> Hotel LO PROPIO
+                </h4>
+                <p class="text-white-50 mb-0">
+                    Confort · Elegancia · Ubicación perfecta
+                </p>
             </div>
-        </footer>
+
+            <!-- ENLACES -->
+            <div class="col-md-4 text-center">
+                <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
+                    <li>
+                        <a href="{% url 'inicio' %}">Inicio</a>
+                    </li>
+                    <li>
+                        <a href="/habitaciones/">Habitaciones</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- UBICACIÓN -->
+            <div class="col-md-4 text-md-end text-center">
+                <p class="mb-1">
+                    <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
+                </p>
+                <small class="text-white-50">
+                    A minutos de Malecón · Las Peñas · Aeropuerto
+                </small>
+            </div>
+
+        </div>
+
+        <!-- DIVISOR -->
+        <hr class="footer-divider my-4">
+
+        <!-- COPYRIGHT -->
+        <div class="text-center text-white-50">
+            © 2025 Hotel LO PROPIO · Todos los derechos reservados.
+        </div>
+
+    </div>
+</footer>
+
+
     {% endblock %}
 {% endblock %}
 

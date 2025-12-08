@@ -256,6 +256,36 @@
             }
         }
     </style>
+        <style>
+        .footer-modern {
+    background: linear-gradient(135deg, #3b82f6, #6c5ce7);
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+}
+
+.footer-modern h4 {
+    letter-spacing: .3px;
+}
+
+.footer-links a {
+    color: rgba(255,255,255,.75);
+    text-decoration: none;
+    font-weight: 500;
+    transition: .2s ease;
+}
+
+.footer-links a:hover {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255,255,255,.4);
+    transform: translateY(-1px);
+}
+
+.footer-divider {
+    border-color: rgba(255,255,255,.15);
+}
+
+    </style>
+
 {% endblock %}
 {% block mensajes_personalizados %}
 
@@ -406,36 +436,57 @@
         </div>
     </section>
     </main>
+<footer class="footer-modern text-white mt-5">
+    <div class="container py-5">
 
-        <footer class="footer-modern mt-5 text-white">
-            <div class="container py-5">
+        <div class="row gy-4 text-center text-md-start align-items-center">
 
-                <div class="row justify-content-center text-center">
-
-                    <!-- Nombre del hotel -->
-                    <div class="col-12 mb-3">
-                        <h4 class="fw-bold">Hotel Genérico</h4>
-                    </div>
-
-                    <!-- Enlaces -->
-                    <div class="col-12 mb-3">
-                        <ul class="footer-links list-inline">
-                            <li class="list-inline-item mx-3"><a href="/" class="text-white-50">Inicio</a></li>
-                            <li class="list-inline-item mx-3"><a href="/habitaciones/"
-                                                                 class="text-white-50">Habitaciones</a></li>
-                        </ul>
-                    </div>
-                    <!-- Derechos -->
-                    <div class="col-12">
-                        <p class="mb-0 text-white-50">
-                            © 2025 Hotel Genérico — Todos los derechos reservados.
-                        </p>
-                    </div>
-
-                </div>
-
+            <!-- LOGO Y NOMBRE -->
+            <div class="col-md-4">
+                <h4 class="fw-bold mb-2">
+                    <i class="bi bi-building-fill"></i> Hotel LO PROPIO
+                </h4>
+                <p class="text-white-50 mb-0">
+                    Confort · Elegancia · Ubicación perfecta
+                </p>
             </div>
-        </footer>
+
+            <!-- ENLACES -->
+            <div class="col-md-4 text-center">
+                <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
+                    <li>
+                        <a href="{% url 'inicio' %}">Inicio</a>
+                    </li>
+                    <li>
+                        <a href="/habitaciones/">Habitaciones</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- UBICACIÓN -->
+            <div class="col-md-4 text-md-end text-center">
+                <p class="mb-1">
+                    <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
+                </p>
+                <small class="text-white-50">
+                    A minutos de Malecón · Las Peñas · Aeropuerto
+                </small>
+            </div>
+
+        </div>
+
+        <!-- DIVISOR -->
+        <hr class="footer-divider my-4">
+
+        <!-- COPYRIGHT -->
+        <div class="text-center text-white-50">
+            © 2025 Hotel LO PROPIO · Todos los derechos reservados.
+        </div>
+
+    </div>
+</footer>
+
+
     </div>
 {% endblock %}
 
@@ -575,7 +626,7 @@
                     // Si backend devolvió error
                     if (data.success === false) {
                         if (data.error) {
-                            mostrarToast(data.error, "error");
+                            mostrarToast("No se obtuvieron habitaciones", "error");
                         } else {
                             mostrarToast("Error al cargar habitaciones.", "error");
                         }

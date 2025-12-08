@@ -1,5 +1,4 @@
 # webapp/views_admin/views_tipo_habitacion.py
-from pprint import pprint
 
 from django.views import View
 from django.shortcuts import render
@@ -85,7 +84,6 @@ class TipoHabitacionCreateAjaxView(View):
                 "descripcionTipoHabitacion": request.POST.get("descripcion"),
                 "estadoTipoHabitacion": request.POST.get("estado") == "true"
             }
-
             api.crear_tipo(dto)
             return JsonResponse({"status": "ok", "message": "Tipo de Habitación creado exitosamente"})
         except ValueError as ve:
@@ -104,7 +102,6 @@ class TipoHabitacionCreateAjaxView(View):
 class TipoHabitacionUpdateAjaxView(View):
     def post(self, request, id_tipo):
         api = TipoHabitacionGestionRest()
-        pprint(request.POST)
         try:
             # Obtener el estado actual del registro si no se envía
             estado_enviado = request.POST.get("estado")

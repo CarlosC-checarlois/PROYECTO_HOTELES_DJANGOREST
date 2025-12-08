@@ -2,145 +2,163 @@
 {% load static %}
 
 {% block titulo_pagina %}
-<title>Iniciar Sesión | Hotel Genérico</title>
+    <title>Iniciar Sesión | Hotel Genérico</title>
 {% endblock %}
 
 {% block css_archivos %}
     <style>
-    :root {
-        --color-principal: #3b82f6;
-        --color-secundario: #6c5ce7;
-        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
-    }
+        :root {
+            --color-principal: #3b82f6;
+            --color-secundario: #6c5ce7;
+            --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+        }
 
-    .login-wrapper {
-        min-height: 100vh;
-        background: var(--degradado);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-    }
+        .login-wrapper {
+            min-height: 100vh;
+            background: var(--degradado);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
 
-    .login-card {
-        border-radius: 1.5rem;
-        padding: 2rem;
-    }
+        .login-card {
+            border-radius: 1.5rem;
+            padding: 2rem;
+        }
 
-    .login-card .form-control,
-    .login-card .input-group-text {
-        border-radius: 0.75rem;
-    }
+        .login-card .form-control,
+        .login-card .input-group-text {
+            border-radius: 0.75rem;
+        }
 
-    .btn-primary {
-        border-radius: 0.75rem;
-        padding: 0.7rem;
-        font-weight: 600;
-    }
+        .btn-primary {
+            border-radius: 0.75rem;
+            padding: 0.7rem;
+            font-weight: 600;
+        }
 
-    .btn-outline-primary {
-        border-radius: 0.75rem;
-        padding: 0.7rem;
-        font-weight: 600;
-    }
-</style>
-<style>
-/* CONTENEDOR GENERAL DE MENSAJES */
-.messages-wrapper {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 3000;
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-}
+        .btn-outline-primary {
+            border-radius: 0.75rem;
+            padding: 0.7rem;
+            font-weight: 600;
+        }
+    </style>
+    <style>
+        /* CONTENEDOR GENERAL DE MENSAJES */
+        .messages-wrapper {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
 
-/* CAJA BASE */
-.app-alert {
-    min-width: 260px;
-    max-width: 360px;
-    display: flex;
-    align-items: center;
-    padding: .75rem 1rem;
-    border-radius: 999px;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
-    color: #fff;
-    font-size: .9rem;
-    font-weight: 500;
-    opacity: 0;
-    transform: translateX(20px);
-    animation: appAlertIn .25s ease forwards;
-}
+        /* CAJA BASE */
+        .app-alert {
+            min-width: 260px;
+            max-width: 360px;
+            display: flex;
+            align-items: center;
+            padding: .75rem 1rem;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+            color: #fff;
+            font-size: .9rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(20px);
+            animation: appAlertIn .25s ease forwards;
+        }
 
-/* ICONO A LA IZQUIERDA */
-.app-alert-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: .5rem;
-    font-size: 1.1rem;
-}
+        /* ICONO A LA IZQUIERDA */
+        .app-alert-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .5rem;
+            font-size: 1.1rem;
+        }
 
-/* TEXTO */
-.app-alert-text {
-    flex: 1;
-}
+        /* TEXTO */
+        .app-alert-text {
+            flex: 1;
+        }
 
-/* BOTÓN “X” OPCIONAL */
-.app-alert-close {
-    margin-left: .5rem;
-    cursor: pointer;
-    opacity: .8;
-    font-size: 1.1rem;
-}
-.app-alert-close:hover {
-    opacity: 1;
-}
+        /* BOTÓN “X” OPCIONAL */
+        .app-alert-close {
+            margin-left: .5rem;
+            cursor: pointer;
+            opacity: .8;
+            font-size: 1.1rem;
+        }
 
-/* COLORES SEGÚN TIPO */
-.app-alert-success { background: #16a34a; }  /* verde */
-.app-alert-error   { background: #dc2626; }  /* rojo  */
-.app-alert-warning { background: #d97706; }  /* naranja */
-.app-alert-info    { background: #2563eb; }  /* azul */
+        .app-alert-close:hover {
+            opacity: 1;
+        }
 
-/* ANIMACIÓN ENTRADA */
-@keyframes appAlertIn {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+        /* COLORES SEGÚN TIPO */
+        .app-alert-success {
+            background: #16a34a;
+        }
 
-/* RESPONSIVE: EN MÓVIL QUE OCUPEN TODO EL ANCHO */
-@media (max-width: 576px) {
-    .messages-wrapper {
-        top: .5rem;
-        right: .5rem;
-        left: .5rem;
-    }
-    .app-alert {
-        max-width: 100%;
-        border-radius: 12px;
-    }
-}
+        /* verde */
+        .app-alert-error {
+            background: #dc2626;
+        }
 
-</style>
+        /* rojo  */
+        .app-alert-warning {
+            background: #d97706;
+        }
+
+        /* naranja */
+        .app-alert-info {
+            background: #2563eb;
+        }
+
+        /* azul */
+
+        /* ANIMACIÓN ENTRADA */
+        @keyframes appAlertIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* RESPONSIVE: EN MÓVIL QUE OCUPEN TODO EL ANCHO */
+        @media (max-width: 576px) {
+            .messages-wrapper {
+                top: .5rem;
+                right: .5rem;
+                left: .5rem;
+            }
+
+            .app-alert {
+                max-width: 100%;
+                border-radius: 12px;
+            }
+        }
+
+    </style>
 
 {% endblock %}
 
 {% block mensajes_personalizados %}
-<div class="messages-wrapper">
-    {% if messages %}
-        {% for message in messages %}
-            {% comment %}
+    <div class="messages-wrapper">
+        {% if messages %}
+            {% for message in messages %}
+                {% comment %}
               message.tags en Django suele traer: success, error, warning, info
             {% endcomment %}
-            <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
                 <span class="app-alert-icon">
                     {% if "success" in message.tags %}
                         <i class="bi bi-check-circle"></i>
@@ -152,101 +170,121 @@
                         <i class="bi bi-info-circle"></i>
                     {% endif %}
                 </span>
-                <span class="app-alert-text">
+                    <span class="app-alert-text">
                     {{ message }}
                 </span>
-                <!-- si quieres cerrar manualmente -->
-                <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    <!-- si quieres cerrar manualmente -->
+                    <span class="app-alert-close" onclick="this.parentElement.remove()">
                     &times;
                 </span>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
 {% endblock %}
 
 
 {% block contenido_pagina %}
-<div class="login-wrapper">
-    <div class="col-md-6 col-lg-4">
+    <div class="login-wrapper">
+        <div class="col-md-6 col-lg-4">
 
-        <div class="card shadow-lg border-0 login-card">
+            <div class="card shadow-lg border-0 login-card">
 
-            <div class="text-center mb-4">
-                <i class="bi bi-person-circle fs-1 text-primary"></i>
-                <h3 class="fw-bold mt-2">Iniciar sesión</h3>
-                <p class="text-muted">Accede a tu cuenta del Hotel</p>
-            </div>
-            <!-- FORMULARIO -->
-            <form action="{% url 'login_post' %}" method="post">
-                {% csrf_token %}
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-circle fs-1 text-primary"></i>
+                    <h3 class="fw-bold mt-2">Iniciar sesión</h3>
+                    <p class="text-muted">Accede a tu cuenta del Hotel</p>
+                </div>
+                <!-- FORMULARIO -->
+                <form action="{% url 'login_post' %}" method="post">
+                    {% csrf_token %}
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Correo electrónico</label>
-                    <div class="input-group">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Correo electrónico</label>
+                        <div class="input-group">
                         <span class="input-group-text bg-white">
                             <i class="bi bi-envelope"></i>
                         </span>
-                        <input type="email" name="correo" class="form-control"
-                               placeholder="tucorreo@ejemplo.com" required>
+                            <input type="email" name="correo" class="form-control"
+                                   placeholder="tucorreo@ejemplo.com" required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Contraseña</label>
-                    <div class="input-group">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Contraseña</label>
+                        <div class="input-group">
                         <span class="input-group-text bg-white">
                             <i class="bi bi-lock"></i>
                         </span>
-                        <input type="password" name="clave" class="form-control"
-                               placeholder="••••••••" required>
+                            <input type="password" name="clave" class="form-control"
+                                   placeholder="••••••••" required>
+                        </div>
                     </div>
-                </div>
 
 
+                    <div class="d-grid">
+                        <button id="btnLogin" class="btn btn-primary">Ingresar</button>
+                    </div>
 
-                <div class="d-grid">
-                    <button class="btn btn-primary">Ingresar</button>
-                </div>
+                    <div class="text-center my-3">
+                        <span class="text-muted small"></span>
+                    </div>
 
-                <div class="text-center my-3">
-                    <span class="text-muted small"></span>
-                </div>
+                    <div class="d-grid">
+                        <a href="{% url 'register' %}" class="btn btn-outline-primary">Crear una cuenta</a>
+                    </div>
 
-                <div class="d-grid">
-                    <a href="{% url 'register' %}" class="btn btn-outline-primary">Crear una cuenta</a>
-                </div>
-
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 {% block jvscript_archivos_defer %}
-<script>
-    {% if login_exitoso %}
-        console.log("Inicio de sesión correcto. Guardando en localStorage...");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-        // Guardar TODOS los datos del usuario en localStorage
-        localStorage.setItem("usuario_id",           "{{ usuario.id }}");
-        localStorage.setItem("usuario_correo",       "{{ usuario.correo }}");
-        localStorage.setItem("usuario_nombre",       "{{ usuario.nombre }}");
-        localStorage.setItem("usuario_apellido",     "{{ usuario.apellido }}");
-        localStorage.setItem("usuario_rol",          "{{ usuario.rol }}");
-        localStorage.setItem("usuario_tipo_doc",     "{{ usuario.tipo_doc }}");
-        localStorage.setItem("usuario_documento",    "{{ usuario.documento }}");
-        localStorage.setItem("usuario_fecha_nac",    "{{ usuario.fecha_nac }}");
+            const form = document.querySelector("form");
+            const boton = document.getElementById("btnLogin");
+            const textoOriginal = boton.innerHTML;
 
-        // Las cookies ya están establecidas desde el servidor
-        console.log("Cookies establecidas: usuario_rol={{ usuario.rol }}, usuario_id={{ usuario.id }}");
+            form.addEventListener("submit", function () {
+                boton.innerHTML = "Iniciando...";
+                boton.disabled = true;
+                boton.classList.add("opacity-75");
+            });
 
-        // Redirigir al inicio luego de guardar
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 600);
-    {% endif %}
-</script>
+            {% if messages %}
+                window.onload = function () {
+                    boton.innerHTML = textoOriginal;
+                    boton.disabled = false;
+                    boton.classList.remove("opacity-75");
+                }
+            {% endif %}
+
+        });
+        {% if login_exitoso %}
+            console.log("Inicio de sesión correcto. Guardando en localStorage...");
+
+            // Guardar TODOS los datos del usuario en localStorage
+            localStorage.setItem("usuario_id", "{{ usuario.id }}");
+            localStorage.setItem("usuario_correo", "{{ usuario.correo }}");
+            localStorage.setItem("usuario_nombre", "{{ usuario.nombre }}");
+            localStorage.setItem("usuario_apellido", "{{ usuario.apellido }}");
+            localStorage.setItem("usuario_rol", "{{ usuario.rol }}");
+            localStorage.setItem("usuario_tipo_doc", "{{ usuario.tipo_doc }}");
+            localStorage.setItem("usuario_documento", "{{ usuario.documento }}");
+            localStorage.setItem("usuario_fecha_nac", "{{ usuario.fecha_nac }}");
+
+            // Las cookies ya están establecidas desde el servidor
+            console.log("Cookies establecidas: usuario_rol={{ usuario.rol }}, usuario_id={{ usuario.id }}");
+
+            // Redirigir al inicio luego de guardar
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 600);
+        {% endif %}
+    </script>
 
 
 

@@ -12,6 +12,27 @@
             border-radius: 15px;
         }
     </style>
+    <style>
+        /* FILA INACTIVA (PAGOS / RESERVAS / ETC) */
+        .table-inactive {
+            background-color: #e5e5e5 !important;
+        }
+
+        .table-inactive td {
+            background-color: #e5e5e5 !important;
+        }
+
+        /* ACENTUAR TEXTO OPCIONAL */
+        .table-inactive td {
+            color: #6c757d;
+        }
+
+        /* Hover NO cambia color (sigue gris) */
+        .table-hover tbody tr.table-inactive:hover td {
+            background-color: #dcdcdc !important;
+        }
+
+    </style>
 {% endblock %}
 
 {% block contenido_pagina %}
@@ -70,24 +91,42 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // ================== CONSTANTES / URLs ==================
-        const URL_LIST_PAGO   = "/admin/pago/list/";
+        const URL_LIST_PAGO = "/admin/pago/list/";
         const URL_CREATE_PAGO = "/admin/pago/create/";
-        const URL_GET_PAGO    = id => `/admin/pago/get/${id}/`;
+        const URL_GET_PAGO = id => `/admin/pago/get/${id}/`;
         const URL_UPDATE_PAGO = id => `/admin/pago/update/${id}/`;
         const URL_DELETE_PAGO = id => `/admin/pago/delete/${id}/`;
-        const URL_NEXT_PAGO   = "/admin/pago/next-id/";
-
+        const URL_NEXT_PAGO = "/admin/pago/next-id/";
         const URL_SEARCH_METODO = "/admin/metodo-pago/search/";
         const URL_SEARCH_FACTURA = "/admin/factura/search/";
         const URL_SEARCH_USUARIO = "/admin/usuario-interno/search/";
-
+        const URL_CUENTAS = "/cuentas-xml/";
         const TABLA_SELECTOR_PAGO = "#tablaPagos";
-
-        const MAX_MONTO = 999999.99;      // 6 enteros + 2 decimales
-
+        const MAX_MONTO = 999999.99;
         let currentPage = 1;
-        let totalPages  = 1;
+        let totalPages = 1;
+        let cuentasCache = null;
+
+        async function obtenerCuentas() {
+            if (cuentasCache) return cuentasCache;
+
+            const resp = await fetch(URL_CUENTAS);
+            const data = await resp.json();
+
+            if (!data.cuentas || !Array.isArray(data.cuentas)) {
+                throw "Respuesta inválida del servicio de cuentas";
+            }
+
+            cuentasCache = data.cuentas.map(String);
+            return cuentasCache;
+        }
+
+
+        async function validarCuentaExiste(idCuenta) {
+            const cuentas = await obtenerCuentas();
+            return cuentas.includes(String(idCuenta));
+        }
+
 
         // ================== HELPERS GENERALES ==================
         function formatearMonto(valor) {
@@ -100,33 +139,35 @@
             if (!valor) return "N/A";
             return valor;
         }
-function limpiarDecimalMonto(v) {
-    if (v == null) return "";
-    v = String(v).replace(",", ".").trim();
-    v = v.replace(/[^0-9.]/g, "");      // solo dígitos y punto
-    return v;
-}
 
-function normalizarMonto(v) {
-    v = limpiarDecimalMonto(v);
-    if (!v) return "";
+        function limpiarDecimalMonto(v) {
+            if (v == null) return "";
+            v = String(v).replace(",", ".").trim();
+            v = v.replace(/[^0-9.]/g, "");      // solo dígitos y punto
+            return v;
+        }
 
-    // hasta 6 enteros y 2 decimales
-    const regex = /^\d{1,6}(\.\d{1,2})?$/;
-    if (!regex.test(v)) {
-        // si no cumple el formato, recortamos
-        let [ent, dec = ""] = v.split(".");
-        ent = ent.slice(0, 6);
-        dec = dec.slice(0, 2);
-        v = ent + (dec ? "." + dec : "");
-    }
+        function normalizarMonto(v) {
+            v = limpiarDecimalMonto(v);
+            if (!v) return "";
 
-    let num = parseFloat(v || "0");
-    if (isNaN(num) || num <= 0) return "";
+            // hasta 6 enteros y 2 decimales
+            const regex = /^\d{1,6}(\.\d{1,2})?$/;
+            if (!regex.test(v)) {
+                // si no cumple el formato, recortamos
+                let [ent, dec = ""] = v.split(".");
+                ent = ent.slice(0, 6);
+                dec = dec.slice(0, 2);
+                v = ent + (dec ? "." + dec : "");
+            }
 
-    if (num > MAX_MONTO) num = MAX_MONTO;
-    return num.toFixed(2);   // string “999999.99”
-}
+            let num = parseFloat(v || "0");
+            if (isNaN(num) || num <= 0) return "";
+
+            if (num > MAX_MONTO) num = MAX_MONTO;
+            return num.toFixed(2);   // string “999999.99”
+        }
+
         // ----------- helpers para monto (input) -----------
         function limpiarDecimal(v) {
             if (v == null) return "";
@@ -224,9 +265,9 @@ function normalizarMonto(v) {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener("keydown", montoKeyDown);
-                el.addEventListener("input",  montoInput);
-                el.addEventListener("blur",   montoBlur);
-                el.addEventListener("paste",  montoPaste);
+                el.addEventListener("input", montoInput);
+                el.addEventListener("blur", montoBlur);
+                el.addEventListener("paste", montoPaste);
             });
         }
 
@@ -291,7 +332,7 @@ function normalizarMonto(v) {
                     });
 
                     currentPage = resp.page || 1;
-                    totalPages  = resp.total_pages || 1;
+                    totalPages = resp.total_pages || 1;
                     actualizarControlesPaginacion();
                 },
                 error: function (xhr) {
@@ -318,12 +359,12 @@ function normalizarMonto(v) {
                     url: URL_SEARCH_METODO,
                     dataType: "json",
                     delay: 250,
-                    data: params => ({ q: params.term || "" }),
+                    data: params => ({q: params.term || ""}),
                     processResults: resp => ({
                         results: (resp.data || []).map(m => {
-                            const id     = m.IdMetodoPago ?? m.idMetodoPago;
+                            const id = m.IdMetodoPago ?? m.idMetodoPago;
                             const nombre = m.NombreMetodoPago ?? m.nombreMetodoPago ?? "";
-                            return { id: id, text: `${id} — ${nombre}` };
+                            return {id: id, text: `${id} — ${nombre}`};
                         })
                     })
                 }
@@ -345,7 +386,7 @@ function normalizarMonto(v) {
                     url: URL_SEARCH_USUARIO,
                     dataType: "json",
                     delay: 250,
-                    data: params => ({ q: params.term || "" }),
+                    data: params => ({q: params.term || ""}),
                     processResults: resp => ({
                         results: (resp.data || []).map(u => ({
                             id: u.Id,
@@ -371,7 +412,7 @@ function normalizarMonto(v) {
                     url: URL_SEARCH_FACTURA,
                     dataType: "json",
                     delay: 250,
-                    data: params => ({ q: params.term }),
+                    data: params => ({q: params.term}),
                     processResults: resp => {
                         const items = resp.data || [];
                         return {
@@ -397,7 +438,9 @@ function normalizarMonto(v) {
             $.get(URL_NEXT_PAGO, function (resp) {
                 const nextId = resp.next || "";
                 $("#crear_IdPago").val(nextId);
-            }).fail(() => { $("#crear_IdPago").val(""); });
+            }).fail(() => {
+                $("#crear_IdPago").val("");
+            });
 
             // limpiar campos
             $("#crear_MontoTotal").val("");
@@ -412,58 +455,79 @@ function normalizarMonto(v) {
 
             $("#modalCrearPago").modal("show");
         }
-function crearPago() {
-    const idPago       = $("#crear_IdPago").val().trim();
+
+async function crearPago(btn) {
+    bloquearBoton(btn, "Guardando...");
+
+    const idPago = $("#crear_IdPago").val().trim();
     const idMetodoPago = $("#crear_IdMetodoPago").val();
-    const idFactura    = $("#crear_IdFactura").val();
+    const idFactura = $("#crear_IdFactura").val();
     const idUsuarioInt = $("#crear_IdUnicoUsuario").val();
-    const montoStr     = $("#crear_MontoTotal").val();
+    const montoStr = $("#crear_MontoTotal").val();
     const cuentaOrigen = $("#crear_CuentaOrigen").val().trim();
-    const cuentaDestino= $("#crear_CuentaDestino").val().trim();
+    const cuentaDestino = $("#crear_CuentaDestino").val().trim();
 
-    if (!cuentaOrigen) {
-        crudNotify("warning", "La cuenta de origen es obligatoria.");
-        return;
+    try {
+
+        // VALIDACIONES
+        if (!cuentaOrigen) throw "La cuenta de origen es obligatoria.";
+        if (!cuentaDestino) throw "La cuenta de destino es obligatoria.";
+
+        if (!idPago || !idMetodoPago || !idFactura || !idUsuarioInt || !montoStr) {
+            throw "ID Pago, Método, Factura, Usuario y Monto son obligatorios.";
+        }
+
+        if (cuentaOrigen === cuentaDestino) {
+            throw "La cuenta ORIGEN y DESTINO no pueden ser iguales.";
+        }
+
+        const montoNormalizado = normalizarMonto(montoStr);
+        if (!montoNormalizado) {
+            throw `El monto debe ser mayor a 0 y menor o igual a ${MAX_MONTO}.`;
+        }
+
+        // VALIDAR CUENTAS EXTERNAS
+        const existeOrigen = await validarCuentaExiste(cuentaOrigen);
+        const existeDestino = await validarCuentaExiste(cuentaDestino);
+
+        if (!existeOrigen) throw `La cuenta ORIGEN no existe: ${cuentaOrigen}`;
+        if (!existeDestino) throw `La cuenta DESTINO no existe: ${cuentaDestino}`;
+
+        const payload = {
+            IdPago: parseInt(idPago),
+            IdMetodoPago: parseInt(idMetodoPago),
+            IdFactura: parseInt(idFactura),
+            IdUnicoUsuario: parseInt(idUsuarioInt),
+            MontoTotal: montoNormalizado,
+            CuentaOrigen: cuentaOrigen,
+            CuentaDestino: cuentaDestino,
+            IdUnicoUsuarioExterno: null,
+            EstadoPago: $("#crear_EstadoPago").is(":checked")
+        };
+
+        $.ajax({
+            url: URL_CREATE_PAGO,
+            method: "POST",
+            data: payload
+        })
+        .done(resp => {
+            crudNotify("success", resp.message || "Pago creado correctamente.");
+            $("#modalCrearPago").modal("hide");
+            cargarPagos(currentPage);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al crear el pago.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
+
+    } catch (err) {
+        crudNotify("error", err);
+        desbloquearBoton(btn);
     }
-    if (!cuentaDestino) {
-        crudNotify("warning", "La cuenta de destino es obligatoria.");
-        return;
-    }
-
-    if (!idPago || !idMetodoPago || !idFactura || !idUsuarioInt || !montoStr) {
-        crudNotify("warning", "ID Pago, Método, Factura, Usuario y Monto son obligatorios.");
-        return;
-    }
-
-    const montoNormalizado = normalizarMonto(montoStr);
-    if (!montoNormalizado) {
-        crudNotify("error", `El monto debe ser > 0 y no mayor a ${MAX_MONTO}.`);
-        return;
-    }
-
-    if (isNaN(parseInt(idMetodoPago)) || isNaN(parseInt(idFactura)) ||
-        isNaN(parseInt(idUsuarioInt))) {
-        crudNotify("error", "Los IDs deben ser numéricos.");
-        return;
-    }
-
-    const payload = {
-        IdPago:           parseInt(idPago),
-        IdMetodoPago:     parseInt(idMetodoPago),
-        IdFactura:        parseInt(idFactura),
-        IdUnicoUsuario:   parseInt(idUsuarioInt),
-        MontoTotal:       montoNormalizado,
-        CuentaOrigen:     cuentaOrigen || null,
-        CuentaDestino:    cuentaDestino || null,
-        IdUnicoUsuarioExterno: null,
-        EstadoPago:       $("#crear_EstadoPago").is(":checked")
-    };
-
-    crudCreate(URL_CREATE_PAGO, payload, () => {
-        $("#modalCrearPago").modal("hide");
-        cargarPagos(currentPage);
-    });
 }
+
 
         // ================== EDITAR ==================
         function abrirModalEditarPago(id) {
@@ -504,56 +568,70 @@ function crearPago() {
                 crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
             });
         }
-function actualizarPago() {
-    const idPago       = $("#editar_IdPago").val();
+
+
+        async function actualizarPago(btn) {
+    bloquearBoton(btn, "Actualizando...");
+
+    const idPago = $("#editar_IdPago").val();
     const idMetodoPago = $("#editar_IdMetodoPago").val();
-    const idFactura    = $("#editar_IdFactura").val();
+    const idFactura = $("#editar_IdFactura").val();
     const idUsuarioInt = $("#editar_IdUnicoUsuario").val();
-    const montoStr     = $("#editar_MontoTotal").val();
+    const montoStr = $("#editar_MontoTotal").val();
     const cuentaOrigen = $("#editar_CuentaOrigen").val().trim();
-    const cuentaDestino= $("#editar_CuentaDestino").val().trim();
+    const cuentaDestino = $("#editar_CuentaDestino").val().trim();
 
-    if (!cuentaOrigen) {
-        crudNotify("warning", "La cuenta de origen es obligatoria.");
-        return;
+    try {
+
+        if (!cuentaOrigen) throw "La cuenta ORIGEN es obligatoria.";
+        if (!cuentaDestino) throw "La cuenta DESTINO es obligatoria.";
+
+        if (cuentaOrigen === cuentaDestino) {
+            throw "Las cuentas no pueden ser iguales.";
+        }
+
+        const montoNormalizado = normalizarMonto(montoStr);
+        if (!montoNormalizado) {
+            throw `Monto inválido (máx ${MAX_MONTO}).`;
+        }
+
+        const existeOrigen = await validarCuentaExiste(cuentaOrigen);
+        const existeDestino = await validarCuentaExiste(cuentaDestino);
+
+        if (!existeOrigen) throw `Cuenta ORIGEN inválida: ${cuentaOrigen}`;
+        if (!existeDestino) throw `Cuenta DESTINO inválida: ${cuentaDestino}`;
+
+        const payload = {
+            IdMetodoPago: parseInt(idMetodoPago),
+            IdFactura: parseInt(idFactura),
+            IdUnicoUsuario: parseInt(idUsuarioInt),
+            MontoTotal: montoNormalizado,
+            CuentaOrigen: cuentaOrigen,
+            CuentaDestino: cuentaDestino,
+            EstadoPago: $("#editar_EstadoPago").is(":checked")
+        };
+
+        $.ajax({
+            url: URL_UPDATE_PAGO(idPago),
+            method: "POST",
+            data: payload
+        })
+        .done(resp => {
+            crudNotify("success", resp.message || "Pago actualizado.");
+            $("#modalEditarPago").modal("hide");
+            cargarPagos(currentPage);
+        })
+        .fail(xhr => {
+            crudNotify("error", xhr.responseJSON?.message || "Error al actualizar.");
+        })
+        .always(() => {
+            desbloquearBoton(btn);
+        });
+
+    } catch (err) {
+        crudNotify("error", err);
+        desbloquearBoton(btn);
     }
-    if (!cuentaDestino) {
-        crudNotify("warning", "La cuenta de destino es obligatoria.");
-        return;
-    }
-
-    if (!idMetodoPago || !idFactura || !idUsuarioInt || !montoStr) {
-        crudNotify("warning", "Método, Factura, Usuario y Monto son obligatorios.");
-        return;
-    }
-
-    const montoNormalizado = normalizarMonto(montoStr);
-    if (!montoNormalizado) {
-        crudNotify("error", `El monto debe ser > 0 y no mayor a ${MAX_MONTO}.`);
-        return;
-    }
-
-    if (isNaN(parseInt(idMetodoPago)) || isNaN(parseInt(idFactura)) ||
-        isNaN(parseInt(idUsuarioInt))) {
-        crudNotify("error", "Los IDs deben ser numéricos.");
-        return;
-    }
-
-    const payload = {
-        IdMetodoPago:   parseInt(idMetodoPago),
-        IdFactura:      parseInt(idFactura),
-        IdUnicoUsuario: parseInt(idUsuarioInt),
-        MontoTotal:     montoNormalizado,
-        CuentaOrigen:   cuentaOrigen || null,
-        CuentaDestino:  cuentaDestino || null,
-        IdUnicoUsuarioExterno: null,
-        EstadoPago:     $("#editar_EstadoPago").is(":checked")
-    };
-
-    crudUpdate(URL_UPDATE_PAGO(idPago), payload, () => {
-        $("#modalEditarPago").modal("hide");
-        cargarPagos(currentPage);
-    });
 }
 
         // ================== ELIMINAR ==================

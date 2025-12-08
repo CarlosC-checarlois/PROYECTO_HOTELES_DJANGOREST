@@ -1,4 +1,3 @@
-from pprint import pprint
 
 from django.views import View
 from django.shortcuts import render
@@ -143,7 +142,6 @@ class UsuarioInternoUpdateAjaxView(View):
     def post(self, request, id_usuario):
         import re
         api = UsuarioInternoGestionRest()
-        pprint(request.POST)
         try:
             # Obtener datos
             nombre = request.POST.get("nombre", "").strip()

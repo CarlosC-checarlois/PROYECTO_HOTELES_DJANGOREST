@@ -1,4 +1,3 @@
-from pprint import pprint
 
 import requests
 
@@ -65,5 +64,3 @@ class RolGestionRest:
         except Exception as e:
             raise ConnectionError(f"Error al eliminar rol {id_rol}: {e}")
 
-c = RolGestionRest()
-pprint(c.obtener_roles())

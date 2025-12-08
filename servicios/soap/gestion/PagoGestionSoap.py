@@ -1,3 +1,4 @@
+
 import requests
 from datetime import datetime
 from decimal import Decimal
@@ -207,4 +208,3 @@ class PagoGestionSoap:
             return self.client.service.EliminarPago(id_pago)
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar pago {id_pago}: {e}")
-

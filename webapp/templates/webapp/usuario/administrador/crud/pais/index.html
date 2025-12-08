@@ -177,18 +177,28 @@ function abrirModalCrearPais(){
     $("#modalCrearPais").modal("show");
 }
 
-function crearPais(){
+function crearPais(btn) {
+    bloquearBoton(btn, "Guardando...");
 
     const idPais     = $("#crear_IdPais").val().trim();
     const nombrePais = $("#crear_NombrePais").val().trim();
 
-    if(!idPais || !nombrePais){
+    // Validaciones front
+    if (!idPais || !nombrePais) {
         crudNotify("warning", "ID País y Nombre son obligatorios.");
+        desbloquearBoton(btn);
         return;
     }
 
-    if(isNaN(parseInt(idPais))){
+    if (isNaN(parseInt(idPais))) {
         crudNotify("error", "El ID País debe ser numérico.");
+        desbloquearBoton(btn);
+        return;
+    }
+
+    if (nombrePais.length > 100) {
+        crudNotify("warning", "El nombre del país no debe superar 100 caracteres.");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -202,6 +212,7 @@ function crearPais(){
         () => {
             $("#modalCrearPais").modal("hide");
             cargarPaises(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }
@@ -228,13 +239,21 @@ function abrirModalEditarPais(id){
     });
 }
 
-function actualizarPais(){
+function actualizarPais(btn) {
+    bloquearBoton(btn, "Actualizando...");
 
     const idPais     = $("#editar_IdPais").val();
     const nombrePais = $("#editar_NombrePais").val().trim();
 
-    if(!nombrePais){
+    if (!nombrePais) {
         crudNotify("warning", "El Nombre del país es obligatorio.");
+        desbloquearBoton(btn);
+        return;
+    }
+
+    if (nombrePais.length > 100) {
+        crudNotify("warning", "El nombre del país no debe superar 100 caracteres.");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -247,6 +266,7 @@ function actualizarPais(){
         () => {
             $("#modalEditarPais").modal("hide");
             cargarPaises(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }

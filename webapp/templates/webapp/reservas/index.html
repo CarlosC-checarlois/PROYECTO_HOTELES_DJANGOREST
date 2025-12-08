@@ -121,53 +121,249 @@
         /* ============================
            BOTONES ACCIÓN
         ============================ */
-
-        .btn-confirmar {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: #fff;
-            border: none;
-            font-weight: 600;
-            border-radius: 999px;
-            padding: .55rem 1rem;
-            transition: all .25s ease;
-            box-shadow: 0 6px 16px rgba(34, 197, 94, .35);
-        }
-
-        .btn-confirmar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 22px rgba(34, 197, 94, .45);
-        }
-
-        .btn-outline-danger {
-            border-radius: 999px;
-            font-weight: 600;
-            transition: all .25s ease;
-        }
-
-        .btn-outline-danger:hover {
-            box-shadow: 0 6px 14px rgba(220, 38, 38, .15);
-            transform: translateY(-1px);
-        }
-
-        /* ============================
-           MEJORA GENERAL TARJETA
-        ============================ */
-
+        /* ========================
+           CARD RESERVA MODERNA
+        ======================== */
         .reserva-card {
-            border-radius: 1rem;
-            background: #fff;
-            transition: .25s ease;
-            border-left: 5px solid transparent;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .05);
+            overflow: hidden;
+            border: 0;
+            position: relative;
+            transition: all .3s ease;
         }
 
         .reserva-card:hover {
-            border-left: 5px solid #3b82f6;
+            transform: translateY(-4px);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, .08);
+        }
+
+        /* Imagen */
+        .reserva-img {
+            height: 170px;
+            width: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+        }
+
+        /* Columna izquierda */
+        .reserva-card .col-md-4 {
+            display: flex;
+            align-items: center;
+        }
+
+        /* CONTENEDOR DETALLES */
+        .reserva-card .col-md-5 {
+            padding-left: .5rem;
+        }
+
+        /* TITULO */
+        .titulo-reserva {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: .2rem;
+        }
+
+        /* UBICACIÓN */
+        .reserva-card .text-muted {
+            font-size: .85rem;
+        }
+
+        /* BOX TOTAL */
+        .price-box {
+            background: linear-gradient(135deg, #f8fafc, #eef2ff);
+            border-radius: 14px;
+            border: none;
+        }
+
+        /* PRECIO FINAL */
+        .precio-total {
+            font-size: 1.3rem !important;
+            letter-spacing: .5px;
+        }
+
+        /* ======================================
+           BADGES ESTADO
+        ====================================== */
+        .badge-estado {
+            font-size: .70rem;
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        /* ======================================
+           BOTÓN CONFIRMAR
+        ====================================== */
+/* ============================
+   BOTÓN CONFIRMAR REFINADO
+============================ */
+
+.btn-confirmar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .55rem 1.2rem;
+    font-size: .85rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35);
+    white-space: nowrap;
+    transition: all .25s ease;
+    max-width: fit-content;
+}
+
+.btn-confirmar i {
+    font-size: 1rem;
+}
+
+.btn-confirmar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(34, 197, 94, .45);
+}
+
+.btn-confirmar:active {
+    transform: scale(.97);
+}
+
+/* ============================
+   RESPONSIVE (MÓVIL)
+============================ */
+
+@media (max-width: 768px) {
+    .btn-confirmar {
+        width: 100%;
+        justify-content: center;
+        font-size: .9rem;
+        padding: .7rem;
+    }
+}
+
+
+        /* ======================================
+           BOTÓN CANCELAR
+        ====================================== */
+        .btn-outline-danger {
+            border-radius: 999px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .btn-outline-danger:hover {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 6px 14px rgba(220, 38, 38, .25);
+        }
+
+        /* ======================================
+           HOLD BADGE MEJORADO
+        ====================================== */
+        .hold-countdown-badge {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, .35);
+        }
+
+        .hold-countdown-badge.expired {
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+        }
+
+
+    </style>
+    <style>
+        #toast-container {
+            position: fixed !important;
+            top: 20px;
+            right: 20px;
+            z-index: 99999 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            color: #fff;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all .3s ease;
+            font-size: .9rem;
+            pointer-events: auto;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-msg .icon {
+            margin-right: .5rem;
+        }
+
+        .toast-success {
+            background-color: #16a34a;
+        }
+
+        .toast-error {
+            background-color: #dc2626;
+        }
+
+        .toast-warning {
+            background-color: #d97706;
+        }
+
+        .toast-info {
+            background-color: #2563eb;
         }
 
     </style>
 {% endblock %}
 
 {% block contenido_pagina %}
+    <div class="messages-wrapper">
+        {% if messages %}
+            {% for message in messages %}
+                {% comment %}
+              message.tags en Django suele traer: success, error, warning, info
+            {% endcomment %}
+                <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <span class="app-alert-icon">
+                    {% if "success" in message.tags %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif "error" in message.tags %}
+                        <i class="bi bi-x-circle"></i>
+                    {% elif "warning" in message.tags %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                </span>
+                    <span class="app-alert-text">
+                    {{ message }}
+                </span>
+                    <!-- si quieres cerrar manualmente -->
+                    <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    &times;
+                </span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+
+    <div id="toast-container"></div>
     <section class="container py-5">
 
         <h2 class="fw-bold mb-4">Mis Reservas</h2>
@@ -178,141 +374,87 @@
 
         <div id="contenedor-reservas">
 
-            {% for r in reservas %}
-                <div class="reserva-card mb-4 p-3 shadow-sm"
-                     data-user="{{ r.idUsuario }}"
-                     data-reserva="{{ r.idReserva }}"
-                     data-hold="{{ r.idHold }}">
-
-                    <div class="row g-4">
-
-                        <!-- Imagen -->
-                        <div class="col-md-4">
-                            <img src="{{ r.imagen|default:'https://imageness3realdecuenca.s3.us-east-2.amazonaws.com/Imagen4.png' }}"
-                                 class="reserva-img rounded">
-                        </div>
-
-                        <!-- Información -->
-                        <div class="col-md-5">
-
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h5 class="titulo-reserva">{{ r.habitacion }}</h5>
-
-                                {% if r.estado == "PRE-RESERVA" or r.estado == "PRE-RESERVA ACTIVA" %}
-                                    <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-warning text-dark badge-estado">
-                <i class="bi bi-clock-history"></i> Pre-Reserva
-            </span>
-
-                                        {# Contador solo si el HOLD sigue vivo #}
-                                        {% if r.hold_restante_segundos and not r.hold_expirado %}
-                                            <span class="hold-countdown-badge hold-pill"
-                                                  data-reserva="{{ r.idReserva }}"
-                                                  data-segundos="{{ r.hold_restante_segundos }}">
-                    <i class="bi bi-hourglass-split"></i>
-                    <span class="hold-countdown-text">
-                        Tiempo restante: …
-                    </span>
-                </span>
-                                        {% elif r.hold_expirado %}
-                                            <span class="hold-countdown-badge expired">
-                    <i class="bi bi-hourglass-top"></i>
-                    Expirado
-                </span>
-                                        {% endif %}
-                                    </div>
-                                {% elif r.estado == "CONFIRMADA" %}
-                                    <span class="badge bg-success badge-estado">
-            <i class="bi bi-check-circle"></i> Confirmada
-        </span>
-                                {% elif r.estado == "CANCELADA" %}
-                                    <span class="badge bg-danger badge-estado">
-            <i class="bi bi-x-circle"></i> Cancelada
-        </span>
-                                {% else %}
-                                    <span class="badge bg-secondary badge-estado">
-            <i class="bi bi-question-circle"></i> {{ r.estado|default:"Pendiente" }}
-        </span>
-                                {% endif %}
-                            </div>
-
-                            <p class="text-muted mb-1"><i
-                                    class="bi bi-geo-alt"></i> {{ r.hotel }} {{ r.ciudad }} {{ r.pais }}</p>
-                            <p class="mb-1"><strong>Fechas:</strong> {{ r.fecha_inicio }} → {{ r.fecha_fin }}</p>
-                            <p class="mb-1"><strong>Huéspedes:</strong> {{ r.huespedes }}</p>
-                            <p class="mb-1"><strong>Capacidad:</strong> {{ r.capacidad_escogida }}
-                                / {{ r.capacidad_habitacion }}</p>
-
-                            <div class="price-box mt-2 p-2 border rounded bg-light">
-                                <p class="mb-1"><strong>Subtotal:</strong> ${{ r.subtotal }}</p>
-                                <p class="mb-1 text-danger"><strong>Descuentos:</strong> -${{ r.total_descuentos }}</p>
-                                <p class="mb-1 text-info"><strong>Impuestos:</strong> +${{ r.total_impuestos }}</p>
-
-                                <p class="precio-total mt-2 fs-5 fw-bold text-success">Total: ${{ r.total }}</p>
-                            </div>
-
-                        </div>
-
-                        <!-- Acciones -->
-                        <div class="col-md-3 d-flex flex-column justify-content-between">
-
-
-                            {% if r.estado == "PRE-RESERVA" %}
-                                <button class="btn btn-success w-100 mb-2 btn-confirmar"
-                                        data-reserva="{{ r.idReserva }}"
-                                        data-hab="{{ r.idHabitacion }}"
-                                        data-hold="{{ r.idHold }}"
-                                        data-fechai="{{ r.fecha_inicio }}"
-                                        data-fechaf="{{ r.fecha_fin }}"
-                                        data-hues="{{ r.huespedes }}"
-                                        data-correo="{{ r.correo }}"
-                                        data-documento="{{ r.documento }}">
-                                    <i class="bi bi-check2-circle"></i> Confirmar reserva
-                                </button>
-                            {% endif %}
-                            {% if r.estado == "PRE-RESERVA" %}
-                                <button class="btn btn-outline-danger w-100 btn-cancelar"
-                                        data-id="{{ r.idReserva }}">
-                                    <i class="bi bi-x-circle"></i> Cancelar
-                                </button>
-
-                            {% endif %}
-
-
-                        </div>
-
-                    </div>
-
-                </div>
-            {% endfor %}
 
         </div>
-
+        <div id="loader-reservas" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Cargando reservas...</p>
+        </div>
     </section>
     <!-- Modal Confirmar Reserva Interna -->
     <div class="modal fade" id="modalConfirmar" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirmar reserva</h5>
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Confirmar reserva
+                    </h5>
                     <button class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
-                    <p>Por favor confirma tus datos antes de completar la reserva.</p>
 
-                    <div class="mb-3">
-                        <label class="form-label">Correo</label>
-                        <input type="email" id="confCorreo" class="form-control" disabled>
+                    <p class="text-muted mb-3">
+                        Por favor confirma tu información antes de completar la reserva.
+                    </p>
+
+                    <div class="row g-3">
+
+                        <!-- NOMBRE -->
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" id="confNombre" class="form-control" disabled>
+                        </div>
+
+                        <!-- APELLIDO -->
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido</label>
+                            <input type="text" id="confApellido" class="form-control" disabled>
+                        </div>
+
+                        <!-- TIPO DOCUMENTO -->
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de documento</label>
+                            <input type="text" id="confTipoDocumento" class="form-control" disabled>
+                        </div>
+
+                        <!-- DOCUMENTO -->
+                        <div class="col-md-6">
+                            <label class="form-label">Documento</label>
+                            <input type="text" id="confDocumento" class="form-control" disabled>
+                        </div>
+
+                        <!-- CORREO -->
+                        <div class="col-md-12">
+                            <label class="form-label">Correo electrónico</label>
+                            <input type="email" id="confCorreo" class="form-control" disabled>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- SIMULACIÓN DE PAGO -->
+                        <h6 class="fw-bold text-primary">
+                            <i class="bi bi-credit-card"></i> Datos de pago
+                        </h6>
+
+                        <!-- NÚMERO DE CUENTA (SOLO VISUAL) -->
+                        <div class="col-md-12">
+                            <label class="form-label">Número de cuenta</label>
+                            <input type="text"
+                                   id="confCuenta"
+                                   class="form-control"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   maxlength="16"
+                                   placeholder="Ej: 1234567890123456"
+                                   required>
+                        </div>
+
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Documento</label>
-                        <input type="text" id="confDocumento" class="form-control" disabled>
-                    </div>
-
-                    <!-- HIDDEN FIELDS -->
+                    <!-- CAMPOS OCULTOS -->
                     <input type="hidden" id="confIdHabitacion">
                     <input type="hidden" id="confIdHold">
                     <input type="hidden" id="confFechaInicio">
@@ -332,40 +474,66 @@
         </div>
     </div>
 
-<!-- MODAL CANCELAR RESERVA -->
-<div class="modal fade" id="modalCancelarReserva" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 shadow">
+    <!-- MODAL CANCELAR RESERVA -->
+    <div class="modal fade" id="modalCancelarReserva" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow">
 
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-danger fw-bold">
-                    <i class="bi bi-x-circle"></i> Cancelar pre-reserva
-                </h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-danger fw-bold">
+                        <i class="bi bi-x-circle"></i> Cancelar pre-reserva
+                    </h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas cancelar esta pre-reserva?</p>
+                    <p class="text-muted small">Esta acción liberará la habitación para otros clientes.</p>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button class="btn btn-light rounded-pill" data-bs-dismiss="modal">
+                        Volver
+                    </button>
+                    <button id="btnConfirmarCancelacion" class="btn btn-danger rounded-pill">
+                        Sí, cancelar
+                    </button>
+                </div>
+
             </div>
-
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas cancelar esta pre-reserva?</p>
-                <p class="text-muted small">Esta acción liberará la habitación para otros clientes.</p>
-            </div>
-
-            <div class="modal-footer border-0">
-                <button class="btn btn-light rounded-pill" data-bs-dismiss="modal">
-                    Volver
-                </button>
-                <button id="btnConfirmarCancelacion" class="btn btn-danger rounded-pill">
-                    Sí, cancelar
-                </button>
-            </div>
-
         </div>
     </div>
-</div>
 
 {% endblock %}
-
+{% block bloquear_footer %}
+{% endblock %}
 
 {% block jvscript_archivos_defer %}
+    <script>
+        function mostrarToast(mensaje, tipo = "success") {
+            const contenedor = document.getElementById("toast-container");
+            if (!contenedor) return;
+
+            const toast = document.createElement("div");
+            toast.className = `toast-msg toast-${tipo}`;
+            toast.innerHTML = `
+        <span class="icon">
+            <i class="bi bi-check2-square"></i>
+        </span>
+        <span>${mensaje}</span>
+    `;
+
+            contenedor.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add("show"));
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+    </script>
     <script>
         // =========================
         //  Helper CSRF
@@ -458,7 +626,7 @@
 
             // =========================
             // 4) Confirmar reserva (modal + AJAX)
-// =========================
+            // =========================
             const modalConfirmarElement = document.getElementById("modalConfirmar");
             let modalConfirmar = null;
 
@@ -482,67 +650,23 @@
                 localStorage.getItem("usuario_doc") ||
                 "";
 
-            // CLICK en cada botón "Confirmar reserva"
-            document.querySelectorAll(".btn-confirmar").forEach(btn => {
-                btn.addEventListener("click", () => {
-
-                    const confCorreo = document.getElementById("confCorreo");
-                    const confDocumento = document.getElementById("confDocumento");
-                    const confIdHabitacion = document.getElementById("confIdHabitacion");
-                    const confIdHold = document.getElementById("confIdHold");
-                    const confFechaInicio = document.getElementById("confFechaInicio");
-                    const confFechaFin = document.getElementById("confFechaFin");
-                    const confHuespedes = document.getElementById("confHuespedes");
-
-                    if (!confCorreo || !confDocumento || !confIdHabitacion || !confIdHold ||
-                        !confFechaInicio || !confFechaFin || !confHuespedes) {
-                        console.error("Algunos elementos del formulario de confirmación no se encontraron.");
-                        alert("Error: No se pudo cargar el formulario de confirmación.");
-                        return;
-                    }
-
-                    // 1) Inputs del usuario
-                    confCorreo.value = correoUsuario;
-                    confDocumento.value = documentoUsuario;
-
-                    // 2) Datos desde el botón
-                    const hab = btn.dataset.hab;
-                    const hold = btn.dataset.hold;
-                    const fechai = btn.dataset.fechai;
-                    const fechaf = btn.dataset.fechaf;
-                    const hues = btn.dataset.hues;
-
-                    if (!hab || !hold || !fechai || !fechaf || !hues) {
-                        console.error("Datos incompletos en el botón .btn-confirmar:", {
-                            hab, hold, fechai, fechaf, hues
-                        });
-                        alert("Error: Faltan datos para confirmar la reserva. Recarga la página.");
-                        return;
-                    }
-
-                    confIdHabitacion.value = hab;
-                    confIdHold.value = hold;
-
-                    // Asegurar formato ISO con hora
-                    confFechaInicio.value = fechai.includes("T") ? fechai : `${fechai}T15:00:00`;
-                    confFechaFin.value = fechaf.includes("T") ? fechaf : `${fechaf}T11:00:00`;
-                    confHuespedes.value = hues;
-
-                    if (modalConfirmar) {
-                        try {
-                            modalConfirmar.show();
-                        } catch (e) {
-                            console.error("Error al mostrar el modal de confirmación:", e);
-                            alert("Error al abrir el modal de confirmación.");
-                        }
-                    }
-                });
-            });
-
-            // CLICK en el botón final del modal "Confirmar reserva"
-            const btnConfirmarSubmit = document.getElementById("btnConfirmarSubmit");
             if (btnConfirmarSubmit) {
                 btnConfirmarSubmit.addEventListener("click", () => {
+                    const numeroCuenta = document.getElementById("confCuenta")?.value.trim();
+
+                    if (!numeroCuenta) {
+                        mostrarToast("⚠️ Debes ingresar un número de cuenta", "warning");
+                        return;
+                    }
+
+                    // Bloquear botón
+                    btnConfirmarSubmit.disabled = true;
+                    btnConfirmarSubmit.innerHTML = "⏳ Pagando...";
+                    // Bloquear botones CANCELAR mientras se paga
+                    document.querySelectorAll(".btn-cancelar").forEach(btn => {
+                        btn.disabled = true;
+                        btn.classList.add("opacity-50");
+                    });
 
                     const idHabitacion = document.getElementById("confIdHabitacion")?.value;
                     const idHold = document.getElementById("confIdHold")?.value;
@@ -551,29 +675,25 @@
                     const numeroHuespedes = document.getElementById("confHuespedes")?.value;
 
                     if (!idHabitacion || !idHold || !usuarioIdLS || !fechaInicio || !fechaFin || !numeroHuespedes) {
-                        alert("Por favor verifica que todos los datos estén completos.");
+                        mostrarToast("⚠️ Datos incompletos.", "warning");
+                        btnConfirmarSubmit.disabled = false;
+                        btnConfirmarSubmit.innerHTML = "Confirmar reserva";
                         return;
                     }
-                    const correo = localStorage.getItem("usuario_correo") || "";
-                    const nombre = localStorage.getItem("usuario_nombre") || "";
-                    const apellido = localStorage.getItem("usuario_apellido") || "";
-                    const tipoDocumento = localStorage.getItem("usuario_tipo_doc") || "CEDULA";
-                    const documento = localStorage.getItem("usuario_documento") || "";
                     const payload = {
-                        idHabitacion: idHabitacion,
-                        idHold: idHold,
+                        idHabitacion,
+                        idHold,
                         idUnicoUsuario: usuarioIdLS,
-                        fechaInicio: fechaInicio,
-                        fechaFin: fechaFin,
-                        numeroHuespedes: numeroHuespedes,
-                        nombre: nombre,
-                        apellido: apellido,
-                        correo: correo,
-                        tipoDocumento: tipoDocumento,
-                        documento: documento
+                        fechaInicio,
+                        fechaFin,
+                        numeroHuespedes,
+                        nombre: localStorage.getItem("usuario_nombre") || "",
+                        apellido: localStorage.getItem("usuario_apellido") || "",
+                        correo: localStorage.getItem("usuario_correo") || "",
+                        tipoDocumento: localStorage.getItem("usuario_tipo_doc") || "CEDULA",
+                        documento: localStorage.getItem("usuario_documento") || "",
+                        numeroCuenta: numeroCuenta       // 🔹 NUEVO
                     };
-
-                    console.log(">>> ENVIANDO CONFIRMAR RESERVA:", payload);
 
                     fetch("/usuario/confirmar-reserva/", {
                         method: "POST",
@@ -583,28 +703,38 @@
                         },
                         body: JSON.stringify(payload)
                     })
-                        .then(r => {
-                            if (!r.ok) {
-                                return r.json().then(data => {
-                                    throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
-                                });
-                            }
-                            return r.json();
-                        })
+                        .then(r => r.json())
                         .then(res => {
+
+                            // Rehabilitar botón
+                            btnConfirmarSubmit.disabled = false;
+                            btnConfirmarSubmit.innerHTML = "Confirmar reserva";
+
                             if (res.ok) {
-                                alert("Reserva confirmada correctamente.");
+
+                                mostrarToast("✅ Reserva confirmada correctamente", "success");
+
                                 if (modalConfirmar) {
                                     modalConfirmar.hide();
                                 }
-                                location.reload();
-                            } else {
-                                alert("Error: " + (res.error || "Error desconocido"));
+
+                                setTimeout(() => location.reload(), 1800);
+                                return;
                             }
+
+                            mostrarToast("⚠️ " + (res.error || "Error desconocido"), "warning");
+                            // Rehabilitar botones cancelar
+                            document.querySelectorAll(".btn-cancelar").forEach(btn => {
+                                btn.disabled = false;
+                                btn.classList.remove("opacity-50");
+                            });
+
                         })
                         .catch(err => {
-                            console.error("Error confirmando reserva:", err);
-                            alert("Error inesperado: " + err.message);
+                            console.error(err);
+                            btnConfirmarSubmit.disabled = false;
+                            btnConfirmarSubmit.innerHTML = "Confirmar reserva";
+                            mostrarToast("❌ Error de red al confirmar", "error");
                         });
                 });
             }
@@ -612,43 +742,107 @@
             // =========================
             // 5) Cancelar pre-reserva
             // =========================
-            document.querySelectorAll(".btn-cancelar").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    const idReserva = btn.dataset.id;
-
-                    if (!idReserva) {
-                        console.error("btn-cancelar sin data-id");
-                        return;
-                    }
-
-                    if (!confirm("¿Deseas cancelar esta pre-reserva?")) return;
-
-                    fetch("/usuario/cancelar-reserva/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": getCookie("csrftoken")
-                        },
-                        body: JSON.stringify({idReserva})
-                    })
-                        .then(r => r.json())
-                        .then(res => {
-                            if (res.ok) {
-                                alert("Reserva cancelada correctamente.");
-                                location.reload();
-                            } else {
-                                alert("Error: " + (res.error || "No se pudo cancelar la reserva."));
-                            }
-                        })
-                        .catch(err => {
-                            console.error("Error cancelando reserva:", err);
-                            alert("Error inesperado al cancelar la reserva.");
-                        });
-                });
-            });
 
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            let reservaSeleccionada = null;
+
+            // ========= ABRIR MODAL =========
+            document.addEventListener("click", function (e) {
+                const btn = e.target.closest(".btn-cancelar");
+                if (!btn) return;
+
+                reservaSeleccionada = btn.dataset.id;
+                if (!reservaSeleccionada) return;
+
+                const modal = new bootstrap.Modal(
+                    document.getElementById("modalCancelarReserva")
+                );
+                modal.show();
+            });
+
+            // ========= CONFIRMAR CANCELACIÓN =========
+            const btnConfirmar = document.getElementById("btnConfirmarCancelacion");
+
+            btnConfirmar.addEventListener("click", () => {
+
+                if (!reservaSeleccionada) {
+                    mostrarToast("❌ No se pudo identificar la reserva", "error");
+                    return;
+                }
+
+                // 🔒 Bloquear botón del modal
+                btnConfirmar.disabled = true;
+                btnConfirmar.innerHTML = "⏳ Cancelando...";
+
+                // 🔒 Bloquear botón/​es de CONFIRMAR de esa reserva
+                const botonesConfirmar = document.querySelectorAll(
+                    `.btn-confirmar[data-reserva="${reservaSeleccionada}"]`
+                );
+                botonesConfirmar.forEach(b => {
+                    b.disabled = true;
+                    b.classList.add("opacity-50");
+                });
+
+                fetch("/usuario/cancelar-reserva/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({idReserva: reservaSeleccionada})
+                })
+                    .then(r => r.json())
+                    .then(res => {
+
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.innerHTML = "Sí, cancelar";
+
+                        if (res.ok) {
+                            mostrarToast("✅ Reserva cancelada correctamente", "success");
+
+                            // Cerrar modal
+                            bootstrap.Modal.getInstance(
+                                document.getElementById("modalCancelarReserva")
+                            ).hide();
+
+                            // Ya no volvemos a habilitar los .btn-confirmar,
+                            // porque la reserva quedó cancelada.
+                            setTimeout(() => location.reload(), 1500);
+                            return;
+                        }
+
+                        // ❌ Si hubo error: re-habilitamos los botones
+                        botonesConfirmar.forEach(b => {
+                            b.disabled = false;
+                            b.classList.remove("opacity-50");
+                        });
+
+                        mostrarToast("⚠ " + (res.error || "No se pudo cancelar"), "warning");
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.innerHTML = "Sí, cancelar";
+
+                        // ❌ Error de red → re-habilitar confirmación
+                        botonesConfirmar.forEach(b => {
+                            b.disabled = false;
+                            b.classList.remove("opacity-50");
+                        });
+
+                        mostrarToast("❌ Error de red", "error");
+                    });
+
+            });
+
+        });
+
+    </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
 
@@ -690,6 +884,294 @@
             }
 
         })
+    </script>
+    <script>
+        function iniciarHoldCountdown(card) {
+
+            const badge = card.querySelector(".hold-countdown-badge");
+            const texto = badge?.querySelector(".hold-countdown-text");
+            const idHold = card.dataset.hold;
+
+            if (!badge || !texto || !idHold) return;
+
+            async function actualizar() {
+                try {
+                    const res = await fetch(`/api/hold-tiempo/${idHold}/`);
+                    const data = await res.json();
+
+                    // ✅ Si expiró → cancelar visualmente
+                    if (!data.activo) {
+
+                        badge.classList.add("expired");
+                        texto.textContent = "EXPIRADO";
+
+                        const badgeEstado = card.querySelector(".badge-estado");
+                        if (badgeEstado) {
+                            badgeEstado.classList.remove("bg-warning");
+                            badgeEstado.classList.add("bg-danger");
+                            badgeEstado.innerHTML = `<i class="bi bi-x-circle"></i> Cancelada`;
+                        }
+
+                        card.querySelectorAll(".btn-confirmar, .btn-cancelar").forEach(b => b.remove());
+
+                        setTimeout(() => {
+                            texto.textContent = "EXPIRADO";
+                        }, 10000);
+
+                        return;
+                    }
+
+                    // ✅ Mostrar contador
+                    const total = data.segundos;
+                    const min = Math.floor(total / 60);
+                    const sec = total % 60;
+
+                    texto.textContent = `${min}:${sec.toString().padStart(2, "0")}`;
+
+                } catch (e) {
+                    console.error("Error leyendo hold", e);
+                    texto.textContent = "Error";
+                }
+            }
+
+            actualizar();                 // primera vez
+            setInterval(actualizar, 1000); // cada segundo
+        }
+
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const inputCuenta = document.getElementById("confCuenta");
+
+            if (!inputCuenta) return;
+
+            inputCuenta.addEventListener("input", function () {
+                this.value = this.value.replace(/\D/g, "");
+            });
+
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const contenedor = document.getElementById("contenedor-reservas");
+            const loader = document.getElementById("loader-reservas");
+
+            const correo = localStorage.getItem("usuario_correo");
+            if (!correo) {
+                alert("Sesión expirada. Vuelve a iniciar sesión.");
+                window.location.href = "/login/";
+                return;
+            }
+
+            let page = 1;
+            const perPage = 5;
+            let cargando = false;
+            let fin = false;
+
+            function templateReserva(r) {
+                // solo que en string con backticks y ${r.campo}
+                return `
+        <div class="reserva-card mb-4 p-3 shadow-sm"
+             data-user="${r.idUsuario}"
+             data-reserva="${r.idReserva}"
+             data-hold="${r.idHold}">
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <img src="${r.imagen || 'https://imageness3realdecuenca.s3.us-east-2.amazonaws.com/Imagen4.png'}"
+                         class="reserva-img rounded">
+                </div>
+
+                <div class="col-md-5">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="titulo-reserva">${r.habitacion}</h5>
+
+                        ${r.estado === "PRE-RESERVA" || r.estado === "PRE-RESERVA ACTIVA" ? `
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-warning text-dark badge-estado">
+                                    <i class="bi bi-clock-history"></i> Pre-Reserva
+                                </span>
+                                ${r.hold_restante_segundos && !r.hold_expirado ? `
+                                    <span class="hold-countdown-badge hold-pill"
+                                          data-reserva="${r.idReserva}"
+                                          data-segundos="${r.hold_restante_segundos}">
+                                        <i class="bi bi-hourglass-split"></i>
+                                        <span class="hold-countdown-text"></span>
+                                    </span>
+                                ` : r.hold_expirado ? `
+                                    <span class="hold-countdown-badge expired">
+                                        <i class="bi bi-hourglass-top"></i> EXPIRADO
+                                    </span>
+                                ` : ``}
+                            </div>
+                        ` : r.estado === "CONFIRMADA" ? `
+                            <span class="badge bg-success badge-estado">
+                                <i class="bi bi-check-circle"></i> Confirmada
+                            </span>
+                        ` : r.estado === "CANCELADA" ? `
+                            <span class="badge bg-danger badge-estado">
+                                <i class="bi bi-x-circle"></i> Cancelada
+                            </span>
+                        ` : `
+                            <span class="badge bg-secondary badge-estado">
+                                <i class="bi bi-question-circle"></i> ${r.estado || 'Pendiente'}
+                            </span>
+                        `}
+                    </div>
+
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-geo-alt"></i> ${r.hotel} ${r.ciudad} ${r.pais}
+                    </p>
+                    <p class="mb-1"><strong>Fechas:</strong> ${r.fecha_inicio} → ${r.fecha_fin}</p>
+                    <p class="mb-1"><strong>Huéspedes:</strong> ${r.huespedes}</p>
+                    <p class="mb-1"><strong>Capacidad:</strong> ${r.capacidad_escogida} / ${r.capacidad_habitacion}</p>
+
+                        <div class="price-box mt-3 p-3">
+                        <p class="mb-1"><strong>Subtotal:</strong> $${r.subtotal}</p>
+                        <p class="mb-1 text-danger"><strong>Descuentos:</strong> -$${r.total_descuentos}</p>
+                        <p class="mb-1 text-info"><strong>Impuestos:</strong> +$${r.total_impuestos}</p>
+                        <p class="precio-total mt-2 fs-5 fw-bold text-success">Total: $${r.total}</p>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex flex-column justify-content-between">
+                    ${r.estado === "PRE-RESERVA" ? `
+<button class="btn btn-success btn-confirmar"
+        data-reserva="${r.idReserva}"
+        data-hab="${r.idHabitacion}"
+        data-hold="${r.idHold}"
+        data-fechai="${r.fecha_inicio}"
+        data-fechaf="${r.fecha_fin}"
+        data-hues="${r.huespedes}">
+    <i class="bi bi-check2-circle"></i> Confirmar
+</button>
+
+                        <button class="btn btn-outline-danger w-100 btn-cancelar"
+                                data-id="${r.idReserva}">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                    ` : ``}
+                </div>
+            </div>
+        </div>`;
+            }
+
+            async function cargarReservas() {
+                if (cargando || fin) return;
+                cargando = true;
+                loader.style.display = "block";
+
+                try {
+                    const url = `/api/mis-reservas-full/?correo=${encodeURIComponent(correo)}&page=${page}&per_page=${perPage}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        console.error(data.error);
+                        loader.innerHTML = `<p class="text-danger">Error cargando reservas</p>`;
+                        loader.style.display = "block";
+                        return;
+                    }
+
+                    if (!data.data.length) {
+                        fin = true;
+                        loader.innerHTML = `<p class="text-muted">No hay más reservas.</p>`;
+                        loader.style.display = "block";
+
+                        return;
+                    }
+
+                    data.data.forEach(r => {
+                        contenedor.insertAdjacentHTML("beforeend", templateReserva(r));
+
+                        // ✅ obtener últimos cards agregados
+                        const cards = contenedor.querySelectorAll(".reserva-card");
+                        const ultima = cards[cards.length - 1];
+
+                        // ✅ iniciar contador solo en ese card
+                        iniciarHoldCountdown(ultima);
+                    });
+
+
+                    page += 1;
+
+                } catch (e) {
+                    console.error(e);
+                    loader.innerHTML = `<p class="text-danger">Error de red</p>`;
+                } finally {
+                    cargando = false;
+                    if (page > 1) {
+                        loader.style.display = "none";
+                    }
+                }
+
+            }
+
+            // Primera carga
+            cargarReservas();
+
+            // Si quieres carga infinita al hacer scroll:
+            window.addEventListener("scroll", () => {
+                const scrollBottom = window.innerHeight + window.scrollY;
+                const docHeight = document.body.offsetHeight;
+
+                if (scrollBottom + 200 >= docHeight) {
+                    cargarReservas();
+                }
+            });
+        });
+    </script>
+    <script>
+        function abrirModalConfirmacion(btn) {
+
+            const modalConfirmar = bootstrap.Modal.getOrCreateInstance(
+                document.getElementById("modalConfirmar")
+            );
+
+            function setValor(id, valor) {
+                const el = document.getElementById(id);
+                if (el) el.value = valor || "";
+            }
+
+            // DATOS DEL USUARIO
+            setValor("confNombre", localStorage.getItem("usuario_nombre"));
+            setValor("confApellido", localStorage.getItem("usuario_apellido"));
+            setValor("confTipoDocumento", localStorage.getItem("usuario_tipo_doc"));
+            setValor("confDocumento", localStorage.getItem("usuario_documento"));
+            setValor("confCorreo", localStorage.getItem("usuario_correo"));
+
+            // DATOS DE LA RESERVA (del botón)
+            const hab = btn.dataset.hab;
+            const hold = btn.dataset.hold;
+            const fechai = btn.dataset.fechai;
+            const fechaf = btn.dataset.fechaf;
+            const hues = btn.dataset.hues;
+
+            if (!hab || !hold || !fechai || !fechaf || !hues) {
+                mostrarToast("❌ Datos incompletos en la reserva", "error");
+                return;
+            }
+
+            setValor("confIdHabitacion", hab);
+            setValor("confIdHold", hold);
+            setValor("confFechaInicio", fechai.includes("T") ? fechai : `${fechai}T15:00:00`);
+            setValor("confFechaFin", fechaf.includes("T") ? fechaf : `${fechaf}T11:00:00`);
+            setValor("confHuespedes", hues);
+
+            modalConfirmar.show();
+        }
+
+    </script>
+    <script>
+        document.addEventListener("click", function (e) {
+            const btn = e.target.closest(".btn-confirmar");
+            if (!btn) return;
+
+            abrirModalConfirmacion(btn);
+        });
+
     </script>
 
 {% endblock %}

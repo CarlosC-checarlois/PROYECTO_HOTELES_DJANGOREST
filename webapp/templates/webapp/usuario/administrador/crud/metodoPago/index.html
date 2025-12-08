@@ -168,28 +168,38 @@
             $("#modalCrearMetodoPago").modal("show");
         }
 
-        function crearMetodoPago() {
-            const idMetodo = $("#crear_IdMetodoPago").val().trim();
-            const nombreMetodo = $("#crear_NombreMetodoPago").val().trim();
+        function crearMetodoPago(btn) {
+    // Bloqueamos el botón mientras validamos / mandamos
+    if (btn) bloquearBoton(btn, "Guardando...");
 
-            if (!idMetodo || !nombreMetodo) {
-                crudNotify("warning", "El ID y el Nombre del Método de Pago son obligatorios.");
-                return;
-            }
+    const idMetodo = $("#crear_IdMetodoPago").val().trim();
+    const nombreMetodo = $("#crear_NombreMetodoPago").val().trim();
 
-            crudCreate(
-                URL_CREATE_MP,
-                {
-                    IdMetodoPago: parseInt(idMetodo), // Asegura que se envíe como entero
-                    NombreMetodoPago: nombreMetodo,
-                    EstadoMetodoPago: true, // Se asume que se crea como activo
-                },
-                () => {
-                    $("#modalCrearMetodoPago").modal("hide");
-                    cargarMetodosPago(currentPage);
-                }
-            );
-        }
+    // Validaciones
+    if (!idMetodo || !nombreMetodo) {
+        if (btn) desbloquearBoton(btn);
+        crudNotify("warning", "El ID y el Nombre del Método de Pago son obligatorios.");
+        return;
+    }
+
+    // Petición manual para poder manejar bien el desbloqueo
+    $.post(URL_CREATE_MP, {
+        IdMetodoPago: parseInt(idMetodo, 10),
+        NombreMetodoPago: nombreMetodo,
+        EstadoMetodoPago: true,  // se crea activo
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Método de pago creado correctamente.");
+        $("#modalCrearMetodoPago").modal("hide");
+        cargarMetodosPago(currentPage);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al crear el Método de Pago.");
+    })
+    .always(() => {
+        if (btn) desbloquearBoton(btn);
+    });
+}
 
         // ================== Editar ==================
         function abrirModalEditarMetodoPago(id) {
@@ -211,28 +221,35 @@
                 crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
             });
         }
+function actualizarMetodoPago(btn) {
+    if (btn) bloquearBoton(btn, "Actualizando...");
 
-        function actualizarMetodoPago() {
-            const id = $("#editar_IdMetodoPago").val();
-            const nombreMetodo = $("#editar_NombreMetodoPago").val().trim();
+    const id = $("#editar_IdMetodoPago").val();
+    const nombreMetodo = $("#editar_NombreMetodoPago").val().trim();
+    const estado = $("#editar_EstadoMetodoPago").is(":checked");
 
-            if (!nombreMetodo) {
-                crudNotify("warning", "El Nombre del Método de Pago es obligatorio.");
-                return;
-            }
+    if (!nombreMetodo) {
+        if (btn) desbloquearBoton(btn);
+        crudNotify("warning", "El Nombre del Método de Pago es obligatorio.");
+        return;
+    }
 
-            crudUpdate(
-                URL_UPDATE_MP(id),
-                {
-                    NombreMetodoPago: nombreMetodo,
-                    EstadoMetodoPago: $("#editar_EstadoMetodoPago").is(":checked")
-                },
-                () => {
-                    $("#modalEditarMetodoPago").modal("hide");
-                    cargarMetodosPago(currentPage);
-                }
-            );
-        }
+    $.post(URL_UPDATE_MP(id), {
+        NombreMetodoPago: nombreMetodo,
+        EstadoMetodoPago: estado
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Método de pago actualizado correctamente.");
+        $("#modalEditarMetodoPago").modal("hide");
+        cargarMetodosPago(currentPage);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al actualizar el Método de Pago.");
+    })
+    .always(() => {
+        if (btn) desbloquearBoton(btn);
+    });
+}
 
         // ================== Eliminar (con confirm modal) ==================
         function eliminarMetodoPago(id) {

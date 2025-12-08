@@ -1,0 +1,51 @@
+{% extends "cabezal.html" %}
+
+{% block titulo_pagina %}
+<title>Error 404 - Página no encontrada</title>
+{% endblock %}
+
+{% block contenido_pagina %}
+<div class="container d-flex align-items-center justify-content-center" style="min-height:75vh">
+
+    <div class="text-center">
+
+        <!-- Ícono -->
+        <div class="mb-3">
+            <i class="bi bi-exclamation-triangle-fill text-primary" style="font-size:4rem;"></i>
+        </div>
+
+        <!-- Código -->
+        <h1 class="display-1 fw-bold text-primary">404</h1>
+
+        <!-- Mensaje -->
+        <h3 class="fw-semibold mb-3">Página no encontrada</h3>
+
+        <p class="text-muted mb-4">
+            La página que buscas ya no existe, cambió de dirección<br>
+            o escribiste mal la URL.
+        </p>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-center gap-3">
+
+            <a href="{% url 'inicio' %}" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-house-door-fill"></i>
+                Inicio
+            </a>
+
+            <a href="{% url 'habitaciones' %}" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="bi bi-building"></i>
+                Habitaciones
+            </a>
+
+        </div>
+
+        <!-- Mensaje pequeño -->
+        <small class="text-secondary d-block mt-4">
+            Código de error: 404 · Hotel LO PROPIO
+        </small>
+
+    </div>
+
+</div>
+{% endblock %}

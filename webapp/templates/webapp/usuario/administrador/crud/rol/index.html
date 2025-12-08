@@ -176,18 +176,16 @@ function abrirModalCrearRol(){
     $("#modalCrearRol").modal("show");
 }
 
-function crearRol(){
+function crearRol(btn){
 
-    const idRol   = $("#crear_IdRol").val().trim();
-    const nombre  = $("#crear_NombreRol").val().trim();
+    bloquearBoton(btn, "Guardando...");
+
+    const idRol = $("#crear_IdRol").val().trim();
+    const nombre = $("#crear_NombreRol").val().trim();
 
     if(!idRol || !nombre){
         crudNotify("warning","ID Rol y Nombre son obligatorios.");
-        return;
-    }
-
-    if(isNaN(parseInt(idRol))){
-        crudNotify("error","El ID Rol debe ser numérico.");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -201,9 +199,12 @@ function crearRol(){
         () => {
             $("#modalCrearRol").modal("hide");
             cargarRoles(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }
+
+
 
 // ================== Editar ==================
 function abrirModalEditarRol(id){
@@ -227,13 +228,17 @@ function abrirModalEditarRol(id){
     });
 }
 
-function actualizarRol(){
 
-    const idRol  = $("#editar_IdRol").val();
+function actualizarRol(btn){
+
+    bloquearBoton(btn, "Guardando...");
+
+    const idRol = $("#editar_IdRol").val();
     const nombre = $("#editar_NombreRol").val().trim();
 
     if(!nombre){
         crudNotify("warning","El nombre del rol es obligatorio.");
+        desbloquearBoton(btn);
         return;
     }
 
@@ -246,6 +251,7 @@ function actualizarRol(){
         () => {
             $("#modalEditarRol").modal("hide");
             cargarRoles(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }

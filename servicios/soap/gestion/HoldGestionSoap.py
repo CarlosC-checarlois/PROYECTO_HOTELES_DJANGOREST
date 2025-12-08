@@ -1,3 +1,4 @@
+
 import requests
 from datetime import datetime
 from zeep import Client, Transport
@@ -149,4 +150,3 @@ class HoldGestionSoap:
             return self.client.service.EliminarHold(id_hold)
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar HOLD {id_hold}: {e}")
-

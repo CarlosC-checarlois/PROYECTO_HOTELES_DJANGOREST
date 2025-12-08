@@ -1,4 +1,3 @@
-from pprint import pprint
 
 import requests
 
@@ -139,8 +138,6 @@ def actualizar_usuario_admin():
         print("❌ Usuario no encontrado.")
         return
 
-    print("➡ Usuario encontrado:")
-    pprint(usuario)
 
     # 2) Construimos el DTO actualizado (respetando lo que ya tiene)
     usuario_actualizado = {
@@ -160,7 +157,25 @@ def actualizar_usuario_admin():
     try:
         resp = api.actualizar(usuario_actualizado)
         print("\n✅ Usuario actualizado correctamente:")
-        pprint(resp)
     except Exception as e:
         print("\n❌ Error al actualizar usuario:")
         print(str(e))
+
+
+api = UsuarioInternoGestionRest()
+
+# 1️⃣ Obtener usuario actual
+usuario = api.obtener_por_id(1)
+
+print("ANTES:")
+print(usuario)
+
+# 2️⃣ Cambiar nombre
+usuario["Nombre"] = "CheCarlos"
+
+# 3️⃣ Enviar actualización
+actualizado = api.actualizar(usuario)
+
+# 4️⃣ Mostrar resultado
+print("\nDESPUÉS:")
+print(actualizado)

@@ -1,4 +1,3 @@
-from pprint import pprint
 
 import requests
 from datetime import datetime
@@ -117,15 +116,3 @@ class ImagenHabitacionGestionSoap:
             return bool(ok)
         except Fault as e:
             raise Exception(f"SOAP Error al eliminar imagen: {e}")
-
-
-if __name__ == "__main__":
-    cliente = ImagenHabitacionGestionSoap()
-
-    print("\nCREAR:")
-    resp = cliente.crear_imagen(
-        id_habitacion="HACA000015",
-        url_imagen="https://miservidor.com/img1.jpg",
-        estado_imagen=True
-    )
-    pprint(resp)

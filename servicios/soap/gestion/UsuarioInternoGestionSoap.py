@@ -129,4 +129,3 @@ class UsuarioInternoGestionSoap:
             return self._normalize(r)
         except Fault as e:
             raise Exception(f"SOAP Error en login: {e}")
-

@@ -24,7 +24,7 @@
                 <!-- MONTO -->
                 <label class="form-label">Monto</label>
 
-              <!-- MONTO -->
+                <!-- MONTO -->
                 <div class="mb-3">
                     <label for="crear_MontoDesxHabxRes" class="form-label fw-semibold">
                         Monto del Descuento <span class="text-danger">*</span>
@@ -50,7 +50,8 @@
                            ">
 
                     <small class="text-muted">
-                        Debe ser un valor numérico mayor a <strong>0</strong>. No se permiten valores nulos ni negativos.
+                        Debe ser un valor numérico mayor a <strong>0</strong>. No se permiten valores nulos ni
+                        negativos.
                     </small>
                 </div>
 
@@ -65,7 +66,13 @@
             <!-- FOOTER -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-success" onclick="crearDesxHabxRes()">Guardar</button>
+
+                <button class="btn btn-success"
+                        id="btnCrearDesxHabxRes"
+                        onclick="crearDesxHabxRes()">
+                    Guardar
+                </button>
+
             </div>
 
         </div>

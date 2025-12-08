@@ -12,6 +12,7 @@ cssselect2==0.8.0
 defusedxml==0.7.1
 Django==4.2.26
 fonttools==4.60.1
+gunicorn==23.0.0
 fpdf2==2.8.4
 freetype-py==2.5.1
 html5lib==1.1

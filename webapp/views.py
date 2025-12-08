@@ -1,67 +1,40 @@
-import base64
-from xml.sax.handler import property_interning_dict
-import boto3
-from django.conf import settings
 import re
-from django.shortcuts import render, redirect
-from django.contrib import messages
-import threading
-from datetime import datetime, timedelta
-from django.views import View
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlencode
-# webapp/views.py
-import decimal
 import requests
-
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.views.decorators.http import require_POST
 from django.utils import timezone
-
 from django.views import View
-
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.contrib import messages
-from django.views import View
-from django.shortcuts import render, redirect
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.shortcuts import render, redirect
-
 import threading
 import time
-
-
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from utils.pdf_generator import generar_pdf_factura
-from utils.s3_upload import subir_pdf_a_s3
-from webapp.decorators import admin_required
-import uuid
+from reportlab.lib.randomtext import PRINTING
 
+from servicios.soap.gestion.DescuentoGestionSoap import DescuentosGestionSoap as DescuentosGestionRest
+from servicios.soap.gestion.DesxHabxResGestionSoap import DesxHabxResGestionSoap as DesxHabxResGestionRest
+from webapp.decorators import admin_required, admin_required_ajax
+import uuid
 # ====== SERVICIOS SOAP (USADOS COMO "REST") ======
 from servicios.soap.gestion.HoldGestionSoap import HoldGestionSoap as HoldGestionRest
 from servicios.soap.integracion.HabitacionesSoap import HabitacionesSoap as HabitacionesRest
-
 from servicios.soap.gestion.TipoHabitacionGestionSoap import TipoHabitacionGestionSoap as TipoHabitacionGestionRest
 from servicios.soap.gestion.AmexHabGestionSoap import AmexHabGestionSoap as AmexHabGestionRest
 from servicios.soap.gestion.AmenidadGestionSoap import AmenidadGestionSoap as AmenidadesGestionRest
-
 from servicios.soap.gestion.UsuarioInternoGestionSoap import UsuarioInternoGestionSoap as UsuarioInternoGestionRest
 from servicios.soap.gestion.PagoGestionSoap import PagoGestionSoap as PagoGestionRest
-from servicios.rest.gestion.FuncionesEspecialesGestionRest import FuncionesEspecialesGestionRest
-
-from servicios.soap.gestion.FacturaGestionSoap import FacturaGestionSoap as FacturasGestionRest
+from servicios.soap.gestion.FuncionesEspecialesGestionSoap import \
+    FuncionesEspecialesGestionSoap as FuncionesEspecialesGestionRest
 from servicios.soap.gestion.PdfGestionSoap import PdfGestionSoap as PdfGestionRest
 from servicios.soap.gestion.HabxResGestionSoap import HabxResGestionSoap as HabxResGestionRest
-
 from servicios.soap.gestion.HabitacionGestionSoap import HabitacionesGestionSoap as HabitacionesGestionRest
 from servicios.soap.gestion.ReservaGestionSoap import ReservaGestionSoap as ReservaGestionRest
-from servicios.soap.gestion.ImagenHabitacionGestionSoap import ImagenHabitacionGestionSoap as ImagenHabitacionGestionRest
+from servicios.soap.gestion.ImagenHabitacionGestionSoap import \
+    ImagenHabitacionGestionSoap as ImagenHabitacionGestionRest
+from utils.hold_cache import HOLDS_CACHE, LOCK
+
 
 def usuario_ya_logueado(request):
     """
@@ -88,7 +61,6 @@ def buscar_usuario_por_correo(correo: str):
     try:
         usuarios = api_usuarios.listar()
     except Exception as e:
-        print("[USUARIOS] Error llamando a listar():", e)
         return None
 
     correo_norm = correo.strip().lower()
@@ -168,9 +140,8 @@ def login_post(request):
         messages.error(request, "Credenciales incorrectas.")
         return redirect("login")
 
-def index_register(request):
-    # Si ya está logueado, directo al inicio
 
+def index_register(request):
     return render(request, "webapp/register/index.html")
 
 
@@ -202,7 +173,22 @@ def register_post(request):
         errores.append("El número de documento es obligatorio.")
     if clave and len(clave) > 40:
         errores.append("La contraseña no puede tener más de 40 caracteres.")
+    # -----------------------
+    # VALIDACIÓN DE NOMBRE Y APELLIDO (SOLO LETRAS)
+    # -----------------------
+    texto_regex = r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$'
 
+    if not re.match(texto_regex, nombre):
+        errores.append("El nombre solo puede contener letras.")
+
+    if not re.match(texto_regex, apellido):
+        errores.append("El apellido solo puede contener letras.")
+
+    # si hay errores, los mostramos y no llamamos al API
+    if errores:
+        for err in errores:
+            messages.error(request, err)
+        return redirect("register")
     # si hay errores, los mostramos y no llamamos al API
     if errores:
         for err in errores:
@@ -303,7 +289,6 @@ def detalle_habitacion(request, id):
     Vista para mostrar los detalles de una habitación específica.
     OPTIMIZACIÓN: Carga de datos en paralelo
     """
-    import time
     start_time = time.time()
 
     # ==============================
@@ -342,7 +327,6 @@ def detalle_habitacion(request, id):
         t.join()
 
     elapsed_data = time.time() - start_time
-    print(f"[PERF] Carga de datos en paralelo: {elapsed_data:.2f}s")
 
     # ==============================
     # PROCESAR DATOS
@@ -439,65 +423,55 @@ class MisReservasView(View):
     template_name = "webapp/reservas/index.html"
 
     def get(self, request):
+        # Solo necesitamos el correo para que el JS lo use (o ni eso,
+        # porque ya lo tienes en localStorage)
+        correo = request.GET.get("correo")
+
+        return render(request, self.template_name, {
+            "correo_inicial": correo or "",
+            # NO mandamos reservas aquí
+        })
+
+
+class MisReservasAjaxView(View):
+    """
+    GET /api/mis-reservas-full/?correo=...&page=1
+    Devuelve las reservas ya procesadas (igual que reservas_final) pero en JSON.
+    """
+
+    def get(self, request):
+        import time
         start_time = time.time()
+
+        correo = request.GET.get("correo")
+        page = int(request.GET.get("page", 1))
+        per_page = int(request.GET.get("per_page", 5))
+
+        if not correo:
+            return JsonResponse({"success": False, "error": "Falta correo"}, status=400)
+
+        usuario = buscar_usuario_por_correo(correo)
+        if not usuario:
+            return JsonResponse({"success": False, "error": "Usuario no encontrado"}, status=404)
+
+        usuario_id = usuario["Id"]
+        usuario_correo = usuario.get("Correo")
 
         api_reserva = ReservaGestionRest()
         api_habxres = HabxResGestionRest()
         api_habs = HabitacionesGestionRest()
         api_imgs = ImagenHabitacionGestionRest()
         api_hold = HoldGestionRest()
-        correo = request.GET.get("correo")
-        usuario = buscar_usuario_por_correo(correo)
-        if not usuario:
-            return render(request, self.template_name, {"reservas": [], "warning": "Cargando..."})
-        usuario_id = usuario["Id"]
-        usuario_correo = usuario.get("Correo")
-        id_reserva_qs = request.GET.get("id_reserva_reserva")
-        fecha_inicio_hold_qs = request.GET.get("fecha_inicio_hold_reserva")
-        tiempo_hold_qs = request.GET.get("tiempo_hold_reserva")
-        id_hold_qs = request.GET.get("id_hold_reserva")
 
-        # 2.a) Si viene id_reserva_reserva → asociamos manualmente la reserva al usuario
-        if id_reserva_qs:
-            try:
-                id_reserva_int = int(id_reserva_qs)
-
-                # Obtener la reserva tal como está en la API
-                reserva = api_reserva.obtener_reserva_por_id(id_reserva_int)
-                ## RESERVA
-                if reserva:
-
-                    dto = {
-                        "idReserva": reserva["IdReserva"],
-                        "idUnicoUsuario": int(usuario_id),  # 👈 AQUÍ ASOCIAMOS AL USUARIO INTERNO
-                        "idUnicoUsuarioExterno": reserva.get("IdUnicoUsuarioExterno"),
-                        "costoTotalReserva": reserva.get("CostoTotalReserva"),
-                        "fechaRegistroReserva": reserva.get("FechaRegistroReserva"),
-                        # Si la reserva no tiene fecha de inicio, usamos el de la pre-reserva
-                        "fechaInicioReserva": reserva.get("FechaInicioReserva") or fecha_inicio_hold_qs,
-                        "fechaFinalReserva": reserva.get("FechaFinalReserva"),
-                        # Si no hay estado, ponemos PRE-RESERVA para que se entienda
-                        "estadoGeneralReserva": reserva.get("EstadoGeneralReserva") or "PRE-RESERVA",
-                        "estadoReserva": reserva.get("EstadoReserva"),
-                    }
-
-                    api_reserva.actualizar_reserva(id_reserva_int, dto)
-                    print(f"[RESERVAS] Asociada reserva {id_reserva_int} al usuario {usuario_id}")
-
-                else:
-                    print(f"[RESERVAS] No se encontró la reserva {id_reserva_int} para asociar")
-
-            except Exception as e:
-                print("[RESERVAS] Error asociando reserva a usuario:", e)
-
-        # =========================================
-        # 3) CARGAR TODO EN PARALELO
-        # =========================================
+        # ==============================
+        # CARGAR TODO EN PARALELO
+        # ==============================
         datos = {
             "reservas_api": None,
             "habxres_list": None,
             "hold_list": None,
             "imgs_list": None,
+            "habitaciones_list": None,
         }
 
         def cargar_reservas():
@@ -512,11 +486,15 @@ class MisReservasView(View):
         def cargar_imagenes():
             datos["imgs_list"] = api_imgs.obtener_imagenes()
 
+        def cargar_habitaciones():
+            datos["habitaciones_list"] = api_habs.obtener_habitaciones()
+
         threads = [
             threading.Thread(target=cargar_reservas),
             threading.Thread(target=cargar_habxres),
             threading.Thread(target=cargar_hold),
             threading.Thread(target=cargar_imagenes),
+            threading.Thread(target=cargar_habitaciones),
         ]
 
         for t in threads:
@@ -528,25 +506,20 @@ class MisReservasView(View):
         habxres_list = datos["habxres_list"] or []
         hold_list = datos["hold_list"] or []
         imgs_list = datos["imgs_list"] or []
+        habitaciones_list = datos["habitaciones_list"] or []
 
-        # =========================================
-        # 4) FILTRAR SOLO RESERVAS DEL USUARIO
-        # =========================================
+        # ==============================
+        # FILTRAR SOLO DEL USUARIO
+        # ==============================
         reservas_filtradas = [
             r for r in reservas_api
             if str(r.get("IdUnicoUsuario")) == str(usuario_id)
         ]
 
-        # =========================================
-        # 5) ÍNDICES AUXILIARES
-        # =========================================
-        # habxres por reserva
+        # Índices auxiliares
         idx_habxres = {h["IdReserva"]: h for h in habxres_list}
-
-        # hold por reserva (si en tu API el HOLD tiene IdReserva)
         idx_hold = {h["IdReserva"]: h for h in hold_list if h.get("IdReserva")}
 
-        # imágenes por habitación
         idx_imagenes = {}
         for img in imgs_list:
             if img.get("EstadoImagen"):
@@ -554,57 +527,19 @@ class MisReservasView(View):
                 if hab_id not in idx_imagenes:
                     idx_imagenes[hab_id] = img.get("UrlImagen")
 
-        # habitaciones a consultar
-        habitaciones_ids = set()
-        for r in reservas_filtradas:
-            id_res = r.get("IdReserva")
-            hxr = idx_habxres.get(id_res, {})
-            id_habitacion = hxr.get("IdHabitacion")
-            if id_habitacion:
-                habitaciones_ids.add(id_habitacion)
+        idx_habitaciones = {h["IdHabitacion"]: h for h in habitaciones_list}
 
-        # =========================================
-        # 6) CARGAR HABITACIONES EN PARALELO
-        # =========================================
-        idx_habitaciones = {}
-
-        def cargar_habitacion(hab_id):
-            try:
-                hab_data = api_habs.obtener_por_id(hab_id)
-                idx_habitaciones[hab_id] = hab_data
-            except Exception as e:
-                print(f"[RESERVAS] Error cargando habitación {hab_id}:", e)
-                idx_habitaciones[hab_id] = {}
-
-        threads_hab = [
-            threading.Thread(target=cargar_habitacion, args=(hab_id,))
-            for hab_id in habitaciones_ids
-        ]
-        for t in threads_hab:
-            t.start()
-        for t in threads_hab:
-            t.join()
-
-        # =========================================
-        # 7) ARMAR LA LISTA FINAL DE RESERVAS
-        # =========================================
         reservas_final = []
 
-        # -----------------------------------
-        # CONSTRUIR RESERVAS
-        # -----------------------------------
         for r in reservas_filtradas:
             id_res = r.get("IdReserva")
-
-            # HABXRES
             hxr = idx_habxres.get(id_res, {})
             id_habitacion = hxr.get("IdHabitacion")
 
-            # HOLD (si existe)
+            # HOLD
             hold = idx_hold.get(id_res, {})
             id_hold = hold.get("IdHold")
 
-            # ====== CÁLCULO DE TIEMPO RESTANTE DEL HOLD ======
             hold_tiempo_total = hold.get("TiempoHold") or hold.get("tiempoHold")
             hold_fecha_inicio_raw = hold.get("FechaInicioHold") or hold.get("fechaInicioHold")
 
@@ -614,10 +549,12 @@ class MisReservasView(View):
 
             if hold_fecha_inicio_raw and hold_tiempo_total:
                 try:
-                    # convertir a datetime
                     inicio_dt = datetime.fromisoformat(str(hold_fecha_inicio_raw))
                     if timezone.is_naive(inicio_dt):
-                        inicio_dt = timezone.make_aware(inicio_dt, timezone.get_default_timezone())
+                        inicio_dt = timezone.make_aware(
+                            inicio_dt,
+                            timezone.get_default_timezone()
+                        )
 
                     fin_dt = inicio_dt + timedelta(seconds=int(hold_tiempo_total))
                     ahora = timezone.now()
@@ -628,13 +565,11 @@ class MisReservasView(View):
                     hold_fecha_fin_iso = fin_dt.isoformat()
 
                 except Exception as e:
-                    print("[RESERVAS] Error calculando tiempo restante de HOLD:", e)
+                    print("[RESERVAS AJAX] Error calculando HOLD:", e)
 
-            # HABITACIÓN
             hab_data = idx_habitaciones.get(id_habitacion, {})
             capacidad_habitacion = hab_data.get("CapacidadHabitacion")
 
-            # IMAGEN
             imagen_final = (
                     idx_imagenes.get(id_habitacion)
                     or "https://imageness3realdecuenca.s3.us-east-2.amazonaws.com/Imagen4.png"
@@ -645,7 +580,6 @@ class MisReservasView(View):
             reservas_final.append({
                 "idReserva": id_res,
                 "idUsuario": r.get("IdUnicoUsuario"),
-
                 "idHabitacion": id_habitacion,
                 "idHold": id_hold,
 
@@ -669,7 +603,6 @@ class MisReservasView(View):
                 "imagen": imagen_final,
                 "usuario_correo": usuario_correo,
 
-                # CAMPOS NUEVOS DEL HOLD 👇
                 "hold_id": id_hold,
                 "hold_tiempo_total": hold_tiempo_total,
                 "hold_fecha_inicio": hold_fecha_inicio_raw,
@@ -678,11 +611,22 @@ class MisReservasView(View):
                 "hold_expirado": hold_expirado,
             })
 
-        elapsed = time.time() - start_time
-        print(f"[PERF] MisReservasView: {elapsed:.2f}s")
+        total = len(reservas_final)
 
-        # 👈 SIEMPRE devolvemos un HttpResponse
-        return render(request, self.template_name, {"reservas": reservas_final})
+        # Paginación simple
+        start = (page - 1) * per_page
+        end = start + per_page
+        slice_reservas = reservas_final[start:end]
+
+        elapsed = time.time() - start_time
+
+        return JsonResponse({
+            "success": True,
+            "data": slice_reservas,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+        })
 
 
 ###############################################################
@@ -697,8 +641,6 @@ class HabitacionesView(View):
         tipos = cliente_tipos.obtener_tipos()
 
         return render(request, self.template_name, {
-            "usuario_id": request.session.get("usuario_id"),
-            "token_sesion": request.session.session_key or "anon-" + str(uuid.uuid4()),
             "tipos_habitacion": tipos
         })
 
@@ -790,7 +732,6 @@ class HabitacionesAjaxView(View):
                 t.join()
 
             elapsed_data = time.time() - start_time
-            print(f"[PERF] Carga de datos en paralelo: {elapsed_data:.2f}s")
 
             # Desempacar datos
             habitaciones_all = datos["habitaciones_all"]
@@ -865,13 +806,10 @@ class HabitacionesAjaxView(View):
                 resultado.append(item)
 
             elapsed_total = time.time() - start_time
-            print(f"[PERF] Tiempo total de solicitud: {elapsed_total:.2f}s")
 
             return JsonResponse({"success": True, "data": resultado, "total": total})
 
         except Exception as e:
-            print("\n❌ ERROR EN SERVIDOR:")
-            print(e)
             import traceback
             traceback.print_exc()
             return JsonResponse({"success": False, "error": str(e)}, status=500)
@@ -940,7 +878,6 @@ class FechasOcupadasAjaxView(View):
                             fechas_ocupadas.append(fecha_actual.isoformat())
                             fecha_actual += timedelta(days=1)
                     except Exception as e:
-                        print(f"Error al procesar fechas de reserva {id_reserva}: {e}")
                         continue
 
             # Eliminar duplicados y ordenar
@@ -966,20 +903,16 @@ class FechasOcupadasAjaxView(View):
 
 ## FUNCIONES PARA GENERAR PRERESERVA
 def iniciar_temporizador_hold(id_hold, duracion, api):
-    print(f"[TEMPORIZADOR] HOLD {id_hold} iniciado ({duracion} segundos)")
 
     segundos = duracion
 
     while segundos > 0:
-        print(f"[TEMPORIZADOR] HOLD {id_hold} → quedan {segundos} segundos")
         time.sleep(1)
         segundos -= 1
 
     # Tiempo terminado → cancelar HOLD
     try:
-        print(f"[TEMPORIZADOR] HOLD {id_hold} EXPIRÓ. Cancelando…")
         api.cancelar_hold(id_hold)
-        print(f"[TEMPORIZADOR] HOLD {id_hold} CANCELADO correctamente.")
     except Exception as e:
         print(f"[TEMPORIZADOR] Error al cancelar HOLD {id_hold}: {e}")
 
@@ -1035,22 +968,6 @@ def crear_prereserva(request):
 
     # === Llamar al servicio REST ===
     api = FuncionesEspecialesGestionRest()
-    print("************************* SE GENERA LA PRERESERVA *************************")
-    print(
-        f"""
-        id_habitacion: {id_habitacion}
-        fecha_inicio: {fecha_inicio}
-        fecha_fin: {fecha_fin}
-        numero_huespedes: {numero_huespedes}
-        nombre: {nombre}
-        apellido: {apellido}
-        correo: {correo}
-        tipo_documento: {tipo_documento}
-        documento: {documento}
-        duracion_hold_seg: 180
-        precio_actual: {precio_actual}
-        """
-    )
     try:
         # 1) Crear Pre-reserva
         resultado = api.crear_prereserva(
@@ -1063,25 +980,22 @@ def crear_prereserva(request):
             correo=correo,
             tipo_documento=tipo_documento,
             documento=documento,
-            duracion_hold_seg=180,
+            duracion_hold_seg=600,
             precio_actual=precio_actual,
         )
-        print("========== RESPUESTA DE crear_prereserva ==========")
-        print(resultado)
-        print("===================================================")
 
         # Obtener el ID del HOLD de la respuesta (puede venir con diferentes nombres)
         hold_id = resultado.get("IdHold") or resultado.get("idHold") or resultado.get("holdId")
 
         # Variables por defecto
         reserva_id = None
-        tiempo_hold = 180
+        tiempo_hold = 600
         fecha_inicio_hold = fecha_inicio
 
         if not hold_id:
             # Si no hay hold_id, usamos los datos que vengan en la misma respuesta
             reserva_id = resultado.get("IdReserva") or resultado.get("idReserva")
-            tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 180
+            tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 600
             fecha_inicio_hold = resultado.get("FechaInicioHold") or resultado.get("fechaInicioHold") or fecha_inicio
 
             if not reserva_id:
@@ -1095,20 +1009,19 @@ def crear_prereserva(request):
             hold_api = HoldGestionRest()
             try:
                 hold = hold_api.obtener_hold_por_id(str(hold_id))
-
                 if not hold:
                     reserva_id = resultado.get("IdReserva") or resultado.get("idReserva")
-                    tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 180
+                    tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 600
                     fecha_inicio_hold = resultado.get("FechaInicioHold") or resultado.get(
                         "fechaInicioHold") or fecha_inicio
                 else:
                     reserva_id = hold.get("IdReserva") or hold.get("idReserva")
-                    tiempo_hold = hold.get("TiempoHold") or hold.get("tiempoHold") or 180
+                    tiempo_hold = hold.get("TiempoHold") or hold.get("tiempoHold") or 600
                     fecha_inicio_hold = hold.get("FechaInicioHold") or hold.get("fechaInicioHold") or fecha_inicio
 
             except ValueError as ve:
                 reserva_id = resultado.get("IdReserva") or resultado.get("idReserva")
-                tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 180
+                tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 600
                 fecha_inicio_hold = resultado.get("FechaInicioHold") or resultado.get("fechaInicioHold") or fecha_inicio
 
                 if not reserva_id:
@@ -1116,7 +1029,7 @@ def crear_prereserva(request):
 
             except Exception as e:
                 reserva_id = resultado.get("IdReserva") or resultado.get("idReserva")
-                tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 180
+                tiempo_hold = resultado.get("TiempoHold") or resultado.get("tiempoHold") or 600
                 fecha_inicio_hold = resultado.get("FechaInicioHold") or resultado.get("fechaInicioHold") or fecha_inicio
 
                 if not reserva_id:
@@ -1124,44 +1037,68 @@ def crear_prereserva(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
     programar_cancelacion_hold(hold_id)
 
-    params = urlencode({
-        "uid": usuario_id,  # opcional ahora
-        "correo": correo,
-        "nombre": nombre,
-        "apellido": apellido,
-        "id_reserva_reserva": reserva_id,
-        "fecha_inicio_hold_reserva": fecha_inicio_hold,
-        "tiempo_hold_reserva": tiempo_hold,
-        "id_hold_reserva": hold_id,
-    })
+    try:
+        api_reserva = ReservaGestionRest()
 
-    return redirect(f"/usuario/reservas/?{params}")
+        reserva = api_reserva.obtener_reserva_por_id(int(reserva_id))
+
+        if reserva:
+            dto = {
+                "idReserva": reserva["IdReserva"],
+                "idUnicoUsuario": int(usuario_id),  # ✅ ASOCIAMOS AQUÍ
+                "idUnicoUsuarioExterno": reserva.get("IdUnicoUsuarioExterno"),
+                "costoTotalReserva": reserva.get("CostoTotalReserva"),
+                "fechaRegistroReserva": reserva.get("FechaRegistroReserva"),
+                "fechaInicioReserva": reserva.get("FechaInicioReserva") or fecha_inicio_hold,
+                "fechaFinalReserva": reserva.get("FechaFinalReserva"),
+                "estadoGeneralReserva": reserva.get("EstadoGeneralReserva") or "PRE-RESERVA",
+                "estadoReserva": reserva.get("EstadoReserva"),
+            }
+
+            api_reserva.actualizar_reserva(int(reserva_id), dto)
+
+        else:
+            print(f"[WARN] No se encontró la reserva {reserva_id} para asociar")
+
+    except Exception as e:
+        print("❌ ERROR asociando reserva en crear_prereserva:", e)
+
+    return redirect(f"/usuario/reservas/")
 
 
 ## FUNCIONES PARA CONFIRMAR RESERVA
 @method_decorator(csrf_exempt, name="dispatch")
 class ConfirmarReservaInternaAjax(View):
+    def obtener_siguiente_id_factura(self):
+        facturas = FacturasGestionRest().obtener_facturas()
+        # Si no hay facturas, empezamos en 1
+        if not facturas:
+            return 1
+
+        max_id = max(
+            f["IdFactura"]
+            for f in facturas
+            if f.get("IdFactura") is not None
+        )
+        return max_id
 
     def post(self, request):
         try:
             data = json.loads(request.body)
-
             idHabitacion = data.get("idHabitacion")
             idHold = data.get("idHold")
             idUnicoUsuario = data.get("idUnicoUsuario")
             fechaInicio = data.get("fechaInicio")
             fechaFin = data.get("fechaFin")
             numeroHuespedes = data.get("numeroHuespedes")
-
             nombre = data.get("nombre")
             apellido = data.get("apellido")
             correo = data.get("correo")
             tipoDocumento = data.get("tipoDocumento")
             documento = data.get("documento")
-
+            numeroCuenta = data.get("numeroCuenta")
             # ==========================================
             # 2. VALIDACIONES
             # ==========================================
@@ -1173,16 +1110,15 @@ class ConfirmarReservaInternaAjax(View):
                 "fechaFin": fechaFin,
                 "numeroHuespedes": numeroHuespedes,
                 "correo": correo,
+                "numeroCuenta": numeroCuenta,
             }
 
             faltantes = [k for k, v in required.items() if not v]
-
             if faltantes:
                 return JsonResponse(
                     {"ok": False, "error": f"Faltan campos obligatorios: {', '.join(faltantes)}"},
                     status=400
                 )
-
             try:
                 idUnicoUsuario = int(idUnicoUsuario)
                 numeroHuespedes = int(numeroHuespedes)
@@ -1197,6 +1133,24 @@ class ConfirmarReservaInternaAjax(View):
                     {"ok": False, "error": "numeroHuespedes debe ser mayor a 0"},
                     status=400
                 )
+            # idHold debemos obtener de la reserva, el valor total
+            c_hold = HoldGestionRest().obtener_hold_por_id(id_hold=idHold)
+            id_reserva_pago = c_hold.get("IdReserva") or c_hold.get("IdReserva")
+            c_reserva = ReservaGestionRest().obtener_reserva_por_id(id_reserva_pago)
+            costo_total_reserva_pago = c_reserva.get("CostoTotalReserva")
+            costo = costo_total_reserva_pago
+            if not costo:
+                return JsonResponse({"ok": False, "error": "Fondos insuficientes"}, status=400)
+
+            try:
+                # 🔹 usamos la cuenta ingresada por el usuario
+                respuesta_banca = ejecutar_pago_banca_interno(costo, numeroCuenta)
+            except Exception as e:
+                return JsonResponse({
+                    "ok": False,
+                    "error": "No existen fondos suficientes en la cuenta",
+                    "detalle": str(e)
+                }, status=502)
 
             # ==========================================
             # 3. CONFIRMAR RESERVA (API REST)
@@ -1216,7 +1170,11 @@ class ConfirmarReservaInternaAjax(View):
                 numeroHuespedes=numeroHuespedes,
             )
 
-
+            with LOCK:
+                if idHold in HOLDS_CACHE:
+                    HOLDS_CACHE[idHold]["timer"].cancel()
+                    HOLDS_CACHE.pop(idHold)
+                    print(f"[HOLD] {idHold} limpiado por CONFIRMACIÓN")
             # ==========================================
             # 4. VALIDAR RESPUESTA DEL SP
             # ==========================================
@@ -1261,42 +1219,135 @@ class ConfirmarReservaInternaAjax(View):
                 documento=documento or "",
             )
 
+            try:
+                pago_api = PagoGestionRest()
 
+                # 1) obtener todos los pagos
+                pagos = pago_api.obtener_pagos() or []
+                if not isinstance(pagos, list):
+                    pagos = [pagos]
+
+                # 2) forzar id_factura a int
+                factura_id_int = int(factura.get("IdFactura") or factura.get("idFactura"))
+
+                # 3) buscar el pago cuyo IdFactura coincida
+                pago_encontrado = None
+                for p in pagos:
+                    try:
+                        if int(p.get("IdFactura")) == factura_id_int:
+                            pago_encontrado = p
+                            break
+                    except (TypeError, ValueError):
+                        continue
+
+                if pago_encontrado:
+                    id_pago = pago_encontrado.get("IdPago")
+
+                    # 4) obtener el pago por ID (opcional, pero como pediste)
+                    detalle = pago_api.obtener_pago_por_id(id_pago)
+
+                    # si por alguna razón vino None, usamos el encontrado en lista
+                    if not detalle:
+                        detalle = pago_encontrado
+
+                    # 5) actualizar el pago SOLO cambiando cuentas
+                    pago_api.actualizar_pago(
+                        id_pago=int(detalle.get("IdPago")),
+                        id_metodo_pago=int(detalle.get("IdMetodoPago")),
+                        id_unico_usuario_externo=detalle.get("IdUnicoUsuarioExterno"),
+                        id_unico_usuario=int(detalle.get("IdUnicoUsuario")),
+                        id_factura=factura_id_int,
+                        cuenta_origen=numeroCuenta,
+                        cuenta_destino=str(settings.CUENTA_ADMIN_ID),
+                        monto_total=detalle.get("MontoTotalPago"),
+                        fecha_emision=None,
+                        estado_pago=bool(detalle.get("EstadoPago", True)),
+                    )
+                    print(f"[PAGO] Actualizado pago {id_pago} para factura {factura_id_int}")
+                else:
+                    print(f"[PAGO] No se encontró pago asociado a factura {factura_id_int}")
+
+            except Exception as e:
+                # NO rompemos el flujo de la reserva/factura si falla el update de pago,
+                # solo lo registramos para revisar.
+                print("[PAGO] Error actualizando cuentas de pago:", str(e))
             # ------------------------
             # 7. GENERAR PDF
             # ------------------------
-            id_factura = factura.get("IdFactura")
+            id_factura = self.obtener_siguiente_id_factura()
             if not id_factura:
                 return JsonResponse({"ok": False, "error": "Factura sin Id"}, status=400)
-            # ==========================================
-            # 8. EJECUTAR PAGO EN BANCA EXTERNA
-            # ==========================================
-            costo = resultado.get("CostoTotalReserva")
+            print(f"ID DE FACTURA NUEVA {id_factura}")
+            hab_api = HabxResGestionRest()
+            habxres = hab_api.obtener_habxres() or []
 
-            if not costo:
-                return JsonResponse({"ok": False, "error": "No se pudo obtener el monto del pago"}, status=400)
+            # Filtrar por ID_RESERVA
+            habxres_reserva = [
+                h for h in habxres
+                if int(h.get("IdReserva")) == int(idReserva)
+            ]
+            desx_api = DesxHabxResGestionRest()
+            desxhabxres = desx_api.obtener_desxhabxres() or []
+            desc_api = DescuentosGestionRest()
+            descuentos = desc_api.obtener_descuentos() or []
+            desc_api = DescuentosGestionRest()
+            descuentos = desc_api.obtener_descuentos() or []
+            map_descuentos = {
+                int(d["IdDescuento"]): d
+                for d in descuentos
+            }
+            habitaciones = []
 
-            try:
-                respuesta_banca = ejecutar_pago_banca_interno(costo)
-            except Exception as e:
-                return JsonResponse({
-                    "ok": False,
-                    "error": "La reserva se creó pero el pago falló",
-                    "detalle": str(e)
-                }, status=502)
+            for hab in habxres_reserva:
+                id_habxres = int(hab["IdHabxRes"])
+
+                # Buscar descuentos por ese HABXRES
+                desx = [
+                    d for d in desxhabxres
+                    if int(d.get("IdHabxRes")) == id_habxres and d.get("EstadoDesxHabxRes") is True
+                ]
+
+                descuentos_hab = []
+
+                for d in desx:
+                    id_desc = int(d["IdDescuento"])
+                    desc = map_descuentos.get(id_desc)
+
+                    if desc:
+                        descuentos_hab.append({
+                            "nombre": desc.get("NombreDescuento"),
+                            "monto": d.get("MontoDesxHabxRes")
+                        })
+
+                subtotal = hab.get("CostoCalculadoHabxRes") or 0
+                descuentos_total = sum(float(d["monto"] or 0) for d in descuentos_hab)
+                impuestos = hab.get("ImpuestosHabxRes") or 0
+
+                total = float(subtotal) - float(descuentos_total) + float(impuestos)
+
+                habitaciones.append({
+                    "habitacion": hab.get("IdHabitacion"),
+                    "capacidad": hab.get("CapacidadReservaHabxRes"),
+                    "subtotal": subtotal,
+                    "impuestos": impuestos,
+                    "descuentos": descuentos_hab,
+                    "total": round(total, 2)
+                })
 
             pdf_bytes = generar_pdf_factura_html(
                 id_factura,
                 {
                     "id_reserva": idReserva,
                     "cliente": f"{nombre} {apellido}",
+                    "fecha_inicio": resultado.get("FechaInicio"),
+                    "fecha_fin": resultado.get("FechaFin"),
+                    "habitaciones": habitaciones,
                     "total": resultado.get("CostoTotalReserva"),
                 }
             )
 
-            ruta = f"facturas/carlos/{id_factura}.pdf"
+            ruta = 'facturas/carlos/' + str(id_factura) + '.pdf'
             url_pdf = subir_pdf_a_s3(pdf_bytes, ruta)
-
 
             # ==========================================
             # 8. RESPUESTA FINAL
@@ -1314,6 +1365,7 @@ class ConfirmarReservaInternaAjax(View):
                 {"ok": False, "error": str(e)},
                 status=500
             )
+
 
 class CancelarReservaAjax(View):
     """
@@ -1343,9 +1395,11 @@ class CancelarReservaAjax(View):
 
             # 2) Llamar al microservicio REST
             api = FuncionesEspecialesGestionRest()
-            print("id_hold = ", id_hold)
             resultado = api.cancelar_prereserva(id_hold)
-
+            with LOCK:
+                if id_hold in HOLDS_CACHE:
+                    HOLDS_CACHE[id_hold]["timer"].cancel()
+                    HOLDS_CACHE.pop(id_hold)
             return JsonResponse({
                 "ok": True,
                 "resultado": resultado
@@ -1383,28 +1437,113 @@ def usuario_gestion(request):
     return render(request, "webapp/usuario/cliente/gestion/index.html")
 
 
-from django.shortcuts import render
-
 
 @admin_required
 def usuario_gestion_administrador(request):
-    """
-    Vista principal del panel administrativo.
-    Solo accesible para usuarios con rol = 2 (administrador).
-    """
-    return render(request, "webapp/usuario/administrador/gestion/index.html")
+    """ Vista principal del panel administrativo. Solo accesible para usuarios con rol = 2 (administrador). """
+    return render(request,"webapp/usuario/administrador/gestion/index.html")
 
+@csrf_exempt
+def usuario_actualizar_administrador(request):
+    """
+    Actualiza el perfil del administrador (SOAP)
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Método no permitido"}, status=405)
+
+    api = UsuarioInternoGestionRest()
+
+    try:
+        # ===========================
+        # ID DESDE FRONT (localStorage)
+        # ===========================
+        id_usuario = request.POST.get("id")
+
+        if not id_usuario:
+            return JsonResponse({
+                "status": "error",
+                "message": "No se envió el ID del usuario"
+            }, status=400)
+
+        id_usuario = int(id_usuario)
+
+        # ===========================
+        # USUARIO ACTUAL
+        # ===========================
+        usuario_actual = api.obtener_por_id(id_usuario)
+
+        if not usuario_actual:
+            return JsonResponse({
+                "status": "error",
+                "message": "Usuario no encontrado"
+            }, status=404)
+
+        # ===========================
+        # DATOS FORM
+        # ===========================
+        nombre = request.POST.get("nombre", "").strip()
+        apellido = request.POST.get("apellido", "").strip()
+        correo = request.POST.get("correo", "").strip()
+        tipo_doc = request.POST.get("tipo_doc", "").strip()
+        documento = request.POST.get("documento", "").strip()
+
+        # ===========================
+        # VALIDACIONES
+        # ===========================
+        if not nombre or not apellido:
+            return JsonResponse({"status": "error", "message": "Nombre y apellido son obligatorios"}, status=400)
+
+        if not correo or "@" not in correo:
+            return JsonResponse({"status": "error", "message": "Correo inválido"}, status=400)
+
+        if not tipo_doc:
+            return JsonResponse({"status": "error", "message": "Debe seleccionar tipo de documento"}, status=400)
+
+        if not documento:
+            return JsonResponse({"status": "error", "message": "Documento obligatorio"}, status=400)
+
+        # ===========================
+        # CONSTRUIR DTO
+        # ===========================
+        dto = {
+            "Id": usuario_actual["Id"],
+            "IdRol": usuario_actual["IdRol"],
+            "Nombre": nombre,
+            "Apellido": apellido,
+            "Correo": correo,
+            "Clave": usuario_actual["Clave"],  # no alterar clave
+            "Estado": usuario_actual["Estado"],
+            "FechaNacimiento": usuario_actual["FechaNacimiento"],
+            "TipoDocumento": tipo_doc,
+            "Documento": documento
+        }
+
+        # ===========================
+        # ACTUALIZAR SOAP
+        # ===========================
+        api.actualizar(dto)
+
+        return JsonResponse({
+            "status": "ok",
+            "message": "Perfil actualizado correctamente"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
 
 def mis_pagos(request):
-    import time
-    start_time = time.time()
+    import time, threading
 
+    start_time = time.time()
     usuario_id = request.GET.get("uid")
 
     if not usuario_id:
         return render(request, "webapp/pagos/index.html", {
             "pagos": [],
-            "error": "Debe iniciar sesión para ver sus pagos."
+            "error": ""
         })
 
     usuario_id = int(usuario_id)
@@ -1413,21 +1552,33 @@ def mis_pagos(request):
     api_facturas = FacturasGestionRest()
     api_pdf = PdfGestionRest()
 
-    # OPTIMIZACIÓN: Cargar datos en paralelo
     datos = {
-        "lista_pagos": None,
-        "lista_facturas": None,
-        "lista_pdfs": None,
+        "lista_pagos": [],
+        "lista_facturas": [],
+        "lista_pdfs": [],
     }
 
+    # ✅ PROTEGER LOS HILOS CON TRY EXCEPT
     def cargar_pagos():
-        datos["lista_pagos"] = api_pagos.obtener_pagos()
+        try:
+            datos["lista_pagos"] = api_pagos.obtener_pagos() or []
+        except Exception as e:
+            print("ERROR PAGOS:", e)
+            datos["lista_pagos"] = []
 
     def cargar_facturas():
-        datos["lista_facturas"] = api_facturas.obtener_facturas()
+        try:
+            datos["lista_facturas"] = api_facturas.obtener_facturas() or []
+        except Exception as e:
+            print("ERROR FACTURAS:", e)
+            datos["lista_facturas"] = []
 
     def cargar_pdfs():
-        datos["lista_pdfs"] = api_pdf.obtener_pdfs()
+        try:
+            datos["lista_pdfs"] = api_pdf.obtener_pdfs() or []
+        except Exception as e:
+            print("ERROR PDF:", e)
+            datos["lista_pdfs"] = []
 
     threads = [
         threading.Thread(target=cargar_pagos),
@@ -1440,27 +1591,21 @@ def mis_pagos(request):
     for t in threads:
         t.join()
 
-    try:
-        lista_pagos = datos["lista_pagos"]
-        lista_facturas = datos["lista_facturas"]
-        lista_pdfs = datos["lista_pdfs"]
-    except Exception as e:
-        return render(request, "webapp/pagos/index.html", {
-            "pagos": [],
-            "error": f"Error al conectar con el servidor: {e}"
-        })
+    # ✅ YA NUNCA SERÁ NONE
+    lista_pagos    = datos["lista_pagos"]
+    lista_facturas = datos["lista_facturas"]
+    lista_pdfs     = datos["lista_pdfs"]
 
-    # Convertir facturas por ID
-    facturas_dict = {f["IdFactura"]: f for f in lista_facturas}
+    # Diccionario de facturas por ID
+    facturas_dict = {f.get("IdFactura"): f for f in lista_facturas if f.get("IdFactura")}
 
-    # Convertir pdfs por factura
+    # PDFs por factura
     pdf_por_factura = {}
     for p in lista_pdfs:
         fid = p.get("IdFactura")
         if fid:
             pdf_por_factura[fid] = p
 
-    # Filtrar pagos del usuario
     pagos_usuario = [
         p for p in lista_pagos if p.get("IdUnicoUsuario") == usuario_id
     ]
@@ -1480,14 +1625,10 @@ def mis_pagos(request):
             estado_pdf = pdf.get("EstadoPdf")
             url_pdf = pdf.get("UrlPdf")
 
-        # reparar fecha
         raw_fecha = p.get("FechaEmisionPago")
         fecha = ""
         if raw_fecha and isinstance(raw_fecha, str):
-            if "-" in raw_fecha:
-                fecha = raw_fecha[:10]
-            else:
-                fecha = "Fecha no disponible"
+            fecha = raw_fecha[:10] if "-" in raw_fecha else "Fecha no disponible"
 
         pagos_final.append({
             "id": p.get("IdPago"),
@@ -1498,18 +1639,17 @@ def mis_pagos(request):
             "cuenta_origen": p.get("CuentaOrigenPago"),
             "cuenta_destino": p.get("CuentaDestinoPago"),
             "metodo": p.get("IdMetodoPago"),
-
-            # Datos factura
             "factura": factura,
             "pdf_estado": estado_pdf,
             "pdf_url": url_pdf,
         })
 
-    elapsed = time.time() - start_time
-    print(f"[PERF] mis_pagos: {elapsed:.2f}s")
+    elapsed = round(time.time() - start_time, 3)
 
-    return render(request, "webapp/pagos/index.html", {"pagos": pagos_final})
-
+    return render(request, "webapp/pagos/index.html", {
+        "pagos": pagos_final,
+        "tiempo": elapsed,
+    })
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -1605,57 +1745,77 @@ def generar_pdf_factura(request):
 
 ################################################################
 ################################################################
-def programar_cancelacion_hold(id_hold: str):
-    """
-    Obtiene la información del HOLD desde el API y programa,
-    en un thread, la cancelación automática cuando venza.
-    """
-    if not id_hold:
-        return
-
+def programar_cancelacion_hold(id_hold):
     try:
-        hold_api = HoldGestionRest()
-        hold = hold_api.obtener_hold_por_id(id_hold)
+        hold = HoldGestionRest().obtener_hold_por_id(id_hold)
+        tiempo_hold = int(hold.get("TiempoHold") or hold.get("tiempoHold") or 600)
 
-        if not hold:
-            print(f"[HOLD] No se encontró el HOLD {id_hold}")
-            return
+        ahora = datetime.now()
+        expiracion = ahora + timedelta(seconds=tiempo_hold)
 
-        # Los nombres pueden venir con diferentes mayúsculas
-        tiempo_hold = hold.get("TiempoHold") or hold.get("tiempoHold")
-        fecha_inicio_str = hold.get("FechaInicioHold") or hold.get("fechaInicioHold")
 
-        if tiempo_hold is None or not fecha_inicio_str:
-            print(
-                f"[HOLD] Datos incompletos para {id_hold}. tiempo_hold={tiempo_hold}, fecha_inicio={fecha_inicio_str}")
-            return
+        def cancelar():
 
-        # Parsear la fecha de inicio (ISO 8601)
-        fecha_inicio = datetime.fromisoformat(fecha_inicio_str.replace("Z", "+00:00"))
-        expiracion = fecha_inicio + timedelta(seconds=int(tiempo_hold))
-
-        # Tiempo restante desde ahora
-        ahora = datetime.utcnow().replace(tzinfo=fecha_inicio.tzinfo)
-        segundos_restantes = (expiracion - ahora).total_seconds()
-
-        if segundos_restantes <= 0:
-            segundos_restantes = 1  # cancelar casi inmediato
-
-        def _cancelar():
             try:
-                print(f"[HOLD] Cancelando pre-reserva para HOLD {id_hold}...")
                 FuncionesEspecialesGestionRest().cancelar_prereserva(id_hold)
-                print(f"[HOLD] HOLD {id_hold} cancelado correctamente.")
-            except Exception as e:
-                print(f"[HOLD] Error al cancelar HOLD {id_hold}: {e}")
 
-        t = threading.Timer(segundos_restantes, _cancelar)
-        t.daemon = True
-        t.start()
-        print(f"[HOLD] Programada cancelación de {id_hold} en {segundos_restantes:.0f} segundos")
+                a = ReservaGestionRest()
+                c = a.obtener_reserva_por_id(int(hold.get("IdReserva")))
+                id_unico_usuario = c.get("IdUnicoUsuario")
+                id_unico_usuario = int(id_unico_usuario) if id_unico_usuario else None
+
+                id_unico_usuario_externo = c.get("IdUnicoUsuarioExterno")
+                id_unico_usuario_externo = None
+
+                costo_total = c.get("CostoTotalReserva")
+                costo_total = float(costo_total) if costo_total else None
+
+                fecha_registro = c.get("FechaRegistroReserva")
+                fecha_inicio = c.get("FechaInicioReserva")
+                fecha_final = c.get("FechaFinalReserva")
+
+                estado_general = c.get("EstadoGeneralReserva")
+
+                # Obtener el estado actual del registro si no se envía
+                estado_enviado = c.get("EstadoReserva")
+                if estado_enviado is not None:
+                    estado_reserva = estado_enviado == "true"
+                else:
+                    # Obtener el estado actual del registro
+                    registro_actual = c.obtener_reserva_por_id(int(hold.get("IdReserva")))
+                    estado_reserva = registro_actual.get("EstadoReserva", True) if registro_actual else True
+
+                dto = {
+                    "idReserva": int(hold.get("IdReserva")),
+                    "idUnicoUsuario": id_unico_usuario,
+                    "idUnicoUsuarioExterno": id_unico_usuario_externo,
+                    "costoTotalReserva": costo_total,
+                    "fechaRegistroReserva": fecha_registro,
+                    "fechaInicioReserva": fecha_inicio,
+                    "fechaFinalReserva": fecha_final,
+                    "estadoGeneralReserva": "EXPIRADO",
+                    "estadoReserva": estado_reserva
+                }
+
+                a.actualizar_reserva(int(hold.get("IdReserva")), dto)
+            finally:
+                with LOCK:
+                    HOLDS_CACHE.pop(id_hold, None)
+
+        # crear temporizador
+        timer = threading.Timer(tiempo_hold, cancelar)
+        timer.daemon = True
+        timer.start()
+
+        # ✅ guardar en memoria
+        with LOCK:
+            HOLDS_CACHE[id_hold] = {
+                "expira": expiracion,
+                "timer": timer
+            }
 
     except Exception as e:
-        print(f"[HOLD] Error al programar cancelación para {id_hold}: {e}")
+        print(f"[HOLD] Error programando HOLD: {e}")
 
 
 def vista_pago(request):
@@ -1663,21 +1823,88 @@ def vista_pago(request):
     Muestra la página de pago (formulario).
     """
     return render(request, "webapp/test/pago.html")
-def ejecutar_pago_banca_interno(monto):
+
+
+def ejecutar_pago_banca_interno(monto, cuenta_origen):
     """
-    Ejecuta el pago contra la API bancaria y retorna dict resultado.
-    Lanza excepción si falla.
+    Ejecuta el pago contra la API bancaria externa.
     """
+
+    if not cuenta_origen:
+        raise ValueError("Cuenta origen requerida para ejecutar el pago")
+
     data = {
-        "cuenta_origen": settings.CUENTA_USUARIO_ID,
-        "cuenta_destino": settings.CUENTA_ADMIN_ID,
+        "cuenta_origen": str(cuenta_origen),
+        "cuenta_destino": str(settings.CUENTA_ADMIN_ID),
         "monto": float(monto),
         "fecha_transaccion": timezone.now().isoformat(),
-        "tipo_transaccion": "Pago",
+        "tipo_transaccion": "Pago Reserva",
     }
 
     url = f"{settings.URL_BANCA_APP}/api/Transacciones"
-    response = requests.post(url, json=data, timeout=10)
-    response.raise_for_status()
 
-    return response.text   # XML o texto
+    try:
+        response = requests.post(url, json=data, timeout=10)
+        response.raise_for_status()
+        return response.text
+
+    except requests.exceptions.Timeout:
+        raise ConnectionError("Tiempo agotado al contactar al banco")
+
+    except requests.exceptions.ConnectionError:
+        raise ConnectionError("No se pudo conectar con el banco")
+
+    except requests.exceptions.HTTPError:
+        raise ValueError(f"Error bancario: {response.text}")
+
+
+def tiempo_hold(request, id_hold):
+    with LOCK:
+        data = HOLDS_CACHE.get(id_hold)
+
+    if not data:
+        return JsonResponse({
+            "activo": False,
+            "segundos": 0
+        })
+
+    ahora = datetime.now()
+    restantes = int((data["expira"] - ahora).total_seconds())
+
+    return JsonResponse({
+        "activo": True,
+        "segundos": max(restantes, 0)
+    })
+
+
+import requests
+import json
+from django.views import View
+from django.http import JsonResponse
+from utils.banca import obtener_cuentas_bancarias
+
+
+def cuenta_existe(cuenta):
+    cuentas = obtener_cuentas_bancarias()
+    return str(cuenta) in cuentas
+
+
+class ListaCuentasXMLView(View):
+    URL_API = "http://mibanca.runasp.net/api/cuentas"
+
+    def get(self, request):
+        try:
+
+            cuentas = obtener_cuentas_bancarias()
+
+            return JsonResponse({
+                "status": "ok",
+                "total": len(cuentas),
+                "cuentas": cuentas
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            }, status=500)

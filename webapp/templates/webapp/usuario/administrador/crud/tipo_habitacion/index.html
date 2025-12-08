@@ -165,33 +165,38 @@ function abrirModalCrearTipoHabitacion(){
     $("#modalCrearTipoHabitacion").modal("show");
 }
 
-function crearTipoHabitacion(){
+
+function crearTipoHabitacion(btn){
+
+    bloquearBoton(btn, "Guardando...");
 
     const idTipo = $("#crear_IdTipoHabitacion").val().trim();
     const nombre = $("#crear_NombreHabitacion").val().trim();
 
     if(!idTipo || !nombre){
         crudNotify("warning","El ID y el Nombre son obligatorios.");
+        desbloquearBoton(btn);
         return;
     }
 
     if(isNaN(parseInt(idTipo))){
         crudNotify("warning","El ID debe ser numérico.");
+        desbloquearBoton(btn);
         return;
     }
 
-    // El view espera: id_tipo, nombre, descripcion (opcional), estado
     crudCreate(
         URL_CREATE_TIPO,
         {
             id_tipo: parseInt(idTipo),
-            nombre:  nombre,
-            descripcion: "",       // si luego agregas campo descripción lo envías aquí
-            estado:  true          // se crea siempre activo
+            nombre: nombre,
+            descripcion: "",
+            estado: true
         },
         () => {
             $("#modalCrearTipoHabitacion").modal("hide");
             cargarTiposHabitacion(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }
@@ -218,7 +223,9 @@ function abrirModalEditarTipoHabitacion(id){
     });
 }
 
-function actualizarTipoHabitacion(){
+function actualizarTipoHabitacion(btn){
+
+    bloquearBoton(btn, "Guardando...");
 
     const idTipo = $("#editar_IdTipoHabitacion").val();
     const nombre = $("#editar_NombreHabitacion").val().trim();
@@ -226,10 +233,10 @@ function actualizarTipoHabitacion(){
 
     if(!nombre){
         crudNotify("warning", "El nombre es obligatorio.");
+        desbloquearBoton(btn);
         return;
     }
 
-    // el view espera nombre, descripcion, estado
     crudUpdate(
         URL_UPDATE_TIPO(idTipo),
         {
@@ -240,6 +247,7 @@ function actualizarTipoHabitacion(){
         () => {
             $("#modalEditarTipoHabitacion").modal("hide");
             cargarTiposHabitacion(currentPage);
+            desbloquearBoton(btn);
         }
     );
 }

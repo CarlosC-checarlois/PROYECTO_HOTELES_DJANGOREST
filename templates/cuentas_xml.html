@@ -1,0 +1,23 @@
+<h2>Lista de cuentas bancarias</h2>
+
+{% if error %}
+    <p style="color:red;"><b>Error:</b> {{ error }}</p>
+{% endif %}
+
+{% if cuentas %}
+    <h4>Formato detectado: {{ formato }}</h4>
+    <h4>Total cuentas: {{ total }}</h4>
+
+    <ul>
+        {% for id in cuentas %}
+            <li>Cuenta ID: {{ id }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if raw %}
+    <h3>Contenido recibido (debug)</h3>
+    <pre style="background:#111;color:#0f0;padding:10px;max-height:400px;overflow:auto;">
+{{ raw }}
+    </pre>
+{% endif %}

@@ -102,7 +102,12 @@
 
 <div class="modal-footer">
 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-<button class="btn btn-success" onclick="crearDescuento()">Guardar</button>
+<button type="button"
+        class="btn btn-success"
+        id="btnCrearDescuento"
+        onclick="crearDescuento()">
+    Guardar
+</button>
 </div>
 
 </div>
@@ -165,7 +170,13 @@
 
 <div class="modal-footer">
 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-<button class="btn btn-primary" onclick="actualizarDescuento()">Guardar cambios</button>
+<button type="button"
+        class="btn btn-primary"
+        id="btnActualizarDescuento"
+        onclick="actualizarDescuento()">
+    Guardar
+</button>
+
 </div>
 
 </div>
@@ -194,6 +205,22 @@ function obtenerNextIdDescuento(){
         $("#crear_IdDescuento").val(resp.next);
     });
 }
+function formatearDescuento(valor) {
+
+    let num = parseFloat(valor);
+
+    // Si viene mal, NaN, null o vacío
+    if (isNaN(num)) {
+        return "0.01";
+    }
+
+    // Si es 0 o negativo
+    if (num <= 0) {
+        return "0.01";
+    }
+
+    return num.toFixed(2);
+}
 
 /* ===== LISTADO ===== */
 function cargarDescuentos(page=1){
@@ -218,7 +245,8 @@ tbody.append(`
 <tr class="${d.EstadoDescuento?'':'table-secondary'}">
 <td>${d.IdDescuento}</td>
 <td>${d.NombreDescuento}</td>
-<td>${parseFloat(d.ValorDescuento).toFixed(2)}%</td>
+<td>${formatearDescuento(d.ValorDescuento)}%</td>
+
 <td>${d.FechaInicioDescuento?.split("T")[0]}</td>
 <td>${d.FechaFinDescuento?.split("T")[0]}</td>
 <td>${estado}</td>
@@ -271,29 +299,44 @@ iniciarLitepicker("rangoFechas","crear");
 $("#modalCrearDescuento").modal("show");
 }
 
-function crearDescuento(){
-const nombre=$("#crear_NombreDescuento").val().trim();
-const valor=parseFloat($("#crear_ValorDescuento").val());
-const inicio=$("#crear_fechaEntrada").val();
-const fin=$("#crear_fechaSalida").val();
-    if (valor > 100) return crudNotify("warning", "El descuento no puede ser mayor al 100%.");
+function crearDescuento() {
 
-if(!nombre) return crudNotify("warning","Nombre obligatorio");
-if(isNaN(valor)||valor<=0) return crudNotify("warning","Valor inválido");
-if(!inicio||!fin) return crudNotify("warning","Seleccione fechas");
+    const btn = document.getElementById("btnCrearDescuento");
 
-crudCreate(URL_CREATE,{
-IdDescuento:$("#crear_IdDescuento").val(),
-NombreDescuento:nombre,
-ValorDescuento:valor,
-FechaInicioDescuento:inicio+"T00:00:00",
-FechaFinDescuento:fin+"T00:00:00",
-EstadoDescuento:$("#crear_EstadoDescuento").is(":checked")
-},()=>{
-$("#modalCrearDescuento").modal("hide");
-cargarDescuentos(PAGINA_ACTUAL);
-});
+    const nombre = $("#crear_NombreDescuento").val().trim();
+    const valor  = parseFloat($("#crear_ValorDescuento").val());
+    const inicio = $("#crear_fechaEntrada").val();
+    const fin    = $("#crear_fechaSalida").val();
+    const activo = $("#crear_EstadoDescuento").is(":checked");
+
+    if (!nombre) return crudNotify("warning", "Nombre obligatorio");
+    if (isNaN(valor) || valor <= 0) return crudNotify("warning", "Valor inválido");
+    if (valor > 100) return crudNotify("warning", "Máximo permitido: 100%");
+    if (!inicio || !fin) return crudNotify("warning", "Seleccione fechas");
+
+    bloquearBoton(btn, "Guardando...");
+
+    $.post(URL_CREATE, {
+        IdDescuento: $("#crear_IdDescuento").val(),
+        NombreDescuento: nombre,
+        ValorDescuento: valor,
+        FechaInicioDescuento: inicio + "T00:00:00",
+        FechaFinDescuento: fin + "T00:00:00",
+        EstadoDescuento: activo
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Descuento creado.");
+        $("#modalCrearDescuento").modal("hide");
+        cargarDescuentos(PAGINA_ACTUAL);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al crear.");
+    })
+    .always(() => {
+        desbloquearBoton(btn);
+    });
 }
+
 
 /* ===== EDITAR ===== */
 function abrirModalEditarDescuento(id) {
@@ -304,121 +347,93 @@ function abrirModalEditarDescuento(id) {
 
         $("#editar_IdDescuento").val(d.IdDescuento);
         $("#editar_NombreDescuento").val(d.NombreDescuento);
-        $("#editar_ValorDescuento").val(d.ValorDescuento);
+
+        // ✅ AQUÍ VA EL FIX CLAVE
+        $("#editar_ValorDescuento").val(formatearDescuento(d.ValorDescuento));
+
         $("#editar_EstadoDescuento").prop("checked", d.EstadoDescuento);
 
-        // Fechas del backend (YYYY-MM-DD)
         const fechaInicio = d.FechaInicioDescuento?.split("T")[0];
         const fechaFin    = d.FechaFinDescuento?.split("T")[0];
 
         $("#editar_fechaEntrada").val(fechaInicio);
         $("#editar_fechaSalida").val(fechaFin);
 
-        // Mostrar rango en el input de texto (DD/MM/YYYY — DD/MM/YYYY)
         $("#editar_rangoFechas").val(
             fechaInicio.split("-").reverse().join("/") + " — " +
             fechaFin.split("-").reverse().join("/")
         );
 
-        // Destruir picker viejo si existe
         if (window.pickerEditar) {
             window.pickerEditar.destroy();
         }
 
-// Calculamos minDate = fechaInicio - 1 día
-const minDateObj = new Date(fechaInicio);   // fechaInicio viene en "YYYY-MM-DD"
-minDateObj.setDate(minDateObj.getDate() - 1);
+        const minDateObj = new Date(fechaInicio);
+        minDateObj.setDate(minDateObj.getDate() - 1);
 
-window.pickerEditar = new Litepicker({
-    element: document.getElementById("editar_rangoFechas"),
-    singleMode: false,
-    autoApply: true,
-    format: "DD/MM/YYYY",
-    numberOfMonths: 2,
-    numberOfColumns: 2,
-    minDate: minDateObj,           // 👈 ahora permite el mismo día de inicio
-    tooltipText: { one: 'noche', other: 'noches' },
-    tooltipNumber: total => total - 1,
-    setup: (picker) => {
-        picker.on('selected', (d1, d2) => {
-            $("#editar_fechaEntrada").val(d1.format("YYYY-MM-DD"));
-            $("#editar_fechaSalida").val(d2.format("YYYY-MM-DD"));
+        window.pickerEditar = new Litepicker({
+            element: document.getElementById("editar_rangoFechas"),
+            singleMode: false,
+            autoApply: true,
+            format: "DD/MM/YYYY",
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            minDate: minDateObj,
+            tooltipText: { one: 'noche', other: 'noches' },
+            tooltipNumber: total => total - 1,
+            setup: (picker) => {
+                picker.on('selected', (d1, d2) => {
+                    $("#editar_fechaEntrada").val(d1.format("YYYY-MM-DD"));
+                    $("#editar_fechaSalida").val(d2.format("YYYY-MM-DD"));
+                });
+
+                picker.setDateRange(fechaInicio, fechaFin);
+            }
         });
-
-        picker.setDateRange(fechaInicio, fechaFin);
-    }
-});
 
         $("#modalEditarDescuento").modal("show");
     });
 }
 
 
+
 function actualizarDescuento() {
+
+    const btn = document.getElementById("btnActualizarDescuento");
+
     const id      = $("#editar_IdDescuento").val();
     const nombre  = $("#editar_NombreDescuento").val().trim();
-    const valorStr= $("#editar_ValorDescuento").val();
+    const valor   = parseFloat($("#editar_ValorDescuento").val());
     const inicio  = $("#editar_fechaEntrada").val();
     const fin     = $("#editar_fechaSalida").val();
     const activo  = $("#editar_EstadoDescuento").is(":checked");
 
-    // ===== VALIDACIONES =====
+    if (!nombre) return crudNotify("warning", "Nombre obligatorio");
+    if (isNaN(valor) || valor <= 0) return crudNotify("warning", "Valor inválido");
+    if (valor > 100) return crudNotify("warning", "Máximo permitido: 100%");
+    if (!inicio || !fin) return crudNotify("warning", "Seleccione rango");
 
-    if (!nombre) {
-        crudNotify("warning", "El nombre del descuento es obligatorio.");
-        return;
-    }
+    bloquearBoton(btn, "Actualizando...");
 
-    if (!valorStr) {
-        crudNotify("warning", "Ingresa el valor del descuento.");
-        return;
-    }
-
-    const valor = parseFloat(valorStr);
-
-    if (isNaN(valor)) {
-        crudNotify("warning", "El valor del descuento debe ser numérico.");
-        return;
-    }
-
-    if (valor <= 0) {
-        crudNotify("warning", "El valor del descuento debe ser mayor a 0.");
-        return;
-    }
-
-    if (valor > 100) {
-        crudNotify("warning", "El valor del descuento no puede ser mayor al 100%.");
-        return;
-    }
-
-    if (!inicio || !fin) {
-        crudNotify("warning", "Debes seleccionar el periodo de vigencia.");
-        return;
-    }
-
-    // Validar que fin no sea antes que inicio
-    if (new Date(fin) < new Date(inicio)) {
-        crudNotify("warning", "La fecha de fin no puede ser anterior a la fecha de inicio.");
-        return;
-    }
-
-    // ===== LLAMADA AJAX =====
-    crudUpdate(
-        URL_UPDATE(id),
-        {
-            NombreDescuento: nombre,
-            ValorDescuento: valor,
-            FechaInicioDescuento: inicio + "T00:00:00",
-            FechaFinDescuento:   fin    + "T00:00:00",
-            EstadoDescuento: activo
-        },
-        () => {
-            $("#modalEditarDescuento").modal("hide");
-            cargarDescuentos(PAGINA_ACTUAL);
-        }
-    );
+    $.post(URL_UPDATE(id), {
+        NombreDescuento: nombre,
+        ValorDescuento: valor,
+        FechaInicioDescuento: inicio + "T00:00:00",
+        FechaFinDescuento: fin + "T00:00:00",
+        EstadoDescuento: activo
+    })
+    .done(resp => {
+        crudNotify("success", resp.message || "Descuento actualizado.");
+        $("#modalEditarDescuento").modal("hide");
+        cargarDescuentos(PAGINA_ACTUAL);
+    })
+    .fail(xhr => {
+        crudNotify("error", xhr.responseJSON?.message || "Error al actualizar.");
+    })
+    .always(() => {
+        desbloquearBoton(btn);
+    });
 }
-
 
 /* ===== ELIMINAR ===== */
 function eliminarDescuento(id){

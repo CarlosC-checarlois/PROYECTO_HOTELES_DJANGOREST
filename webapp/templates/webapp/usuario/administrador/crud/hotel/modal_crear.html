@@ -1,49 +1,56 @@
 <div class="modal fade" id="modalCrearHotel" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-      <!-- HEADER -->
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-plus-circle me-2"></i> Crear Hotel
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i> Crear Hotel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
 
-      <!-- BODY -->
-      <div class="modal-body">
+            <!-- BODY -->
+            <div class="modal-body">
 
-        <div class="mb-3">
-          <label class="form-label fw-bold">ID Hotel</label>
-          <input type="text"
-                 id="crear_IdHotel"
-                 class="form-control readonly-input"
-                 readonly>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">ID Hotel</label>
+                    <input type="text"
+                           id="crear_IdHotel"
+                           class="form-control readonly-input"
+                           readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre del Hotel</label>
+                    <input type="text"
+                           id="crear_NombreHotel"
+                           class="form-control"
+                           placeholder="Ej: Hotel Genérico">
+                </div>
+
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="crear_EstadoHotel" checked>
+                    <label class="form-check-label fw-bold" for="crear_EstadoHotel">
+                        Activo
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button"
+                        class="btn btn-success"
+                        id="btnCrearHotel"
+                        onclick="crearHotel(this)">
+                    Guardar
+                </button>
+
+            </div>
+
         </div>
-
-        <div class="mb-3">
-          <label class="form-label fw-bold">Nombre del Hotel</label>
-          <input type="text"
-                 id="crear_NombreHotel"
-                 class="form-control"
-                 placeholder="Ej: Hotel Genérico">
-        </div>
-
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="checkbox" id="crear_EstadoHotel" checked>
-          <label class="form-check-label fw-bold" for="crear_EstadoHotel">
-            Activo
-          </label>
-        </div>
-
-      </div>
-
-      <!-- FOOTER -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-success" onclick="crearHotel()">Guardar</button>
-      </div>
-
     </div>
-  </div>
 </div>

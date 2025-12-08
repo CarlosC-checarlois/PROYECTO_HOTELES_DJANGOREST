@@ -7,57 +7,59 @@
 
 {% block css_archivos %}
 <style>
-    :root {
-        --color-principal: #3b82f6;
-        --color-secundario: #6c5ce7;
-        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
-    }
+:root {
+    --color-principal: #2563eb;
+    --color-secundario: #6366f1;
+}
 
-    body {
-        background: #f5f7fb;
-    }
+body {
+    background: #f4f6fb;
+}
 
-    .perfil-wrapper {
-        max-width: 750px;
-        margin: auto;
-        padding: 2rem;
-    }
+.perfil-wrapper {
+    max-width: 800px;
+    margin: auto;
+    padding: 2.5rem 1rem;
+}
 
-    .card-perfil {
-        border-radius: 1rem;
-        padding: 2rem;
-        background: #fff;
-    }
+.card-perfil {
+    border-radius: 1.2rem;
+    padding: 2.5rem;
+    background: #fff;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.07);
+}
 
-    .input-soft {
-        background: #eef0f3 !important;
-        border-radius: .75rem;
-        border: 1px solid #ccc;
-        padding: .9rem 1rem;
-        font-size: 1rem;
-        cursor: not-allowed;
-    }
+.input-soft {
+    background: #f1f5f9 !important;
+    border-radius: .7rem;
+    border: 1px solid #d1d5db;
+    padding: .9rem 1rem;
+}
 
-    select.input-soft {
-        pointer-events: none;
-    }
+.editable {
+    background: #fff !important;
+    border: 1px solid var(--color-principal);
+}
 
-    .btn-primary {
-        display: none; /* No actualizar porque TODO es readonly */
-    }
+.btn-editar, .btn-guardar, .btn-cancelar {
+    border-radius: 40px;
+}
 </style>
+    <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
 {% endblock %}
-    {% block bloquear_footer %}
-{% endblock %}
-{% block contenido_pagina %}
 
+{% block bloquear_footer %}{% endblock %}
+
+{% block contenido_pagina %}
+<div id="crud-toast-container"></div>
 <section class="perfil-wrapper">
 
     <h2 class="fw-bold mb-4 text-center">
         <i class="bi bi-person-circle text-primary"></i> Mi Perfil
     </h2>
 
-    <div class="card card-perfil shadow">
+    <div class="card card-perfil">
+
         <h5 class="fw-bold mb-4">Información personal</h5>
 
         <form id="form-perfil">
@@ -65,22 +67,22 @@
             <div class="row g-3">
 
                 <div class="col-md-6">
-                    <label class="fw-semibold mb-1">Nombre</label>
-                    <input id="u_nombre" type="text" class="form-control input-soft" readonly>
+                    <label>Nombre</label>
+                    <input id="u_nombre" class="form-control input-soft" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="fw-semibold mb-1">Apellido</label>
-                    <input id="u_apellido" type="text" class="form-control input-soft" readonly>
+                    <label>Apellido</label>
+                    <input id="u_apellido" class="form-control input-soft" readonly>
                 </div>
 
                 <div class="col-md-12">
-                    <label class="fw-semibold mb-1">Correo electrónico</label>
+                    <label>Correo electrónico</label>
                     <input id="u_correo" type="email" class="form-control input-soft" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="fw-semibold mb-1">Tipo documento</label>
+                    <label>Tipo documento</label>
                     <select id="u_tipo_doc" class="form-select input-soft" disabled>
                         <option value="CEDULA">Cédula</option>
                         <option value="PASAPORTE">Pasaporte</option>
@@ -88,29 +90,195 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="fw-semibold mb-1">Documento</label>
-                    <input id="u_documento" type="text" class="form-control input-soft" readonly>
+                    <label>Documento</label>
+                    <input id="u_documento" class="form-control input-soft" readonly>
                 </div>
 
             </div>
 
         </form>
-    </div>
 
+    </div>
 </section>
 
 {% endblock %}
 
 {% block jvscript_archivos_defer %}
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
 <script>
-    // =============================================
-    // Cargar datos desde localStorage — SOLO LECTURA
-    // =============================================
-    document.getElementById("u_nombre").value    = localStorage.getItem("usuario_nombre") || "";
-    document.getElementById("u_apellido").value  = localStorage.getItem("usuario_apellido") || "";
-    document.getElementById("u_correo").value    = localStorage.getItem("usuario_correo") || "";
-    document.getElementById("u_tipo_doc").value  = localStorage.getItem("usuario_tipo_doc") || "";
-    document.getElementById("u_documento").value = localStorage.getItem("usuario_documento") || "";
+/* =============================== */
+/* CSRF COOKIE (SOLUCIÓN AL ERROR) */
+/* =============================== */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* ====================== */
+/* CARGAR DESDE STORAGE */
+/* ====================== */
+u_nombre.value    = localStorage.getItem("usuario_nombre") || "";
+u_apellido.value  = localStorage.getItem("usuario_apellido") || "";
+u_correo.value    = localStorage.getItem("usuario_correo") || "";
+u_tipo_doc.value  = localStorage.getItem("usuario_tipo_doc") || "";
+u_documento.value = localStorage.getItem("usuario_documento") || "";
+
+const inputs = document.querySelectorAll(".input-soft");
+const btnEditar   = document.getElementById("btnEditar");
+const btnGuardar  = document.getElementById("btnGuardar");
+const btnCancelar = document.getElementById("btnCancelar");
+
+const original = {};
+
+/* ====================== */
+function activar(val){
+    inputs.forEach(i=>{
+        if(i.tagName==="SELECT") i.disabled=!val;
+        else i.readOnly=!val;
+        i.classList.toggle("editable", val);
+    })
+}
+
+btnEditar.onclick = ()=>{
+    inputs.forEach(i=> original[i.id]=i.value);
+    activar(true);
+    btnEditar.classList.add("d-none");
+    btnGuardar.classList.remove("d-none");
+    btnCancelar.classList.remove("d-none");
+}
+
+btnCancelar.onclick = ()=>{
+    for(let k in original) document.getElementById(k).value = original[k];
+    activar(false);
+    btnEditar.classList.remove("d-none");
+    btnGuardar.classList.add("d-none");
+    btnCancelar.classList.add("d-none");
+}
+
+btnGuardar.onclick = async () => {
+
+    const id = localStorage.getItem("usuario_id");
+
+    const data = {
+        id: id,
+        nombre: u_nombre.value.trim(),
+        apellido: u_apellido.value.trim(),
+        correo: u_correo.value.trim(),
+        tipo_doc: u_tipo_doc.value,
+        documento: u_documento.value.trim()
+    };
+
+    /* ========================= */
+    /* VALIDACIONES PROFESIONALES */
+    /* ========================= */
+
+    const soloLetras = /^[a-zA-ZÁÉÍÓÚáéíóúÑñ\s]+$/;
+
+    const correosPermitidos = [
+        "gmail.com", "outlook.com", "hotmail.com", "yahoo.com"
+    ];
+
+    /* ===== NOMBRE ===== */
+    if (!soloLetras.test(data.nombre)) {
+        crudNotify("error", "El nombre solo puede contener letras y espacios");
+        return;
+    }
+
+    /* ===== APELLIDO ===== */
+    if (!soloLetras.test(data.apellido)) {
+        crudNotify("error", "El apellido solo puede contener letras y espacios");
+        return;
+    }
+
+    /* ===== CORREO ===== */
+    if (!data.correo.includes("@")) {
+        crudNotify("error", "El correo debe contener @");
+        return;
+    }
+
+    if (data.correo.includes("..")) {
+        crudNotify("error", "El correo no puede contener '..'");
+        return;
+    }
+
+    if (!data.correo.endsWith(".com")) {
+        crudNotify("error", "El correo debe terminar en .com");
+        return;
+    }
+
+    const dominio = data.correo.split("@")[1];
+
+    if (!correosPermitidos.includes(dominio)) {
+        crudNotify("warning", "Dominio no permitido. Usa:\n" + correosPermitidos.join(", "));
+        return;
+    }
+
+    if (/\.co{2,}m$/.test(data.correo)) {
+        crudNotify("error", "Dominio inválido)");
+        return;
+    }
+
+    /* ===== DOCUMENTO ===== */
+    if (!/^\d+$/.test(data.documento)) {
+        crudNotify("error", "El documento solo debe contener números");
+        return;
+    }
+
+    if (data.documento.length !== 10) {
+        crudNotify("error", "El documento debe tener exactamente 10 dígitos");
+        return;
+    }
+
+    /* ============================= */
+    /* PASÓ VALIDACIONES → ENVIAR API */
+    /* ============================= */
+
+    btnGuardar.innerText = "Guardando...";
+    btnGuardar.disabled = true;
+
+    try {
+
+        const res = await fetch("/admin/perfil/actualizar/", {
+            method: "POST",
+            body: new URLSearchParams(data)
+        });
+
+        const json = await res.json();
+
+        if (json.status !== "ok") throw json.message;
+
+        // Actualizar LocalStorage
+        localStorage.setItem("usuario_nombre", data.nombre);
+        localStorage.setItem("usuario_apellido", data.apellido);
+        localStorage.setItem("usuario_correo", data.correo);
+        localStorage.setItem("usuario_tipo_doc", data.tipo_doc);
+        localStorage.setItem("usuario_documento", data.documento);
+
+        crudNotify("success", "Perfil actualizado correctamente ✅");
+
+        activar(false);
+        btnEditar.classList.remove("d-none");
+        btnGuardar.classList.add("d-none");
+        btnCancelar.classList.add("d-none");
+
+    } catch (e) {
+        console.error(e);
+        crudNotify("error", "Error al guardar: " + e);
+    }
+
+    btnGuardar.innerText = "Guardar";
+    btnGuardar.disabled = false;
+};
 
 </script>
 {% endblock %}

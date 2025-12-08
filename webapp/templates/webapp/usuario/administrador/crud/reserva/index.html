@@ -3,49 +3,71 @@
 {% block bloquear_footer %}
 {% endblock %}
 {% block css_archivos %}
-<link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+    <link rel="stylesheet" href="{% static 'webapp/css/usuario/administrador/crud/crud_helper.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
 
-<style>
-    .badge-estado{
-        font-size:.85rem;
-        padding:.25rem .6rem;
-        border-radius:15px;
-    }
-    .table-inactive{
-        background-color:#e0e0e0 !important;
-    }
-    .readonly-input{
-        background-color:#f0f0f0 !important;
-        color:#6c757d !important;
-        cursor:not-allowed !important;
-    }
-    .select2-container{
-        width:100%!important;
-    }
-</style>
+    <style>
+        /* === Campos SOLO LECTURA / DESHABILITADOS EN MODAL EDITAR RESERVA === */
+
+        /* Inputs readonly (ID Reserva, Fecha Registro, etc.) */
+        .readonly-input,
+        input[readonly] {
+            background-color: #e9ecef !important; /* gris más marcado */
+            color: #6c757d !important; /* texto gris */
+            cursor: not-allowed !important;
+            border-color: #d0d0d0 !important;
+        }
+
+        /* Select nativo deshabilitado (por si no usa select2) */
+        select:disabled {
+            background-color: #e9ecef !important;
+            color: #6c757d !important;
+            cursor: not-allowed !important;
+            border-color: #d0d0d0 !important;
+        }
+
+        /* Select2 deshabilitado para ID Usuario Interno */
+        .select2-container--disabled .select2-selection--single {
+            background-color: #e9ecef !important;
+            color: #6c757d !important;
+            cursor: not-allowed !important;
+            border-color: #d0d0d0 !important;
+        }
+
+        /* Texto dentro del select2 */
+        .select2-container--disabled .select2-selection__rendered {
+            color: #6c757d !important;
+        }
+
+        /* Opcional: ocultar la flechita para que se note que no es editable */
+        .select2-container--disabled .select2-selection__arrow {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    </style>
 {% endblock %}
 
 {% block contenido_pagina %}
 
-<div id="crud-toast-container"></div>
+    <div id="crud-toast-container"></div>
 
-<div class="container mt-4">
+    <div class="container mt-4">
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold">Gestión de Reservas</h2>
-        <button class="btn btn-primary" onclick="abrirModalCrearReserva()">
-            <i class="bi bi-plus-lg"></i> Registrar Reserva
-        </button>
-    </div>
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold">Gestión de Reservas</h2>
+            <button class="btn btn-primary" onclick="abrirModalCrearReserva()">
+                <i class="bi bi-plus-lg"></i> Registrar Reserva
+            </button>
+        </div>
 
-    <!-- TABLA -->
-    <div class="table-responsive shadow-sm">
-        <table class="table table-striped table-hover align-middle" id="tablaReservas">
-            <thead class="table-dark">
+        <!-- TABLA -->
+        <div class="table-responsive shadow-sm">
+            <table class="table table-striped table-hover align-middle" id="tablaReservas">
+                <thead class="table-dark">
                 <tr>
                     <th>ID Reserva</th>
                     <th>Usuario Interno</th>
@@ -56,450 +78,515 @@
                     <th>Activa</th>
                     <th>Acciones</th>
                 </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+            <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
+                ◀ Anterior
+            </button>
+            <span id="infoPaginacion" class="fw-bold">Cargando...</span>
+            <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
+                Siguiente ▶
+            </button>
+        </div>
+
     </div>
 
-    <!-- PAGINACIÓN -->
-    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
-        <button class="btn btn-secondary btn-sm" id="btnAnterior" onclick="irAPaginaAnterior()" disabled>
-            ◀ Anterior
-        </button>
-        <span id="infoPaginacion" class="fw-bold">Cargando...</span>
-        <button class="btn btn-secondary btn-sm" id="btnSiguiente" onclick="irAPaginaSiguiente()" disabled>
-            Siguiente ▶
-        </button>
-    </div>
-
-</div>
-
-{# MODALES #}
-{% include "webapp/usuario/administrador/crud/reserva/modal_crear.html" %}
-{% include "webapp/usuario/administrador/crud/reserva/modal_editar.html" %}
+    {# MODALES #}
+    {% include "webapp/usuario/administrador/crud/reserva/modal_crear.html" %}
+    {% include "webapp/usuario/administrador/crud/reserva/modal_editar.html" %}
 
 {% endblock %}
 {% block jvscript_archivos_defer %}
-<script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+    <script src="{% static 'webapp/js/usuario/administrador/crud/crud_helper.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 
-<script>
-    // ================== CONSTANTES ==================
-    const URL_LIST_RESERVA   = "/admin/reservas/list/";
-    const URL_CREATE_RESERVA = "/admin/reservas/create/";
-    const URL_GET_RESERVA    = id => `/admin/reservas/get/${id}/`;
-    const URL_UPDATE_RESERVA = id => `/admin/reservas/update/${id}/`;
-    const URL_DELETE_RESERVA = id => `/admin/reservas/delete/${id}/`;
-    const URL_NEXT_RESERVA   = "/admin/reservas/next-id/";
-    const URL_SEARCH_USUARIO_INTERNO = "/admin/usuario-interno/search/";
+    <script>
+        // ================== CONSTANTES ==================
+        const URL_LIST_RESERVA = "/admin/reservas/list/";
+        const URL_CREATE_RESERVA = "/admin/reservas/create/";
+        const URL_GET_RESERVA = id => `/admin/reservas/get/${id}/`;
+        const URL_UPDATE_RESERVA = id => `/admin/reservas/update/${id}/`;
+        const URL_DELETE_RESERVA = id => `/admin/reservas/delete/${id}/`;
+        const URL_NEXT_RESERVA = "/admin/reservas/next-id/";
+        const URL_SEARCH_USUARIO_INTERNO = "/admin/usuario-interno/search/";
 
-    const COSTO_MAX = 999999.99;   // DECIMAL(8,2) => 999,999.99
-    let currentPage = 1;
-    let totalPages  = 1;
+        const COSTO_MAX = 999999.99;   // DECIMAL(8,2) => 999,999.99
+        let currentPage = 1;
+        let totalPages = 1;
 
-    // ================== HELPERS MONTO ==================
-    function esMontoValido(valor) {
-        if (valor == null) return false;
-        let v = String(valor).replace(",", ".").trim();
+        // ================== HELPERS MONTO ==================
+        function esMontoValido(valor) {
+            if (valor == null) return false;
+            let v = String(valor).replace(",", ".").trim();
 
-        // patrón: solo dígitos con opcional . y máximo 2 decimales
-        if (!/^\d+(\.\d{1,2})?$/.test(v)) {
-            return false;
-        }
-        const num = parseFloat(v);
-        if (isNaN(num)) return false;
-        if (num < 0 || num > COSTO_MAX) return false;
-        return true;
-    }
-
-    function normalizarMontoInput(e) {
-        let v = this.value.replace(",", ".").trim();
-        // eliminar todo lo que no sea dígito o punto
-        v = v.replace(/[^0-9.]/g, "");
-        // solo un punto
-        const partes = v.split(".");
-        if (partes.length > 2) {
-            v = partes[0] + "." + partes[1];
-        }
-        if (v === "") {
-            this.value = "";
-            return;
-        }
-        // si es número, cap a máximo permitido
-        let num = parseFloat(v);
-        if (!isNaN(num) && num > COSTO_MAX) {
-            num = COSTO_MAX;
-        }
-        this.value = isNaN(num) ? "" : String(num);
-    }
-
-    function validarMontoAlSalir(e) {
-        const v = this.value;
-        if (v === "") return;    // vacío es permitido (costo opcional)
-        if (!esMontoValido(v)) {
-            this.value = "";
-            crudNotify(
-                "error",
-                "El costo total debe ser un número entre 0 y 999,999.99 con máximo dos decimales."
-            );
-            return;
-        }
-        // lo dejamos formateado a 2 decimales
-        this.value = parseFloat(v.replace(",", ".")).toFixed(2);
-    }
-
-    function configurarCamposMontoReserva() {
-        ["crear_CostoTotalReserva", "editar_CostoTotalReserva"].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener("input", normalizarMontoInput);
-            el.addEventListener("blur", validarMontoAlSalir);
-        });
-    }
-
-    // ================== PAGINACIÓN ==================
-    function actualizarControlesPaginacion(){
-        $("#btnAnterior").prop("disabled", currentPage <= 1);
-        $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
-        $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
-    }
-
-    function irAPaginaAnterior(){
-        if(currentPage > 1) cargarReservas(currentPage - 1);
-    }
-
-    function irAPaginaSiguiente(){
-        if(currentPage < totalPages) cargarReservas(currentPage + 1);
-    }
-
-    // ================== SELECT2 USUARIO INTERNO ==================
-    function initSelectUsuarioInternoReserva(selector, parentSelector, selectedId=null, selectedText=""){
-        const $sel = $(selector);
-
-        if($sel.data("select2")){
-            $sel.select2("destroy");
-        }
-        $sel.empty();
-
-        $sel.select2({
-            placeholder: "Buscar usuario interno...",
-            allowClear: true,
-            width: "100%",
-            dropdownParent: $(parentSelector),
-            minimumInputLength: 0,
-            ajax: {
-                url: URL_SEARCH_USUARIO_INTERNO,
-                dataType: "json",
-                delay: 250,
-                data: params => ({ q: params.term || "" }),
-                processResults: resp => ({
-                    results: (resp.data || []).map(u => ({
-                        id: u.Id,
-                        text: `${u.Id} — ${u.Nombre} ${u.Apellido} (${u.Correo})`
-                    }))
-                }),
-                cache: true
+            // patrón: solo dígitos con opcional . y máximo 2 decimales
+            if (!/^\d+(\.\d{1,2})?$/.test(v)) {
+                return false;
             }
-        });
-
-        if(selectedId !== null && selectedId !== undefined && selectedId !== ""){
-            const opt = new Option(selectedText || `ID ${selectedId}`, selectedId, true, true);
-            $sel.append(opt).trigger("change");
-        }
-    }
-
-    // ================== LITEPICKER RANGO FECHAS ==================
-    let pickerCrearReserva = null;
-    let pickerEditarReserva = null;
-
-    function initRangoFechasReserva(crear = true, start = null, end = null){
-        const inputId   = crear ? "crear_RangoFechasReserva" : "editar_RangoFechasReserva";
-        const iniHidden = crear ? "#crear_FechaInicioReserva" : "#editar_FechaInicioReserva";
-        const finHidden = crear ? "#crear_FechaFinalReserva"  : "#editar_FechaFinalReserva";
-
-        const el = document.getElementById(inputId);
-        if (!el || !window.Litepicker) {
-            console.error("Litepicker no está cargado o el input no existe");
-            return;
+            const num = parseFloat(v);
+            if (isNaN(num)) return false;
+            if (num < 0 || num > COSTO_MAX) return false;
+            return true;
         }
 
-        if (crear && pickerCrearReserva)  pickerCrearReserva.destroy();
-        if (!crear && pickerEditarReserva) pickerEditarReserva.destroy();
-
-        // minDate:
-        //  - crear: hoy
-        //  - editar: fecha de inicio original
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        const minDate = crear
-            ? hoy
-            : (start || null);
-
-        const picker = new Litepicker({
-            element: el,
-            singleMode: false,
-            format: "YYYY-MM-DD",
-            numberOfMonths: 2,
-            numberOfColumns: 2,
-            autoApply: true,
-            minDate: minDate,
-            startDate: start || null,
-            endDate: end   || null,
-            tooltipText: { one: "día", other: "días" },
-            tooltipNumber: totalDays => totalDays,
-            setup: (p) => {
-                p.on("selected", (date1, date2) => {
-                    const v1 = date1 ? date1.format("YYYY-MM-DD") : "";
-                    const v2 = date2 ? date2.format("YYYY-MM-DD") : "";
-                    $(iniHidden).val(v1);
-                    $(finHidden).val(v2);
-                });
+        function normalizarMontoInput(e) {
+            let v = this.value.replace(",", ".").trim();
+            // eliminar todo lo que no sea dígito o punto
+            v = v.replace(/[^0-9.]/g, "");
+            // solo un punto
+            const partes = v.split(".");
+            if (partes.length > 2) {
+                v = partes[0] + "." + partes[1];
             }
-        });
-
-        if (crear) pickerCrearReserva  = picker;
-        else       pickerEditarReserva = picker;
-    }
-
-    // ================== CARGAR TABLA ==================
-    function cargarReservas(page = 1){
-        $.ajax({
-            url: `${URL_LIST_RESERVA}?page=${page}`,
-            method: "GET",
-            success: function(resp){
-                const tbody = $("#tablaReservas tbody");
-                tbody.empty();
-
-                (resp.data || []).forEach(r => {
-                    const activaBadge = r.EstadoReserva
-                        ? `<span class="badge bg-success badge-estado">Activa</span>`
-                        : `<span class="badge bg-secondary badge-estado">Inactiva</span>`;
-
-                    const costo = r.CostoTotalReserva != null
-                        ? parseFloat(r.CostoTotalReserva).toFixed(2)
-                        : "0.00";
-
-                    const estadoGen = (r.EstadoGeneralReserva || "").trim() || "-";
-
-                    const rowHtml = `
-                        <tr class="${r.EstadoReserva ? "" : "table-secondary"}">
-                            <td>${r.IdReserva}</td>
-                            <td>${r.IdUnicoUsuario ?? "-"}</td>
-                            <td>$${costo}</td>
-                            <td>${r.FechaInicioReserva ?? "-"}</td>
-                            <td>${r.FechaFinalReserva ?? "-"}</td>
-                            <td>${estadoGen}</td>
-                            <td>${activaBadge}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="abrirModalEditarReserva(${r.IdReserva})">
-                                    Editar
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="eliminarReserva(${r.IdReserva})">
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>`;
-                    tbody.append(rowHtml);
-                });
-
-                currentPage = resp.page || 1;
-                totalPages  = resp.total_pages || 1;
-                actualizarControlesPaginacion();
-            },
-            error: function(xhr){
-                crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Reservas.");
+            if (v === "") {
+                this.value = "";
+                return;
             }
-        });
-    }
-
-    // ================== CREAR ==================
-    function abrirModalCrearReserva(){
-        $.get(URL_NEXT_RESERVA, function(resp){
-            if(resp.next_id){
-                $("#crear_IdReserva").val(resp.next_id);
-            } else if(resp.next){
-                $("#crear_IdReserva").val(resp.next);
-            } else {
-                $("#crear_IdReserva").val("");
+            // si es número, cap a máximo permitido
+            let num = parseFloat(v);
+            if (!isNaN(num) && num > COSTO_MAX) {
+                num = COSTO_MAX;
             }
-        });
-
-        $("#crear_CostoTotalReserva").val("");
-        $("#crear_RangoFechasReserva").val("");
-        $("#crear_FechaInicioReserva").val("");
-        $("#crear_FechaFinalReserva").val("");
-        $("#crear_EstadoReserva").prop("checked", true);
-
-        const hoy = new Date().toISOString().slice(0,10);
-        $("#crear_FechaRegistroReserva").val(hoy);
-
-        // Estado general por defecto PENDIENTE
-        $("#crear_EstadoGeneralReserva").val("PENDIENTE");
-
-        initSelectUsuarioInternoReserva("#crear_IdUnicoUsuario", "#modalCrearReserva");
-        initRangoFechasReserva(true);
-
-        $("#modalCrearReserva").modal("show");
-    }
-
-    function crearReserva(){
-        const idReserva  = $("#crear_IdReserva").val().trim();
-        const idUsuario  = $("#crear_IdUnicoUsuario").val();
-        const costoTotal = $("#crear_CostoTotalReserva").val().trim();
-        const estadoGen  = $("#crear_EstadoGeneralReserva").val();
-
-        if(!idReserva || !idUsuario){
-            crudNotify("warning", "El ID Reserva y el Usuario Interno son obligatorios.");
-            return;
+            this.value = isNaN(num) ? "" : String(num);
         }
 
-        if(!estadoGen){
-            crudNotify("warning", "Debe seleccionar un Estado General.");
-            return;
+        function validarMontoAlSalir(e) {
+            const v = this.value;
+            if (v === "") return;    // vacío es permitido (costo opcional)
+            if (!esMontoValido(v)) {
+                this.value = "";
+                crudNotify(
+                    "error",
+                    "El costo total debe ser un número entre 0 y 999,999.99 con máximo dos decimales."
+                );
+                return;
+            }
+            // lo dejamos formateado a 2 decimales
+            this.value = parseFloat(v.replace(",", ".")).toFixed(2);
         }
 
-        if (costoTotal !== "" && !esMontoValido(costoTotal)) {
-            crudNotify("warning",
-                "El costo total debe estar entre 0 y 999,999.99 con máximo dos decimales.");
-            return;
+        function configurarCamposMontoReserva() {
+            ["crear_CostoTotalReserva", "editar_CostoTotalReserva"].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("input", normalizarMontoInput);
+                el.addEventListener("blur", validarMontoAlSalir);
+            });
         }
 
-        const data = {
-            IdReserva: idReserva,
-            IdUnicoUsuario: idUsuario,
-            IdUnicoUsuarioExterno: null,
-            CostoTotalReserva: costoTotal || null,
-            FechaRegistroReserva: $("#crear_FechaRegistroReserva").val().trim() || null,
-            FechaInicioReserva:   $("#crear_FechaInicioReserva").val().trim()   || null,
-            FechaFinalReserva:    $("#crear_FechaFinalReserva").val().trim()    || null,
-            EstadoGeneralReserva: estadoGen,
-            EstadoReserva: $("#crear_EstadoReserva").is(":checked")
-        };
-
-        crudCreate(URL_CREATE_RESERVA, data, () => {
-            $("#modalCrearReserva").modal("hide");
-            cargarReservas(currentPage);
-        });
-    }
-
-
-function abrirModalEditarReserva(id){
-    $.get(URL_GET_RESERVA(id), function(resp){
-        if(resp.status !== "ok"){
-            return crudNotify("error", resp.message || "No se pudo cargar la reserva.");
+        // ================== PAGINACIÓN ==================
+        function actualizarControlesPaginacion() {
+            $("#btnAnterior").prop("disabled", currentPage <= 1);
+            $("#btnSiguiente").prop("disabled", currentPage >= totalPages);
+            $("#infoPaginacion").text(`Página ${currentPage} de ${totalPages}`);
         }
 
-        const r = resp.data || {};
+        function irAPaginaAnterior() {
+            if (currentPage > 1) cargarReservas(currentPage - 1);
+        }
 
-        $("#editar_IdReserva").val(r.IdReserva);
+        function irAPaginaSiguiente() {
+            if (currentPage < totalPages) cargarReservas(currentPage + 1);
+        }
 
-        // ----- COSTO -----
-        const monto = r.CostoTotalReserva;
-        $("#editar_CostoTotalReserva").val(
-            (monto !== null && monto !== undefined && monto !== "")
-                ? parseFloat(monto).toFixed(2)
-                : ""
-        );
+        // ================== SELECT2 USUARIO INTERNO ==================
+        function initSelectUsuarioInternoReserva(selector, parentSelector, selectedId = null, selectedText = "") {
+            const $sel = $(selector);
 
-        // ----- FECHA REGISTRO -----
-        const fechaReg = (r.FechaRegistroReserva || "").split("T")[0];
-        $("#editar_FechaRegistroReserva").val(fechaReg);
+            if ($sel.data("select2")) {
+                $sel.select2("destroy");
+            }
+            $sel.empty();
 
-        // ----- ESTADO GENERAL (TRIM) -----
-        const estadoGen = (r.EstadoGeneralReserva || "").trim();   // 👈 importante
-        $("#editar_EstadoGeneralReserva").val(estadoGen).trigger("change");
+            $sel.select2({
+                placeholder: "Buscar usuario interno...",
+                allowClear: true,
+                width: "100%",
+                dropdownParent: $(parentSelector),
+                minimumInputLength: 0,
+                ajax: {
+                    url: URL_SEARCH_USUARIO_INTERNO,
+                    dataType: "json",
+                    delay: 250,
+                    data: params => ({q: params.term || ""}),
+                    processResults: resp => ({
+                        results: (resp.data || []).map(u => ({
+                            id: u.Id,
+                            text: `${u.Id} — ${u.Nombre} ${u.Apellido} (${u.Correo})`
+                        }))
+                    }),
+                    cache: true
+                }
+            });
 
-        // ----- ACTIVA / INACTIVA -----
-        $("#editar_EstadoReserva").prop("checked", !!r.EstadoReserva);
+            if (selectedId !== null && selectedId !== undefined && selectedId !== "") {
+                const opt = new Option(selectedText || `ID ${selectedId}`, selectedId, true, true);
+                $sel.append(opt).trigger("change");
+            }
+        }
 
-        // ----- RANGO FECHAS -----
-        const fIni = (r.FechaInicioReserva || "").split("T")[0];
-        const fFin = (r.FechaFinalReserva  || "").split("T")[0];
+        // ================== LITEPICKER RANGO FECHAS ==================
+        let pickerCrearReserva = null;
+        let pickerEditarReserva = null;
 
-        $("#editar_FechaInicioReserva").val(fIni);
-        $("#editar_FechaFinalReserva").val(fFin);
-        $("#editar_RangoFechasReserva").val(fIni && fFin ? `${fIni} - ${fFin}` : "");
+        function initRangoFechasReserva(crear = true, start = null, end = null) {
+            const inputId = crear ? "crear_RangoFechasReserva" : "editar_RangoFechasReserva";
+            const iniHidden = crear ? "#crear_FechaInicioReserva" : "#editar_FechaInicioReserva";
+            const finHidden = crear ? "#crear_FechaFinalReserva" : "#editar_FechaFinalReserva";
 
-        // ----- USUARIO INTERNO (SOLO LECTURA) -----
-        const usuarioId   = r.IdUnicoUsuario;
-        const usuarioText = usuarioId ? `ID ${usuarioId}` : "";
+            const el = document.getElementById(inputId);
+            if (!el || !window.Litepicker) {
+                console.error("Litepicker no está cargado o el input no existe");
+                return;
+            }
 
-        initSelectUsuarioInternoReserva(
-            "#editar_IdUnicoUsuario",
-            "#modalEditarReserva",
-            usuarioId,
-            usuarioText
-        );
-        $("#editar_IdUnicoUsuario").prop("disabled", true);
+            if (crear && pickerCrearReserva) pickerCrearReserva.destroy();
+            if (!crear && pickerEditarReserva) pickerEditarReserva.destroy();
 
-        // ----- LITEPICKER: solo desde la fecha de inicio original -----
-        initRangoFechasReserva(false, fIni || null, fFin || null);
+            // minDate:
+            //  - crear: hoy
+            //  - editar: fecha de inicio original
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const minDate = crear
+                ? hoy
+                : (start || null);
 
-        $("#modalEditarReserva").modal("show");
-    })
-    .fail(xhr => {
-        crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
-    });
+            const picker = new Litepicker({
+                element: el,
+                singleMode: false,
+                format: "YYYY-MM-DD",
+                numberOfMonths: 2,
+                numberOfColumns: 2,
+                autoApply: true,
+                minDate: minDate,
+                startDate: start || null,
+                endDate: end || null,
+                tooltipText: {one: "día", other: "días"},
+                tooltipNumber: totalDays => totalDays,
+                setup: (p) => {
+                    p.on("selected", (date1, date2) => {
+                        const v1 = date1 ? date1.format("YYYY-MM-DD") : "";
+                        const v2 = date2 ? date2.format("YYYY-MM-DD") : "";
+                        $(iniHidden).val(v1);
+                        $(finHidden).val(v2);
+                    });
+                }
+            });
+
+            if (crear) pickerCrearReserva = picker;
+            else pickerEditarReserva = picker;
+        }
+
+        // ================== CARGAR TABLA ==================
+        function cargarReservas(page = 1) {
+            $.ajax({
+                url: `${URL_LIST_RESERVA}?page=${page}`,
+                method: "GET",
+                success: function (resp) {
+                    const tbody = $("#tablaReservas tbody");
+                    tbody.empty();
+
+                    (resp.data || []).forEach(r => {
+                        const activaBadge = r.EstadoReserva
+                            ? `<span class="badge bg-success badge-estado">Activa</span>`
+                            : `<span class="badge bg-secondary badge-estado">Inactiva</span>`;
+
+                        const costo = r.CostoTotalReserva != null
+                            ? parseFloat(r.CostoTotalReserva).toFixed(2)
+                            : "0.00";
+
+                        const estadoGen = (r.EstadoGeneralReserva || "").trim() || "-";
+                        const estadoActivo = (
+                            r.EstadoReserva === true ||
+                            r.EstadoReserva === 1 ||
+                            r.EstadoReserva === "1" ||
+                            r.EstadoReserva === "true"
+                        );
+                        let accionesHtml = "";
+
+if (!estadoActivo) {
+
+    accionesHtml = `
+        <button class="btn btn-warning btn-sm"
+                onclick="abrirModalEditarReserva(${r.IdReserva})">
+            Editar
+        </button>
+        <button class="btn btn-secondary btn-sm" disabled>
+            Eliminado
+        </button>
+    `;
+
+} else {
+
+    accionesHtml = `
+        <button class="btn btn-warning btn-sm"
+                onclick="abrirModalEditarReserva(${r.IdReserva})">
+            Editar
+        </button>
+        <button class="btn btn-danger btn-sm"
+                onclick="eliminarReserva(${r.IdReserva})">
+            Eliminar
+        </button>
+    `;
 }
 
 
 
+                        const rowHtml = `
+<tr class="${estadoActivo ? "" : "table-secondary"}">
+    <td>${r.IdReserva}</td>
+    <td>${r.IdUnicoUsuario ?? "-"}</td>
+    <td>$${costo}</td>
+    <td>${r.FechaInicioReserva ?? "-"}</td>
+    <td>${r.FechaFinalReserva ?? "-"}</td>
+    <td>${estadoGen}</td>
+    <td>${activaBadge}</td>
+    <td>${accionesHtml}</td>
+</tr>
+`;
 
-    function actualizarReserva(){
-        const idReserva  = $("#editar_IdReserva").val();
-        const idUsuario  = $("#editar_IdUnicoUsuario").val();   // aunque esté disabled, .val() funciona
-        const costoTotal = $("#editar_CostoTotalReserva").val().trim();
-        const estadoGen  = $("#editar_EstadoGeneralReserva").val();
+                        tbody.append(rowHtml);
+                    });
 
-        if(!idUsuario){
-            crudNotify("warning", "El Usuario Interno es obligatorio.");
-            return;
-        }
-
-        if(!estadoGen){
-            crudNotify("warning", "Debe seleccionar un Estado General.");
-            return;
-        }
-
-        if (costoTotal !== "" && !esMontoValido(costoTotal)) {
-            crudNotify("warning",
-                "El costo total debe estar entre 0 y 999,999.99 con máximo dos decimales.");
-            return;
-        }
-
-        const data = {
-            IdUnicoUsuario: idUsuario,
-            IdUnicoUsuarioExterno: null,
-            CostoTotalReserva: costoTotal || null,
-            FechaRegistroReserva: $("#editar_FechaRegistroReserva").val().trim() || null,
-            FechaInicioReserva:   $("#editar_FechaInicioReserva").val().trim()   || null,
-            FechaFinalReserva:    $("#editar_FechaFinalReserva").val().trim()    || null,
-            EstadoGeneralReserva: estadoGen,
-            EstadoReserva: $("#editar_EstadoReserva").is(":checked")
-        };
-
-        crudUpdate(URL_UPDATE_RESERVA(idReserva), data, () => {
-            $("#modalEditarReserva").modal("hide");
-            cargarReservas(currentPage);
-        });
-    }
-
-    // ================== ELIMINAR ==================
-    function eliminarReserva(id){
-        crudConfirm("¿Está seguro de eliminar esta reserva? Esto la marcará como inactiva.")
-            .then(ok => {
-                if(!ok) return;
-                crudDelete(URL_DELETE_RESERVA(id), () => cargarReservas(currentPage));
+                    currentPage = resp.page || 1;
+                    totalPages = resp.total_pages || 1;
+                    actualizarControlesPaginacion();
+                },
+                error: function (xhr) {
+                    crudNotify("error", xhr.responseJSON?.message || "No se pudo cargar la información de Reservas.");
+                }
             });
-    }
+        }
 
-    // ================== INIT ==================
-    $(document).ready(function(){
-        cargarReservas(1);
-        $("#btnAnterior").on("click", irAPaginaAnterior);
-        $("#btnSiguiente").on("click", irAPaginaSiguiente);
-        configurarCamposMontoReserva();
-    });
-</script>
+        // ================== CREAR ==================
+        function abrirModalCrearReserva() {
+            $.get(URL_NEXT_RESERVA, function (resp) {
+                if (resp.next_id) {
+                    $("#crear_IdReserva").val(resp.next_id);
+                } else if (resp.next) {
+                    $("#crear_IdReserva").val(resp.next);
+                } else {
+                    $("#crear_IdReserva").val("");
+                }
+            });
+
+            $("#crear_CostoTotalReserva").val("");
+            $("#crear_RangoFechasReserva").val("");
+            $("#crear_FechaInicioReserva").val("");
+            $("#crear_FechaFinalReserva").val("");
+            $("#crear_EstadoReserva").prop("checked", true);
+
+            const hoy = new Date().toISOString().slice(0, 10);
+            $("#crear_FechaRegistroReserva").val(hoy);
+
+            // Estado general por defecto PENDIENTE
+            $("#crear_EstadoGeneralReserva").val("PRE-RESERVA");
+
+            initSelectUsuarioInternoReserva("#crear_IdUnicoUsuario", "#modalCrearReserva");
+            initRangoFechasReserva(true);
+
+            $("#modalCrearReserva").modal("show");
+        }
+
+        function crearReserva(btn) {
+
+            bloquearBoton(btn, "Guardando...");
+
+            const idReserva = $("#crear_IdReserva").val().trim();
+            const idUsuario = $("#crear_IdUnicoUsuario").val();
+            const costoTotal = $("#crear_CostoTotalReserva").val().trim();
+            const estadoGen = $("#crear_EstadoGeneralReserva").val();
+
+            if (!idReserva || !idUsuario) {
+                crudNotify("warning", "El ID Reserva y el Usuario Interno son obligatorios.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            if (!estadoGen) {
+                crudNotify("warning", "Debe seleccionar un Estado General.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            if (costoTotal !== "" && !esMontoValido(costoTotal)) {
+                crudNotify("warning", "El costo total no es válido.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            const data = {
+                IdReserva: idReserva,
+                IdUnicoUsuario: idUsuario,
+                IdUnicoUsuarioExterno: null,
+                CostoTotalReserva: costoTotal || null,
+                FechaRegistroReserva: $("#crear_FechaRegistroReserva").val().trim() || null,
+                FechaInicioReserva: $("#crear_FechaInicioReserva").val().trim() || null,
+                FechaFinalReserva: $("#crear_FechaFinalReserva").val().trim() || null,
+                EstadoGeneralReserva: estadoGen,
+                EstadoReserva: $("#crear_EstadoReserva").is(":checked")
+            };
+
+            crudCreate(URL_CREATE_RESERVA, data, () => {
+                $("#modalCrearReserva").modal("hide");
+                cargarReservas(currentPage);
+                desbloquearBoton(btn);
+            });
+        }
+
+
+        function abrirModalEditarReserva(id) {
+            $.get(URL_GET_RESERVA(id), function (resp) {
+                if (resp.status !== "ok") {
+                    return crudNotify("error", resp.message || "No se pudo cargar la reserva.");
+                }
+
+                const r = resp.data || {};
+
+                $("#editar_IdReserva").val(r.IdReserva);
+
+                // ----- COSTO -----
+                const monto = r.CostoTotalReserva;
+                $("#editar_CostoTotalReserva").val(
+                    (monto !== null && monto !== undefined && monto !== "")
+                        ? parseFloat(monto).toFixed(2)
+                        : ""
+                );
+
+                // ----- FECHA REGISTRO -----
+                const fechaReg = (r.FechaRegistroReserva || "").split("T")[0];
+                $("#editar_FechaRegistroReserva").val(fechaReg);
+
+                // ----- ESTADO GENERAL (TRIM) -----
+                let estadoRaw = (typeof r.EstadoGeneralReserva === "string"
+                        ? r.EstadoGeneralReserva.trim().toUpperCase()
+                        : ""
+                );
+
+// normalizar valores posibles
+                const MAP_ESTADOS = {
+                    "CONFIRMADO": "CONFIRMADO",
+                    "PRE-RESERVA": "PRE-RESERVA",
+                    "PRE RESERVA": "PRE-RESERVA",
+                    "PRERESERVA": "PRE-RESERVA",
+                    "CANCELADA": "CANCELADA",
+                    "CANCELADO": "CANCELADA",
+                    "EXPIRADO": "EXPIRADO",
+                    "EXPIRADO": "EXPIRADA"
+                };
+
+                const estadoGen = MAP_ESTADOS[estadoRaw] || "";
+
+// setear valor
+                $("#editar_EstadoGeneralReserva").val(estadoGen).trigger("change");
+
+                // ----- ACTIVA / INACTIVA -----
+                const estadoActivo = (
+                    r.EstadoReserva === true ||
+                    r.EstadoReserva === 1 ||
+                    r.EstadoReserva === "1" ||
+                    r.EstadoReserva === "true"
+                );
+
+                $("#editar_EstadoReserva").prop("checked", estadoActivo);
+
+                // ----- RANGO FECHAS -----
+                const fIni = (r.FechaInicioReserva || "").split("T")[0];
+                const fFin = (r.FechaFinalReserva || "").split("T")[0];
+
+                $("#editar_FechaInicioReserva").val(fIni);
+                $("#editar_FechaFinalReserva").val(fFin);
+                $("#editar_RangoFechasReserva").val(fIni && fFin ? `${fIni} - ${fFin}` : "");
+
+                // ----- USUARIO INTERNO (SOLO LECTURA) -----
+                const usuarioId = r.IdUnicoUsuario;
+                const usuarioText = usuarioId ? `ID ${usuarioId}` : "";
+
+                initSelectUsuarioInternoReserva(
+                    "#editar_IdUnicoUsuario",
+                    "#modalEditarReserva",
+                    usuarioId,
+                    usuarioText
+                );
+                $("#editar_IdUnicoUsuario").prop("disabled", true);
+
+                // ----- LITEPICKER: solo desde la fecha de inicio original -----
+                initRangoFechasReserva(false, fIni || null, fFin || null);
+
+                $("#modalEditarReserva").modal("show");
+            })
+                .fail(xhr => {
+                    crudNotify("error", xhr.responseJSON?.message || "Error al obtener datos para edición.");
+                });
+        }
+
+
+        function actualizarReserva(btn) {
+
+            bloquearBoton(btn, "Guardando...");
+
+            const idReserva = $("#editar_IdReserva").val();
+            const idUsuario = $("#editar_IdUnicoUsuario").val();
+            const costoTotal = $("#editar_CostoTotalReserva").val().trim();
+            const estadoGen = $("#editar_EstadoGeneralReserva").val();
+
+            if (!idUsuario) {
+                crudNotify("warning", "El Usuario Interno es obligatorio.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            if (!estadoGen) {
+                crudNotify("warning", "Debe seleccionar un Estado General.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            if (costoTotal !== "" && !esMontoValido(costoTotal)) {
+                crudNotify("warning", "El costo total no es válido.");
+                desbloquearBoton(btn);
+                return;
+            }
+
+            const data = {
+                IdUnicoUsuario: idUsuario,
+                IdUnicoUsuarioExterno: null,
+                CostoTotalReserva: costoTotal || null,
+                FechaInicioReserva: $("#editar_FechaInicioReserva").val().trim() || null,
+                FechaFinalReserva: $("#editar_FechaFinalReserva").val().trim() || null,
+                EstadoGeneralReserva: estadoGen,
+                EstadoReserva: $("#editar_EstadoReserva").is(":checked")
+            };
+
+            crudUpdate(URL_UPDATE_RESERVA(idReserva), data, () => {
+                $("#modalEditarReserva").modal("hide");
+                cargarReservas(currentPage);
+                desbloquearBoton(btn);
+            });
+        }
+
+        // ================== ELIMINAR ==================
+        function eliminarReserva(id) {
+            crudConfirm("¿Está seguro de eliminar esta reserva? Esto la marcará como inactiva.")
+                .then(ok => {
+                    if (!ok) return;
+                    crudDelete(URL_DELETE_RESERVA(id), () => cargarReservas(currentPage));
+                });
+        }
+
+        // ================== INIT ==================
+        $(document).ready(function () {
+            cargarReservas(1);
+            $("#btnAnterior").on("click", irAPaginaAnterior);
+            $("#btnSiguiente").on("click", irAPaginaSiguiente);
+            configurarCamposMontoReserva();
+        });
+    </script>
 {% endblock %}

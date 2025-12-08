@@ -1,8 +1,6 @@
 # PdfGestionRest.py
 from __future__ import annotations
 
-from pprint import pprint
-
 import requests
 from datetime import datetime
 

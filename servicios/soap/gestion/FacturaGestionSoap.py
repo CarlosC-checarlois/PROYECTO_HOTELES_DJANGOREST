@@ -1,3 +1,4 @@
+
 import requests
 from datetime import datetime
 from decimal import Decimal
@@ -127,4 +128,5 @@ class FacturaGestionSoap:
             return self.client.service.EliminarFactura(id_factura)
         except Fault as e:
             raise Exception(f"Error SOAP al eliminar factura {id_factura}: {e}")
+
 

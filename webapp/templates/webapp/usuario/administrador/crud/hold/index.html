@@ -53,7 +53,7 @@
                     <th>ID Hold</th>
                     <th>ID Habitación</th>
                     <th>ID Reserva</th>
-                    <th>Tiempo (min)</th>
+                    <th>Tiempo (seg)</th>
                     <th>Fecha Inicio</th>
                     <th>Fecha Final</th>
                     <th>Estado</th>
@@ -91,20 +91,20 @@
 
     <script>
         // ================== CONSTANTES / URLs ==================
-        const URL_LIST_HOLD   = "/admin/hold/list/";
+        const URL_LIST_HOLD = "/admin/hold/list/";
         const URL_CREATE_HOLD = "/admin/hold/create/";
-        const URL_GET_HOLD    = id => `/admin/hold/get/${id}/`;
+        const URL_GET_HOLD = id => `/admin/hold/get/${id}/`;
         const URL_UPDATE_HOLD = id => `/admin/hold/update/${id}/`;
         const URL_DELETE_HOLD = id => `/admin/hold/delete/${id}/`;
-        const URL_NEXT_HOLD   = "/admin/hold/next-id/";
+        const URL_NEXT_HOLD = "/admin/hold/next-id/";
 
-        const URL_SEARCH_HAB  = "/admin/habitaciones/search/";
-        const URL_SEARCH_RES  = "/admin/reservas/search/";
+        const URL_SEARCH_HAB = "/admin/habitaciones/search/";
+        const URL_SEARCH_RES = "/admin/reservas/search/";
 
         const MAX_TIEMPO_HOLD = 99999;  // hasta 5 dígitos (minutos)
 
         let currentPage = 1;
-        let totalPages  = 1;
+        let totalPages = 1;
 
         let pickerCrear = null;
         let pickerEditar = null;
@@ -170,8 +170,8 @@
                     `);
                 });
 
-                currentPage = resp.page        || 1;
-                totalPages  = resp.total_pages || 1;
+                currentPage = resp.page || 1;
+                totalPages = resp.total_pages || 1;
                 actualizarPaginacion();
 
             }).fail(xhr => {
@@ -195,7 +195,7 @@
                     url: URL_SEARCH_HAB,
                     dataType: "json",
                     delay: 250,
-                    data: params => ({ q: params.term }),
+                    data: params => ({q: params.term}),
                     processResults: resp => ({
                         results: (resp.data || []).map(h => ({
                             id: h.IdHabitacion,
@@ -221,7 +221,7 @@
                     url: URL_SEARCH_RES,
                     dataType: "json",
                     delay: 250,
-                    data: params => ({ q: params.term }),
+                    data: params => ({q: params.term}),
                     processResults: resp => ({
                         results: (resp.data || []).map(r => ({
                             id: r.IdReserva,
@@ -236,29 +236,29 @@
         function getTodayStr() {
             const d = new Date();
             const month = String(d.getMonth() + 1).padStart(2, "0");
-            const day   = String(d.getDate()).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
             return `${d.getFullYear()}-${month}-${day}`;  // YYYY-MM-DD
         }
 
         function initRangoFechas(crear = true, start = null, end = null) {
-            const inputId  = crear ? "crear_RangoFechas"   : "editar_RangoFechas";
+            const inputId = crear ? "crear_RangoFechas" : "editar_RangoFechas";
             const iniHidden = crear ? "#crear_FechaInicio" : "#editar_FechaInicio";
-            const finHidden = crear ? "#crear_FechaFinal"  : "#editar_FechaFinal";
+            const finHidden = crear ? "#crear_FechaFinal" : "#editar_FechaFinal";
 
             const el = document.getElementById(inputId);
             if (!el || !window.Litepicker) return;
 
             // destruir instancia anterior
-            if (crear && pickerCrear)  pickerCrear.destroy();
+            if (crear && pickerCrear) pickerCrear.destroy();
             if (!crear && pickerEditar) pickerEditar.destroy();
 
             const hoyStr = getTodayStr();
 
             // CREAR: minDate = hoy
             // EDITAR: minDate = fecha de inicio original (si existe), si no, hoy
-            const minDateStr   = crear ? hoyStr : (start || hoyStr);
+            const minDateStr = crear ? hoyStr : (start || hoyStr);
             const startDateStr = start || minDateStr;
-            const endDateStr   = end   || null;
+            const endDateStr = end || null;
 
             const picker = new Litepicker({
                 element: el,
@@ -270,7 +270,7 @@
                 minDate: minDateStr,
                 startDate: startDateStr,
                 endDate: endDateStr,
-                tooltipText: { one: "día", other: "días" },
+                tooltipText: {one: "día", other: "días"},
                 tooltipNumber: totalDays => totalDays,
                 setup: (p) => {
                     p.on("selected", (date1, date2) => {
@@ -282,8 +282,8 @@
                 }
             });
 
-            if (crear) pickerCrear  = picker;
-            else       pickerEditar = picker;
+            if (crear) pickerCrear = picker;
+            else pickerEditar = picker;
         }
 
         // ================== HELPERS TIEMPO HOLD (ENTERO POSITIVO) ==================
@@ -339,8 +339,8 @@
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener("keydown", tiempoHoldKeyDown);
-                el.addEventListener("input",   tiempoHoldInput);
-                el.addEventListener("paste",   tiempoHoldPaste);
+                el.addEventListener("input", tiempoHoldInput);
+                el.addEventListener("paste", tiempoHoldPaste);
             });
         }
 
@@ -367,57 +367,75 @@
             $("#modalCrearHold").modal("show");
         }
 
-        function crearHold() {
-            const idHold   = $("#crear_IdHold").val().trim();
-            const idHab    = $("#crear_IdHabitacion").val();
-            const idResStr = $("#crear_IdReserva").val();
-            const tiempoStr= $("#crear_TiempoHold").val().trim();
-            const fechaIni = $("#crear_FechaInicio").val();
-            const fechaFin = $("#crear_FechaFinal").val();
-            const estado   = $("#crear_EstadoHold").is(":checked");
+        function crearHold(btn) {
+    // 1) Bloqueamos el botón de inmediato
+    bloquearBoton(btn, "Guardando...");
 
-            if (!idHold || !idHab || !idResStr) {
-                return crudNotify("warning", "ID Hold, Habitación y Reserva son obligatorios.");
-            }
+    const idHold   = $("#crear_IdHold").val().trim();
+    const idHab    = $("#crear_IdHabitacion").val();
+    const idResStr = $("#crear_IdReserva").val();
+    const tiempoStr= $("#crear_TiempoHold").val().trim();
+    const fechaIni = $("#crear_FechaInicio").val();
+    const fechaFin = $("#crear_FechaFinal").val();
+    const estado   = $("#crear_EstadoHold").is(":checked");
 
-            const idReserva = parseInt(idResStr, 10);
-            if (Number.isNaN(idReserva)) {
-                return crudNotify("warning", "La reserva seleccionada es inválida.");
-            }
+    // ============ VALIDACIONES (si fallan, desbloqueamos y salimos) ============
 
-            if (tiempoStr !== "") {
-                const tiempoNum = parseInt(tiempoStr, 10);
-                if (Number.isNaN(tiempoNum) || tiempoNum <= 0 || tiempoNum > MAX_TIEMPO_HOLD) {
-                    return crudNotify("warning",
-                        `El tiempo de hold debe ser un entero entre 1 y ${MAX_TIEMPO_HOLD}.`);
-                }
-            }
+    if (!idHold || !idHab || !idResStr) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "ID Hold, Habitación y Reserva son obligatorios.");
+    }
 
-            const data = {
-                IdHold:       idHold,
-                IdHabitacion: idHab,
-                IdReserva:    idReserva,
-                TiempoHold:   tiempoStr === "" ? "" : tiempoStr,
-                FechaInicio:  fechaIni || "",
-                FechaFinal:   fechaFin || "",
-                EstadoHold:   estado ? "true" : "false"
-            };
+    const idReserva = parseInt(idResStr, 10);
+    if (Number.isNaN(idReserva)) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "La reserva seleccionada es inválida.");
+    }
 
-            $.post(URL_CREATE_HOLD, data)
-                .done(resp => {
-                    if (resp.status !== "ok") {
-                        return crudNotify("error", resp.message || "No se pudo crear el hold.");
-                    }
-                    $("#modalCrearHold").modal("hide");
-                    crudNotify("success", resp.message || "Hold creado correctamente.");
-                    cargarHolds(currentPage);
-                })
-                .fail(xhr => {
-                    const msg = xhr.responseJSON?.message ||
-                                "No se pudo crear el registro. Verifique los datos.";
-                    crudNotify("error", msg);
-                });
-        }
+    if (!tiempoStr) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "Debe ingresar el tiempo del hold (en segundos).");
+    }
+
+    if (!fechaIni || !fechaFin) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "Debe seleccionar el rango completo de fechas.");
+    }
+
+    const tiempoNum = parseInt(tiempoStr, 10);
+    if (isNaN(tiempoNum) || tiempoNum <= 0 || tiempoNum > MAX_TIEMPO_HOLD) {
+        desbloquearBoton(btn);
+        return crudNotify("warning",
+            `El tiempo debe ser un número entre 1 y ${MAX_TIEMPO_HOLD}.`);
+    }
+
+    if (fechaFin < fechaIni) {
+        desbloquearBoton(btn);
+        return crudNotify("error", "La fecha final no puede ser menor que la inicial.");
+    }
+
+    // ============ SI TODO OK, ARMAMOS DATA ============
+
+    const data = {
+        IdHold:       idHold,
+        IdHabitacion: idHab,
+        IdReserva:    idReserva,
+        TiempoHold:   tiempoStr,
+        FechaInicio:  fechaIni || "",
+        FechaFinal:   fechaFin || "",
+        EstadoHold:   estado ? "true" : "false"
+    };
+
+    // ============ LLAMADA AL BACKEND ============
+
+    crudCreate(URL_CREATE_HOLD, data, () => {
+        $("#modalCrearHold").modal("hide");
+        cargarHolds(currentPage);
+        // solo aquí lo desbloqueamos al final
+        desbloquearBoton(btn);
+    });
+}
+
 
         // ================== EDITAR ==================
         async function abrirModalEditarHold(id) {
@@ -458,57 +476,71 @@
                 crudNotify("error", "Error al obtener datos para edición.");
             }
         }
+function actualizarHold(btn) {
+    bloquearBoton(btn, "Actualizando...");
 
-        function actualizarHold() {
-            const id       = $("#editar_IdHold").val().trim();
-            const idHab    = $("#editar_IdHabitacion").val();
-            const idResStr = $("#editar_IdReserva").val();
-            const tiempoStr= $("#editar_TiempoHold").val().trim();
-            const fechaIni = $("#editar_FechaInicio").val();
-            const fechaFin = $("#editar_FechaFinal").val();
-            const estado   = $("#editar_EstadoHold").is(":checked");
+    const id       = $("#editar_IdHold").val().trim();
+    const idHab    = $("#editar_IdHabitacion").val();
+    const idResStr = $("#editar_IdReserva").val();
+    const tiempoStr= $("#editar_TiempoHold").val().trim();
+    const fechaIni = $("#editar_FechaInicio").val();
+    const fechaFin = $("#editar_FechaFinal").val();
+    const estado   = $("#editar_EstadoHold").is(":checked");
 
-            if (!idHab || !idResStr) {
-                return crudNotify("warning", "Habitación y Reserva son obligatorias.");
-            }
+    // ============ VALIDACIONES ============
 
-            const idReserva = parseInt(idResStr, 10);
-            if (Number.isNaN(idReserva)) {
-                return crudNotify("warning", "La reserva seleccionada es inválida.");
-            }
+    if (!idHab || !idResStr) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "Habitación y reserva son obligatorias.");
+    }
 
-            if (tiempoStr !== "") {
-                const tiempoNum = parseInt(tiempoStr, 10);
-                if (Number.isNaN(tiempoNum) || tiempoNum <= 0 || tiempoNum > MAX_TIEMPO_HOLD) {
-                    return crudNotify("warning",
-                        `El tiempo de hold debe ser un entero entre 1 y ${MAX_TIEMPO_HOLD}.`);
-                }
-            }
+    if (!tiempoStr) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "Debe ingresar el tiempo del hold.");
+    }
 
-            const data = {
-                IdHabitacion: idHab,
-                IdReserva:    idReserva,
-                TiempoHold:   tiempoStr === "" ? "" : tiempoStr,
-                FechaInicio:  fechaIni || "",
-                FechaFinal:   fechaFin || "",
-                EstadoHold:   estado ? "true" : "false"
-            };
+    if (!fechaIni || !fechaFin) {
+        desbloquearBoton(btn);
+        return crudNotify("warning", "Debe seleccionar el rango completo de fechas.");
+    }
 
-            $.post(URL_UPDATE_HOLD(id), data)
-                .done(resp => {
-                    if (resp.status !== "ok") {
-                        return crudNotify("error", resp.message || "No se pudo actualizar el hold.");
-                    }
-                    $("#modalEditarHold").modal("hide");
-                    crudNotify("success", resp.message || "Hold actualizado correctamente.");
-                    cargarHolds(currentPage);
-                })
-                .fail(xhr => {
-                    const msg = xhr.responseJSON?.message ||
-                                "No se pudo actualizar el registro. Verifique los datos.";
-                    crudNotify("error", msg);
-                });
-        }
+    const idReserva = parseInt(idResStr, 10);
+    if (isNaN(idReserva)) {
+        desbloquearBoton(btn);
+        return crudNotify("error", "Reserva inválida.");
+    }
+
+    const tiempoNum = parseInt(tiempoStr, 10);
+    if (isNaN(tiempoNum) || tiempoNum <= 0 || tiempoNum > MAX_TIEMPO_HOLD) {
+        desbloquearBoton(btn);
+        return crudNotify("warning",
+            `Tiempo inválido (1 - ${MAX_TIEMPO_HOLD}).`);
+    }
+
+    if (fechaFin < fechaIni) {
+        desbloquearBoton(btn);
+        return crudNotify("error", "La fecha final no puede ser menor que la inicial.");
+    }
+
+    // ============ DATA ============
+
+    const data = {
+        IdHabitacion: idHab,
+        IdReserva:    idReserva,
+        TiempoHold:   tiempoStr,
+        FechaInicio:  fechaIni || "",
+        FechaFinal:   fechaFin || "",
+        EstadoHold:   estado ? "true" : "false"
+    };
+
+    // ============ LLAMADA BACKEND ============
+
+    crudUpdate(URL_UPDATE_HOLD(id), data, () => {
+        $("#modalEditarHold").modal("hide");
+        cargarHolds(currentPage);
+        desbloquearBoton(btn);
+    });
+}
 
         // ================== ELIMINAR ==================
         function eliminarHold(id) {

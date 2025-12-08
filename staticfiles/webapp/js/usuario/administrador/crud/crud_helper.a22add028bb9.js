@@ -223,3 +223,19 @@ function crudConfirm(message) {
             .addEventListener("click", () => close(true));
     });
 }
+    function bloquearBoton(btn, texto = "Cargando...") {
+    btn.dataset.textoOriginal = btn.innerHTML;
+    btn.innerHTML = texto;
+    btn.disabled = true;
+    btn.classList.add("disabled");
+    btn.style.opacity = "0.6";
+    btn.style.pointerEvents = "none";
+}
+
+function desbloquearBoton(btn) {
+    btn.innerHTML = btn.dataset.textoOriginal || "Enviar";
+    btn.disabled = false;
+    btn.classList.remove("disabled");
+    btn.style.opacity = "1";
+    btn.style.pointerEvents = "auto";
+}

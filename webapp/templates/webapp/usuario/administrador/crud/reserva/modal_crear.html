@@ -33,10 +33,11 @@
                         <label class="form-label">Estado General</label>
                         <select id="crear_EstadoGeneralReserva" class="form-select">
                             <option value="">Seleccione estado...</option>
-                            <option value="CONFIRMADA">CONFIRMADA</option>
-                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="CONFIRMADO">CONFIRMADO</option>
+                            <option value="PRE-RESERVA">PRE-RESERVA</option>
                             <option value="CANCELADA">CANCELADA</option>
-                            <option value="FINALIZADA">FINALIZADA</option>
+                            <option value="EXPIRADO">EXPIRADO</option>
+
                         </select>
                     </div>
                 </div>
@@ -102,7 +103,12 @@
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-success" onclick="crearReserva()">Guardar Reserva</button>
+<button class="btn btn-success"
+        id="btnCrearReserva"
+        onclick="crearReserva(this)">
+    Guardar Reserva
+</button>
+
             </div>
 
         </div>

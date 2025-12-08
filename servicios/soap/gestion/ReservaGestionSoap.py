@@ -1,3 +1,4 @@
+
 import requests
 from datetime import datetime
 from decimal import Decimal
@@ -177,5 +178,4 @@ class ReservaGestionSoap:
 
         except Fault as e:
             raise Exception(f"SOAP Error al buscar datos reserva: {e}")
-
 
