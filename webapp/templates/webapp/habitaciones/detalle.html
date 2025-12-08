@@ -91,61 +91,72 @@
             font-size: 1rem;
         }
     </style>
-<style>
-#toast-container {
-    position: fixed !important;
-    top: 20px;
-    right: 20px;
-    z-index: 99999 !important;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-}
+    <style>
+        #toast-container {
+            position: fixed !important;
+            top: 20px;
+            right: 20px;
+            z-index: 99999 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
 
-.toast-msg {
-    min-width: 260px;
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    border-radius: 999px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
-    color: #fff;
-    font-weight: 600;
-    opacity: 0;
-    transform: translateX(30px);
-    transition: all .3s ease;
-    font-size: .9rem;
-    pointer-events: auto;
-}
+        .toast-msg {
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            color: #fff;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all .3s ease;
+            font-size: .9rem;
+            pointer-events: auto;
+        }
 
-.toast-msg.show {
-    opacity: 1;
-    transform: translateX(0);
-}
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
 
-.toast-msg .icon {
-    margin-right: .5rem;
-}
+        .toast-msg .icon {
+            margin-right: .5rem;
+        }
 
-.toast-success { background-color: #16a34a; }
-.toast-error   { background-color: #dc2626; }
-.toast-warning { background-color: #d97706; }
-.toast-info    { background-color: #2563eb; }
+        .toast-success {
+            background-color: #16a34a;
+        }
 
-</style>
+        .toast-error {
+            background-color: #dc2626;
+        }
+
+        .toast-warning {
+            background-color: #d97706;
+        }
+
+        .toast-info {
+            background-color: #2563eb;
+        }
+
+    </style>
 {% endblock %}
 
 
 
 {% block contenido_pagina %}
-<div class="messages-wrapper">
-    {% if messages %}
-        {% for message in messages %}
-            {% comment %}
+    <div class="messages-wrapper">
+        {% if messages %}
+            {% for message in messages %}
+                {% comment %}
               message.tags en Django suele traer: success, error, warning, info
             {% endcomment %}
-            <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
+                <div class="app-alert app-alert-{{ message.tags|default:'info' }}">
                 <span class="app-alert-icon">
                     {% if "success" in message.tags %}
                         <i class="bi bi-check-circle"></i>
@@ -157,17 +168,17 @@
                         <i class="bi bi-info-circle"></i>
                     {% endif %}
                 </span>
-                <span class="app-alert-text">
+                    <span class="app-alert-text">
                     {{ message }}
                 </span>
-                <!-- si quieres cerrar manualmente -->
-                <span class="app-alert-close" onclick="this.parentElement.remove()">
+                    <!-- si quieres cerrar manualmente -->
+                    <span class="app-alert-close" onclick="this.parentElement.remove()">
                     &times;
                 </span>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
     <div id="toast-container"></div>
 
 
@@ -491,32 +502,43 @@
 
                     picker.on('selected', (date1, date2) => {
                         if (date1 && date2) {
-                            // Validar que el rango seleccionado no incluya días bloqueados
+
                             const inicio = new Date(date1);
                             const fin = new Date(date2);
+
                             inicio.setHours(0, 0, 0, 0);
                             fin.setHours(0, 0, 0, 0);
 
+                            const diffTime = fin.getTime() - inicio.getTime();
+                            const noches = diffTime / (1000 * 60 * 60 * 24);
+
+                            if (noches < 1) {
+                                mostrarToast("La estancia mínima debe ser de 1 noche.", "warning");
+                                picker.clearSelection();
+                                document.getElementById('rango-fechas').value = '';
+                                return;
+                            }
+
+                            // Validar días bloqueados
                             let tieneDiaBloqueado = false;
-                            let fechaBloqueadaEncontrada = null;
 
                             for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
                                 const fechaStr = d.toISOString().split('T')[0];
                                 if (fechasOcupadas.includes(fechaStr)) {
                                     tieneDiaBloqueado = true;
-                                    fechaBloqueadaEncontrada = fechaStr;
                                     break;
                                 }
                             }
 
                             if (tieneDiaBloqueado) {
-                                mostrarToast("Las fechas seleccionadas incluyen días que ya están ocupados, Por favor, selecciona otras fechas.", "warning");
+                                mostrarToast("El rango incluye fechas ocupadas.", "warning");
                                 picker.clearSelection();
                                 document.getElementById('rango-fechas').value = '';
-                                return false;
+                                return;
                             }
                         }
                     });
+
                 }
             });
 
@@ -602,15 +624,29 @@
 
                     btn.addEventListener("click", () => {
 
-                        // VALIDACIÓN OBLIGATORIA
-                        if (!inputFechas.value.trim()) {
-                            mostrarToast("Por favor selecciona un rango de fechas antes de continuar.", "warning");
+                        const fechas = inputFechas.value.trim();
+                        if (!fechas) {
+                            mostrarToast("Por favor selecciona un rango de fechas.", "warning");
                             return;
                         }
 
+                        const [inicioRaw, finRaw] = fechas.split(" - ");
+                        const inicio = new Date(inicioRaw.split("/").reverse().join("-"));
+                        const fin = new Date(finRaw.split("/").reverse().join("-"));
+
+                        const noches = (fin - inicio) / (1000 * 60 * 60 * 24);
+
+                        if (noches < 1) {
+                            mostrarToast("La estancia mínima debe ser de 2 noches.", "warning");
+                            return;
+                        }
+
+                        // ✅ abrir modal solo si es válido
                         const modal = new bootstrap.Modal(document.getElementById("modalReserva"));
                         modal.show();
                     });
+
+
                 }
             }
         });
@@ -666,8 +702,19 @@
                     desbloquearBoton();
                     return;
                 }
-
                 const [inicioRaw, finRaw] = fechas.split(" - ");
+
+                const inicio = new Date(inicioRaw.split("/").reverse().join("-"));
+                const fin = new Date(finRaw.split("/").reverse().join("-"));
+const diff = (fin - inicio) / (1000 * 60 * 60 * 24);
+
+if (diff < 1) {
+    mostrarToast("La estancia mínima debe ser de 1 noche.", "warning");
+    desbloquearBoton();
+    return;
+}
+
+
                 const fechaInicio = inicioRaw.split("/").reverse().join("-") + "T15:00:00";
                 const fechaFin = finRaw.split("/").reverse().join("-") + "T11:00:00";
 

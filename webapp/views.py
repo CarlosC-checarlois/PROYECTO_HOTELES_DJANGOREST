@@ -1143,7 +1143,7 @@ class ConfirmarReservaInternaAjax(View):
                 return JsonResponse({"ok": False, "error": "Fondos insuficientes"}, status=400)
 
             try:
-                # 🔹 usamos la cuenta ingresada por el usuario
+
                 respuesta_banca = ejecutar_pago_banca_interno(costo, numeroCuenta)
             except Exception as e:
                 return JsonResponse({

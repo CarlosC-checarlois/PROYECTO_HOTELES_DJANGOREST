@@ -2,204 +2,203 @@
 {% load static %}
 
 {% block titulo_pagina %}
-<title>Mis Pagos | Hotel Genérico</title>
+    <title>Mis Pagos | Hotel Genérico</title>
 {% endblock %}
 
 {% block css_archivos %}
-<style>
-    :root {
-        --color-principal: #3b82f6;
-        --color-secundario: #6c5ce7;
-        --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
-    }
+    <style>
+        :root {
+            --color-principal: #3b82f6;
+            --color-secundario: #6c5ce7;
+            --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+        }
 
-    body { background: #f5f7fb; }
+        body {
+            background: #f5f7fb;
+        }
 
-    .pago-card {
-        background: #fff;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        transition: .2s;
-    }
-    .pago-card:hover {
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-        transform: translateY(-3px);
-    }
+        .pago-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: .2s;
+        }
 
-    .badge-estado {
-        font-size: 0.85rem;
-        padding: .45rem .8rem;
-        border-radius: .75rem;
-    }
+        .pago-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+        }
 
-    .small-label {
-        font-size: 0.85rem;
-    }
+        .badge-estado {
+            font-size: 0.85rem;
+            padding: .45rem .8rem;
+            border-radius: .75rem;
+        }
 
-    .pdf-link {
-        display: inline-block;
-        margin-top: 6px;
-        font-size: 0.9rem;
-        padding: 6px 12px;
-        border-radius: 8px;
-        background: var(--color-principal);
-        color: white;
-        text-decoration: none;
-        transition: .2s;
-    }
-    .pdf-link:hover {
-        background: var(--color-secundario);
-        color: white;
-    }
-</style>
+        .small-label {
+            font-size: 0.85rem;
+        }
+
+        .pdf-link {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--color-principal);
+            color: white;
+            text-decoration: none;
+            transition: .2s;
+        }
+
+        .pdf-link:hover {
+            background: var(--color-secundario);
+            color: white;
+        }
+    </style>
 {% endblock %}
 
 {% block contenido_pagina %}
 
-<section class="container py-5">
+    <section class="container py-5">
 
-    <h2 class="fw-bold mb-4">Mis Pagos</h2>
+        <h2 class="fw-bold mb-4">Mis Pagos</h2>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
 
-    {% if pagos|length == 0 %}
-        <div class="alert alert-info">Cargando tu informacion de pagos</div>
-    {% endif %}
+        {% if pagos|length == 0 %}
+            <div class="alert alert-info">Cargando tu informacion de pagos</div>
+        {% endif %}
 
-    <div class="row g-4">
+        <div class="row g-4">
 
-        {% for p in pagos %}
-        <div class="col-md-6">
-            <div class="pago-card shadow-sm">
+            {% for p in pagos %}
+                <div class="col-md-6">
+                    <div class="pago-card shadow-sm">
 
-                <!-- Encabezado -->
-                <h5 class="fw-bold mb-1">
-                    Pago #{{ p.id }}
-                </h5>
+                        <!-- Encabezado -->
+                        <h5 class="fw-bold mb-1">
+                            Pago #{{ p.id }}
+                        </h5>
 
-                <!-- Factura -->
-                <p class="text-muted mb-1">
-                    <i class="bi bi-receipt"></i>
-                    Factura: {{ p.factura_id }}
-                </p>
+                        <!-- Factura -->
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-receipt"></i>
+                            Factura: {{ p.factura_id }}
+                        </p>
 
-                <!-- Monto -->
-                <p class="mb-1"><strong>Monto:</strong> ${{ p.monto }}</p>
+                        <!-- Monto -->
+                        <p class="mb-1"><strong>Monto:</strong> ${{ p.monto }}</p>
 
-                <!-- Fecha -->
-
-                <!-- Método -->
-                <p class="mb-1"><strong>Método Pago Tipo:</strong> {{ p.metodo }}</p>
-
-
-                <!-- Estado -->
-                {% if p.estado == "Pagado" %}
-                    <span class="badge bg-success badge-estado">Pagado</span>
-                {% else %}
-                    <span class="badge bg-warning text-dark badge-estado">Pendiente</span>
-                {% endif %}
-
-                <!-- ============================ -->
-                <!-- SECCIÓN: DETALLES DE RESERVA -->
-                <!-- ============================ -->
-
-<hr>
-
-<p class="fw-bold mb-2">Detalles de la Reserva:</p>
-
-{% if p.pdf_url %}
-    <a class="btn btn-primary btn-sm" href="{{ p.pdf_url }}" target="_blank">
-        Ver PDF de la Reserva
-    </a>
-{% else %}
-    <button class="btn btn-warning btn-sm generar-pdf-btn"
-            data-factura="{{ p.factura_id }}">
-        Generar PDF
-    </button>
-{% endif %}
+                        <!-- Fecha -->
+                        <!-- Método -->
+                        <p class="mb-1"><strong>Cuenta origen:</strong> {{ p.cuenta_origen }}</p>
+                        <p class="mb-1"><strong>Cuenta destino:</strong> {{ p.cuenta_destino }}</p>
 
 
-            </div>
+                        <!-- Estado -->
+                        {% if p.estado == "Pagado" %}
+                            <span class="badge bg-success badge-estado">Pagado</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark badge-estado">Pendiente</span>
+                        {% endif %}
+                        <hr>
+
+                        <p class="fw-bold mb-2">Detalles de la Reserva:</p>
+
+                        {% if p.pdf_url %}
+                            <a class="btn btn-primary btn-sm" href="{{ p.pdf_url }}" target="_blank">
+                                Ver PDF de la Reserva
+                            </a>
+                        {% else %}
+                            <button class="btn btn-warning btn-sm generar-pdf-btn"
+                                    data-factura="{{ p.factura_id }}">
+                                Generar PDF
+                            </button>
+                        {% endif %}
+
+
+                    </div>
+                </div>
+            {% endfor %}
+
         </div>
-        {% endfor %}
 
-    </div>
-
-</section>
+    </section>
 
 {% endblock %}
-    {% block bloquear_footer %}
+{% block bloquear_footer %}
 {% endblock %}
 {% block jvscript_archivos_defer %}
-<script>
-    // Si el usuario está logeado, agregamos ?uid=ID automáticamente
-    document.addEventListener("DOMContentLoaded", function() {
-        const uid = localStorage.getItem("usuario_id");
-        if (uid && window.location.search === "") {
-            window.location.href = "?uid=" + uid;
-        }
-    });
-</script>
     <script>
-document.addEventListener("click", function(e) {
-    if (e.target.classList.contains("generar-pdf-btn")) {
-        const facturaId = e.target.dataset.factura;
-
-        // Validar que facturaId exista
-        if (!facturaId) {
-            alert("Error: No se pudo obtener el ID de la factura.");
-            console.error("facturaId no encontrado en dataset:", e.target.dataset);
-            return;
-        }
-
-        // Validar que sea un número válido
-        const facturaIdNum = parseInt(facturaId);
-        if (isNaN(facturaIdNum) || facturaIdNum <= 0) {
-            alert("Error: ID de factura inválido.");
-            return;
-        }
-
-        fetch("/api/generar-pdf-reserva/", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken")
-            },
-            body: JSON.stringify({ factura_id: facturaIdNum })
-        })
-        .then(r => {
-            if (!r.ok) {
-                return r.json().then(data => {
-                    throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
-                });
+        // Si el usuario está logeado, agregamos ?uid=ID automáticamente
+        document.addEventListener("DOMContentLoaded", function () {
+            const uid = localStorage.getItem("usuario_id");
+            if (uid && window.location.search === "") {
+                window.location.href = "?uid=" + uid;
             }
-            return r.json();
-        })
-        .then(data => {
-            if (data.ok) {
-                alert("PDF generado correctamente!");
-                location.reload();
-            } else {
-                alert("Error: " + (data.error || "Error desconocido"));
-            }
-        })
-        .catch(err => {
-            console.error("Error al generar PDF:", err);
-            alert("Error inesperado: " + err.message);
         });
-    }
-});
+    </script>
+    <script>
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("generar-pdf-btn")) {
+                const facturaId = e.target.dataset.factura;
 
-// Helper para obtener CSRF token
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return null;
-}
+                // Validar que facturaId exista
+                if (!facturaId) {
+                    alert("Error: No se pudo obtener el ID de la factura.");
+                    console.error("facturaId no encontrado en dataset:", e.target.dataset);
+                    return;
+                }
 
-</script>
+                // Validar que sea un número válido
+                const facturaIdNum = parseInt(facturaId);
+                if (isNaN(facturaIdNum) || facturaIdNum <= 0) {
+                    alert("Error: ID de factura inválido.");
+                    return;
+                }
+
+                fetch("/api/generar-pdf-reserva/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({factura_id: facturaIdNum})
+                })
+                    .then(r => {
+                        if (!r.ok) {
+                            return r.json().then(data => {
+                                throw new Error(data.error || `Error ${r.status}: ${r.statusText}`);
+                            });
+                        }
+                        return r.json();
+                    })
+                    .then(data => {
+                        if (data.ok) {
+                            alert("PDF generado correctamente!");
+                            location.reload();
+                        } else {
+                            alert("Error: " + (data.error || "Error desconocido"));
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error al generar PDF:", err);
+                        alert("Error inesperado: " + err.message);
+                    });
+            }
+        });
+
+        // Helper para obtener CSRF token
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return null;
+        }
+
+    </script>
 
 {% endblock %}
