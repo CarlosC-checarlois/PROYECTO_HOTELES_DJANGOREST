@@ -8,14 +8,19 @@
 {% block css_archivos %}
     <style>
         :root {
-            --color-principal: #3b82f6;
-            --color-secundario: #6c5ce7;
+            --color-principal: #f97316; /* naranja */
+            --color-secundario: #f43f5e; /* coral */
+            --color-fondo: #fff7ed; /* fondo cálido */
+            --color-borde: #fed7aa; /* borde suave */
+            --color-texto-suave: #9a3412; /* marrón café */
             --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
         }
 
+        /* fondo general */
         body {
-            background: #f5f7fb;
+            background: var(--color-fondo);
         }
+
 
         .reserva-card {
             border-radius: 1rem;

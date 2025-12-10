@@ -161,5 +161,3 @@ class PagoGestionRest:
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al eliminar pago: {e}")
-
-

@@ -1,0 +1,90 @@
+:root {
+    --texto-claro: #ffffff;
+    /* 🎨 Colores cálidos */
+    --color-principal: #f97316;   /* naranja cálido */
+    --color-secundario: #f43f5e;  /* coral/rosado cálido */
+}
+
+/* CABEZAL */
+.cabezal_general {
+    position: sticky;
+    top: 0;
+    z-index: 3000;
+    background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
+    border-bottom: none;
+    box-shadow: 0 10px 30px rgba(15,23,42,.25);
+}
+
+.menu_cabezal_general {
+    padding: 0.75rem 0;
+}
+
+.logo_cabezal_general {
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #fff !important;   /* para que no quede azul de bootstrap */
+}
+
+/* Enlaces del menú */
+.navbar-nav .nav-link {
+    color: rgba(255,255,255,.9);
+    font-weight: 500;
+    transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    border-radius: 999px;
+    padding-inline: 1rem;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #ffffff;
+    background: rgba(0,0,0,0.16);
+    transform: translateY(-1px);
+}
+
+/* Botón del navbar (Iniciar sesión, etc.) */
+.navbar .btn {
+    background: linear-gradient(90deg, #f97316, #facc15); /* naranja → dorado */
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    color: #4b1f0e;
+    transition: all 0.3s ease;
+}
+
+.navbar .btn:hover {
+    background: linear-gradient(90deg, #ea580c, #eab308);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+}
+
+/* FOOTER cálido a juego */
+.footer-modern {
+    background: linear-gradient(135deg, #f97316, #f43f5e);
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.15);
+}
+
+.footer-links a {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,.8);
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.footer-social a {
+    color: #ffffff;
+    font-size: 1.4rem;
+    transition: 0.3s ease;
+}
+
+.footer-social a:hover {
+    color: #ffe4c7; /* marfil cálido */
+    transform: translateY(-3px);
+}

@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.soap.gestion.PagoGestionSoap import PagoGestionSoap as PagoGestionRest
+from servicios.rest.gestion.PagoGestionRest import PagoGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

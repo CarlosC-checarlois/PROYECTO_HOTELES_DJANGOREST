@@ -13,26 +13,28 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from reportlab.lib.randomtext import PRINTING
 
-from servicios.soap.gestion.DescuentoGestionSoap import DescuentosGestionSoap as DescuentosGestionRest
-from servicios.soap.gestion.DesxHabxResGestionSoap import DesxHabxResGestionSoap as DesxHabxResGestionRest
+from servicios.rest.gestion.DescuentosGestionRest import DescuentosGestionRest
+from servicios.rest.gestion.DesxHabxResGestionRest import DesxHabxResGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 import uuid
-# ====== SERVICIOS SOAP (USADOS COMO "REST") ======
-from servicios.soap.gestion.HoldGestionSoap import HoldGestionSoap as HoldGestionRest
-from servicios.soap.integracion.HabitacionesSoap import HabitacionesSoap as HabitacionesRest
-from servicios.soap.gestion.TipoHabitacionGestionSoap import TipoHabitacionGestionSoap as TipoHabitacionGestionRest
-from servicios.soap.gestion.AmexHabGestionSoap import AmexHabGestionSoap as AmexHabGestionRest
-from servicios.soap.gestion.AmenidadGestionSoap import AmenidadGestionSoap as AmenidadesGestionRest
-from servicios.soap.gestion.UsuarioInternoGestionSoap import UsuarioInternoGestionSoap as UsuarioInternoGestionRest
-from servicios.soap.gestion.PagoGestionSoap import PagoGestionSoap as PagoGestionRest
-from servicios.soap.gestion.FuncionesEspecialesGestionSoap import \
-    FuncionesEspecialesGestionSoap as FuncionesEspecialesGestionRest
-from servicios.soap.gestion.PdfGestionSoap import PdfGestionSoap as PdfGestionRest
-from servicios.soap.gestion.HabxResGestionSoap import HabxResGestionSoap as HabxResGestionRest
-from servicios.soap.gestion.HabitacionGestionSoap import HabitacionesGestionSoap as HabitacionesGestionRest
-from servicios.soap.gestion.ReservaGestionSoap import ReservaGestionSoap as ReservaGestionRest
-from servicios.soap.gestion.ImagenHabitacionGestionSoap import \
-    ImagenHabitacionGestionSoap as ImagenHabitacionGestionRest
+
+# ====== SERVICIOS REST IMPORTS ======
+from servicios.rest.gestion.HoldGestionRest import HoldGestionRest
+from servicios.rest.integracion.HabitacionesRest import HabitacionesRest
+from servicios.rest.gestion.TipoHabitacionGestionRest import TipoHabitacionGestionRest
+from servicios.rest.gestion.AmexHabGestionRest import AmexHabGestionRest
+from servicios.rest.gestion.AmenidadesGestionRest import AmenidadesGestionRest
+from servicios.rest.gestion.UsuarioInternoGestionRest import UsuarioInternoGestionRest
+from servicios.rest.gestion.PagoGestionRest import PagoGestionRest
+from servicios.rest.gestion.FuncionesEspecialesGestionRest import FuncionesEspecialesGestionRest
+from servicios.rest.gestion.PdfGestionRest import PdfGestionRest
+from servicios.rest.gestion.HabxResGestionRest import HabxResGestionRest
+from servicios.rest.gestion.HabitacionesGestionRest import HabitacionesGestionRest
+from servicios.rest.gestion.ReservaGestionRest import ReservaGestionRest
+from servicios.rest.gestion.ImagenHabitacionGestionRest import ImagenHabitacionGestionRest
+from django.http import JsonResponse
+from django.views import View
+from servicios.rest.gestion.PagoGestionRest import PagoGestionRest
 from utils.hold_cache import HOLDS_CACHE, LOCK
 
 
@@ -202,7 +204,7 @@ def register_post(request):
     # -----------------------
     # VALIDACIÓN DE CORREO
     # -----------------------
-    email_regex = r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.com$'
+    email_regex = r'^[A-Za-z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|live\.com|icloud\.com|puce\.edu\.ec)$'
     if correo and not re.match(email_regex, correo):
         errores.append("El correo electrónico debe tener el formato usuario@dominio.com.")
 
@@ -213,6 +215,7 @@ def register_post(request):
         "hotmail.com",
         "live.com",
         "icloud.com",
+        "puce.edu.ec",
     }
 
     if correo and re.match(email_regex, correo):
@@ -224,7 +227,7 @@ def register_post(request):
         if dominio not in allowed_domains:
             errores.append(
                 "Solo se permiten correos de dominios generales como "
-                "@gmail.com, @yahoo.com, @outlook.com, @hotmail.com, @live.com o @icloud.com."
+                "@gmail.com, @yahoo.com, @outlook.com, @hotmail.com, @live.com, @icloud.com o @puce.edu.ec."
             )
 
     # Si hubo errores hasta aquí, no seguimos
@@ -282,7 +285,6 @@ def register_post(request):
     except Exception as e:
         messages.error(request, f"Error: {e}")
         return redirect("register")
-
 
 def detalle_habitacion(request, id):
     """
@@ -903,7 +905,6 @@ class FechasOcupadasAjaxView(View):
 
 ## FUNCIONES PARA GENERAR PRERESERVA
 def iniciar_temporizador_hold(id_hold, duracion, api):
-
     segundos = duracion
 
     while segundos > 0:
@@ -1437,11 +1438,11 @@ def usuario_gestion(request):
     return render(request, "webapp/usuario/cliente/gestion/index.html")
 
 
-
 @admin_required
 def usuario_gestion_administrador(request):
     """ Vista principal del panel administrativo. Solo accesible para usuarios con rol = 2 (administrador). """
-    return render(request,"webapp/usuario/administrador/gestion/index.html")
+    return render(request, "webapp/usuario/administrador/gestion/index.html")
+
 
 @csrf_exempt
 def usuario_actualizar_administrador(request):
@@ -1534,6 +1535,7 @@ def usuario_actualizar_administrador(request):
             "message": str(e)
         }, status=500)
 
+
 def mis_pagos(request):
     import time, threading
 
@@ -1592,9 +1594,9 @@ def mis_pagos(request):
         t.join()
 
     # ✅ YA NUNCA SERÁ NONE
-    lista_pagos    = datos["lista_pagos"]
+    lista_pagos = datos["lista_pagos"]
     lista_facturas = datos["lista_facturas"]
-    lista_pdfs     = datos["lista_pdfs"]
+    lista_pdfs = datos["lista_pdfs"]
 
     # Diccionario de facturas por ID
     facturas_dict = {f.get("IdFactura"): f for f in lista_facturas if f.get("IdFactura")}
@@ -1651,12 +1653,13 @@ def mis_pagos(request):
         "tiempo": elapsed,
     })
 
+
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from servicios.soap.gestion.FacturaGestionSoap import FacturaGestionSoap as FacturasGestionRest
-from servicios.soap.gestion.PdfGestionSoap import PdfGestionSoap
+from servicios.rest.gestion.FacturasGestionRest import FacturasGestionRest
+from servicios.rest.gestion.PdfGestionRest import PdfGestionRest
 from fpdf import FPDF
 
 from xhtml2pdf import pisa
@@ -1753,7 +1756,6 @@ def programar_cancelacion_hold(id_hold):
         ahora = datetime.now()
         expiracion = ahora + timedelta(seconds=tiempo_hold)
 
-
         def cancelar():
 
             try:
@@ -1823,6 +1825,63 @@ def vista_pago(request):
     Muestra la página de pago (formulario).
     """
     return render(request, "webapp/test/pago.html")
+
+
+class UsuarioPagosAjaxView(View):
+
+    def get(self, request):
+        try:
+            uid = request.GET.get("uid")
+
+            if not uid:
+                return JsonResponse({
+                    "ok": False,
+                    "error": "Falta ID de usuario"
+                }, status=400)
+
+            api = PagoGestionRest()
+            pagos = api.obtener_pagos() or []
+
+            # ✅ Filtrar pagos solo del usuario logueado
+            pagos_usuario = [
+                p for p in pagos
+                if str(p.get("IdUnicoUsuario")) == str(uid)
+            ]
+
+            data = []
+
+            for p in pagos_usuario:
+                data.append({
+                    "id": p.get("IdPago"),
+                    "factura_id": p.get("IdFactura"),
+                    "cuenta_origen": p.get("CuentaOrigenPago"),
+                    "cuenta_destino": p.get("CuentaDestinoPago"),
+                    "monto": float(p.get("MontoTotalPago") or 0),
+                    "estado": "Pagado" if p.get("EstadoPago") else "Pendiente",
+                    "fecha": p.get("FechaModificacionPago"),
+                    "pdf_url": None  # la API no entrega PDF aún
+                })
+
+            # ✅ Totales automáticos para el dashboard
+            total_pagado = sum(p["monto"] for p in data if p["estado"] == "Pagado")
+            total_pendiente = sum(p["monto"] for p in data if p["estado"] == "Pendiente")
+
+            return JsonResponse({
+                "ok": True,
+                "data": data,
+                "dashboard": {
+                    "total_pagado": round(total_pagado, 2),
+                    "total_pendiente": round(total_pendiente, 2),
+                    "cantidad_pagos": len(data)
+                }
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "ok": False,
+                "error": str(e)
+            }, status=500)
+
 
 
 def ejecutar_pago_banca_interno(monto, cuenta_origen):

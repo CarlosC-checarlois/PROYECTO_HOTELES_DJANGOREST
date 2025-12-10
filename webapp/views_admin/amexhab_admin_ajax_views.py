@@ -9,7 +9,7 @@ import requests
 from reportlab.lib.randomtext import PRINTING
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.soap.gestion.AmexHabGestionSoap import AmexHabGestionSoap as AmexHabGestionRest
+from servicios.rest.gestion.AmexHabGestionRest import AmexHabGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 
@@ -226,7 +226,7 @@ class AmexHabDeleteAjaxView(View):
 # ================================
 # BUSCADOR AJAX PARA SELECT2
 # ================================
-from servicios.soap.gestion.HabitacionGestionSoap import HabitacionesGestionSoap as HabitacionesGestionRest
+from servicios.rest.gestion.HabitacionesGestionRest import HabitacionesGestionRest
 from django.http import JsonResponse
 from django.views import View
 class HabitacionSearchAjaxView(View):

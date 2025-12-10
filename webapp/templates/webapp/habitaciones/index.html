@@ -11,11 +11,11 @@
 
     <style>
         :root {
-            --color-principal: #2563eb;
-            --color-secundario: #4f46e5;
-            --color-fondo: #f5f7fb;
-            --color-borde: #e5e7eb;
-            --color-texto-suave: #6b7280;
+            --color-principal: #f97316; /* naranja */
+            --color-secundario: #f43f5e; /* coral */
+            --color-fondo: #fff7ed; /* fondo cálido */
+            --color-borde: #fed7aa; /* borde suave */
+            --color-texto-suave: #9a3412; /* marrón café */
         }
 
         /* fondo general */
@@ -30,7 +30,7 @@
             position: fixed;
             top: 1rem;
             right: 1rem;
-            z-index: 3000;
+            z-index: 4000;
         }
 
         .toast-msg {
@@ -39,9 +39,9 @@
             align-items: center;
             padding: .75rem 1.25rem;
             border-radius: 999px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .25);
             color: #fff;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: .5rem;
             opacity: 0;
             transform: translateX(20px);
@@ -54,18 +54,30 @@
             transform: translateX(0);
         }
 
-        .toast-msg .icon {
-            margin-right: .5rem;
-            font-size: 1.1rem;
+        .toast-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
         }
 
-        .toast-success { background-color: #16a34a; }
-        .toast-error   { background-color: #dc2626; }
-        .toast-warning { background-color: #d97706; }
-        .toast-info    { background-color: #2563eb; }
+        .toast-warning {
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            color: #4b1f0e;
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+        }
+
+        .toast-msg .icon {
+            margin-right: .5rem;
+            font-size: 1.2rem;
+        }
 
         /* ===========================
-           LAYOUT STICKY FOOTER
+           LAYOUT
         ============================*/
         .layout-body {
             min-height: 100vh;
@@ -73,90 +85,59 @@
             flex-direction: column;
         }
 
-        .layout-main {
-            flex: 1 0 auto;
-        }
-
-        .layout-footer {
-            flex-shrink: 0;
-        }
 
         /* ===========================
            BUSCADOR
         ============================*/
         .buscador-section {
-            padding: 3rem 0 1rem 0;
+            padding: 3rem 0 1rem;
         }
 
-        .buscador-form {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 999px;
-            padding: .75rem;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
-            display: flex;
-            flex-wrap: wrap;
-            align-items: stretch;
-        }
 
-        .buscador-form .form-control {
-            box-shadow: none !important;
-        }
-
-        .buscador-form input[readonly] {
-            background-color: transparent;
-            cursor: pointer;
-        }
-
-        /* cada campo */
+        /* FIELD */
         .buscador-field {
             position: relative;
+            padding: .5rem 1.25rem;
+            border-right: 1px solid var(--color-borde);
+            flex: 1 1 180px;
+            transition: background .2s ease, box-shadow .2s ease;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: .4rem 1.25rem;
-            border-right: 1px solid var(--color-borde);
-            flex: 1 1 180px;
-            min-width: 0;
-            transition: background .15s ease, box-shadow .15s ease;
         }
 
-        .buscador-field:last-of-type {
+        .buscador-field:last-child {
             border-right: none;
         }
 
-        /* label superior */
+        /* LABEL */
         .buscador-label {
             font-size: .75rem;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: .05rem;
             color: var(--color-texto-suave);
             display: flex;
             align-items: center;
             gap: .35rem;
             margin-bottom: .15rem;
+            font-weight: 700;
         }
 
-        /* texto / valor */
-        .buscador-input,
-        .buscador-input::placeholder {
-            font-size: .95rem;
-            color: #111827;
-        }
-
+        /* INPUT */
         .buscador-input {
             border: none !important;
-            padding: 0;
             background: transparent;
-            box-shadow: none !important;
+            padding: 0;
+            font-size: .95rem;
+            color: #111;
+            font-weight: 600;
         }
 
         .buscador-input:focus {
             outline: none;
         }
 
-        /* línea inferior discreta para el foco */
+        /* FOCUS LINE */
         .buscador-field::after {
             content: "";
             position: absolute;
@@ -164,55 +145,63 @@
             right: 1.25rem;
             bottom: 0;
             height: 2px;
-            background: transparent;
-            transform-origin: left;
+            background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
             transform: scaleX(0);
-            transition: transform .18s ease, background .18s ease;
+            transition: .2s ease;
         }
 
         .buscador-field:focus-within {
-            background: rgba(15, 23, 42, 0.02);
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+            background: #fff1e7;
         }
 
         .buscador-field:focus-within::after {
-            background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
             transform: scaleX(1);
         }
-
-        /* iconos de cada campo con color suave */
-        .field-tipo .buscador-label i      { color: #fb923c; }
-        .field-fechas .buscador-label i    { color: #60a5fa; }
-        .field-capacidad .buscador-label i { color: #4ade80; }
-        .field-precio .buscador-label i    { color: #a855f7; }
 
         .buscador-field:focus-within .buscador-label {
             color: var(--color-principal);
         }
 
-        /* CTA */
+        /* ICONOS */
+        .field-tipo i {
+            color: #fb923c;
+        }
+
+        .field-fechas i {
+            color: #fdba74;
+        }
+
+        .field-capacidad i {
+            color: #f97316;
+        }
+
+        .field-precio i {
+            color: #facc15;
+        }
+
+        /* BOTON BUSCAR */
         .buscador-cta {
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: .4rem .75rem .4rem .25rem;
+            align-items: center;
+            padding: .3rem .75rem;
         }
 
-        .buscador-cta .btn-buscar {
+        .btn-buscar {
             border-radius: 999px;
-            padding: .6rem 1.9rem;
-            font-weight: 600;
+            padding: .6rem 2rem;
+            font-weight: 800;
             border: none;
-            background: linear-gradient(90deg, var(--color-principal), var(--color-secundario));
-            color: #fff;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, .45);
-            transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            color: #4b1f0e;
+            box-shadow: 0 12px 30px rgba(250, 204, 21, .6);
+            transition: .15s ease;
         }
 
-        .buscador-cta .btn-buscar:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
-            box-shadow: 0 16px 35px rgba(37, 99, 235, .55);
+        .btn-buscar:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+            box-shadow: 0 16px 36px rgba(250, 204, 21, .8);
         }
 
         /* ===========================
@@ -221,31 +210,34 @@
         .resultado-card {
             border-radius: 1rem;
             overflow: hidden;
+            transition: .2s ease;
         }
 
         .resultado-card:hover {
-            box-shadow: 0 14px 30px rgba(15, 23, 42, .15);
-            transform: translateY(-2px);
-            transition: 0.2s ease;
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, .2);
         }
 
         .badge-amenidad {
             border-radius: 999px;
-            font-size: .8rem;
+            font-size: .75rem;
+            font-weight: 600;
         }
 
-        /* responsive */
+        /* ===========================
+           RESPONSIVE
+        ============================*/
         @media (max-width: 768px) {
             .buscador-form {
-                border-radius: 1.5rem;
+                border-radius: 1.25rem;
             }
 
             .buscador-field {
-                border-right: none;
+                border: none;
                 border-bottom: 1px solid var(--color-borde);
             }
 
-            .buscador-field:last-of-type {
+            .buscador-field:last-child {
                 border-bottom: none;
             }
 
@@ -256,36 +248,187 @@
             }
         }
     </style>
-        <style>
+
+    {% comment %}
+    Buscador dinamico superpuesto
+    {% endcomment %}
+    <style>
         .footer-modern {
-    background: linear-gradient(135deg, #3b82f6, #6c5ce7);
-    border-top-left-radius: 2rem;
-    border-top-right-radius: 2rem;
-}
+            background: linear-gradient(135deg, #f97316, #f43f5e); /* naranja y coral */
+            border-top-left-radius: 2rem;
+            border-top-right-radius: 2rem;
+            box-shadow: 0 -12px 30px rgba(0, 0, 0, .25);
+        }
 
-.footer-modern h4 {
-    letter-spacing: .3px;
-}
+        .footer-modern h4 {
+            letter-spacing: .4px;
+            font-weight: 800;
+            color: #fff7ed;
+        }
 
-.footer-links a {
-    color: rgba(255,255,255,.75);
-    text-decoration: none;
-    font-weight: 500;
-    transition: .2s ease;
-}
+        .footer-links a {
+            color: rgba(255, 242, 220, .8); /* beige cálido */
+            text-decoration: none;
+            font-weight: 600;
+            transition: .2s ease;
+        }
 
-.footer-links a:hover {
-    color: #fff;
-    text-shadow: 0 0 5px rgba(255,255,255,.4);
-    transform: translateY(-1px);
-}
+        .footer-links a:hover {
+            color: #fde68a; /* dorado suave */
+            text-shadow: 0 0 6px rgba(253, 230, 138, .6);
+            transform: translateY(-1px);
+        }
 
-.footer-divider {
-    border-color: rgba(255,255,255,.15);
-}
+        .footer-divider {
+            border-color: rgba(255, 220, 180, .3);
+        }
 
+        /* subtítulos */
+        .footer-modern p,
+        .footer-modern small {
+            color: rgba(255, 248, 240, .85);
+        }
     </style>
 
+    {% comment %}
+    Buscador dinamico superpuesto
+    {% endcomment %}
+    <style>
+
+        /* Glassmorphism real */
+        .buscador-form {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 24px; /* 👈 antes tenías 999px */
+            padding: .75rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+
+
+    </style>
+    {% comment %}
+    {% endcomment %}
+    <style>
+
+        .contexto-rapido_contenido_rapido_generales {
+            position: relative;
+            min-height: 80vh;
+            padding-bottom: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: visible;
+        }
+
+
+        /* Imagen del hero: que se vea mejor la señora (lado izquierdo) */
+        .imagen_contenido_rapido_generales {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 90%;
+            object-fit: cover;
+            object-position: left center; /* 🔥 da prioridad a la señora */
+            z-index: 0;
+        }
+
+        /* Overlay oscuro */
+        .overlay_contenido_rapido_generales {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        /* Texto centrado y arriba del overlay */
+        .hero-text {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin-bottom: 2.5rem; /* separación respecto al buscador */
+        }
+
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 900;
+            letter-spacing: .1rem;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 6px 20px rgba(0, 0, 0, .6);
+            margin-bottom: .5rem;
+        }
+
+        .hero-text p {
+            font-size: 1.2rem;
+            color: #ffedd5;
+            font-weight: 500;
+            text-shadow: 0 4px 14px rgba(0, 0, 0, .5);
+        }
+
+        /* Buscador flotando pero DENTRO del hero (sin esconderse) */
+        .buscador-superpuesto {
+            position: absolute;
+            left: 50%;
+            bottom: 1.5rem; /* dentro del hero, ya no negativo */
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1100px;
+            z-index: 3;
+        }
+
+        /* El contenido general baja un poquito, ya no necesita tanto margen */
+        .layout-main {
+            flex: 1;
+            margin-top: 5.5rem; /* ajusta si ves que se monta con el buscador */
+        }
+
+        .buscador-form {
+            background: rgba(255, 255, 255, .95);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: .75rem;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, .25);
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .layout-main {
+            margin-top: 140px;
+        }
+
+        @media (max-width: 768px) {
+            .buscador-superpuesto {
+                bottom: -120px;
+            }
+
+            .layout-main {
+                margin-top: 200px;
+            }
+        }
+
+        /* Responsive: hero un poco más alto para que quepa texto + buscador */
+        @media (max-width: 768px) {
+            .contexto-rapido_contenido_rapido_generales {
+                height: auto;
+                min-height: 100vh;
+                padding-bottom: 7rem;
+            }
+
+            .buscador-superpuesto {
+                bottom: 1.5rem;
+                width: 92%;
+            }
+
+            .layout-main {
+                margin-top: 3rem;
+            }
+        }
+    </style>
 {% endblock %}
 {% block mensajes_personalizados %}
 
@@ -296,40 +439,47 @@
 {% block sobreescribir_contenido_pagina %}
     <div class="layout-body">
 
-    <!-- MENU -->
-    <!-- MENU -->
-    <!-- MENU -->
-    <div id="toast-container"></div>
-    <!-- MENU -->
-    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio">
-        <div class="container menu_cabezal_general">
+        <!-- MENU -->
+        <!-- MENU -->
+        <!-- MENU -->
+        <div id="toast-container" style="z-index: 4000;"></div>
+        <!-- MENU -->
+        <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio"
+             STYLE="z-index: 3000;">
+            <div class="container menu_cabezal_general">
 
-            <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
-                Hotel Genérico
-            </a>
+                <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
+                    Hotel LO PROPIO - GUAYAQUIL
+                </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
-                    aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
+                        aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="menu">
-                <ul class="navbar-nav ms-auto" id="menu-dinamico">
-                    <!-- Aquí JS insertará el menú según el rol -->
-                </ul>
+                <div class="collapse navbar-collapse" id="menu">
+                    <ul class="navbar-nav ms-auto" id="menu-dinamico">
+                        <!-- Aquí JS insertará el menú según el rol -->
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
-    <!-- FIN MENU -->
+        </nav>
+        <!-- FIN MENU -->
 
+        <section
+                class="contexto-rapido_contenido_rapido_generales d-flex align-items-center justify-content-center text-center text-white">
+            <!-- Imagen de fondo directa -->
+            <img src="{% static 'webapp/imagen/portadas/imagen_portada_habitaciones.png' %}" alt="Banner Servicios"
+                 class="imagen_contenido_rapido_generales">
 
-    <!-- MENU -->
-    <!-- MENU -->
-    <!-- MENU -->
-<main class="layout-main">
-        <section class="buscador-section d-flex align-items-center justify-content-center">
-            <div class="container text-center">
+            <!-- Capa oscura superpuesta -->
+            <div class="overlay_contenido_rapido_generales"></div>
+            <div class="hero-text">
+                <h1>HOTEL LO PROPIO</h1>
+                <p>Donde encuentras tu habitación ideal</p>
+            </div>
 
+            <div class="buscador-superpuesto">
                 <form id="formBuscador" novalidate class="buscador-form">
 
                     <!-- Tipo habitación -->
@@ -418,73 +568,76 @@
                         </button>
                     </div>
                 </form>
-
             </div>
         </section>
-    <section class="container py-5">
-        <h3 class="fw-bold mb-4">Resultados encontrados</h3>
+        <!-- MENU -->
+        <!-- MENU -->
+        <!-- MENU -->
+        <main class="layout-main">
+            <section class="container py-5">
+                <h3 class="fw-bold mb-4">Resultados encontrados</h3>
 
-        <div id="resultados"></div>
+                <div id="resultados"></div>
 
-        <div id="loader" class="text-center my-3 d-none">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Cargando más habitaciones...</p>
-        </div>
+                <div id="loader" class="text-center my-3 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Cargando más habitaciones...</p>
+                </div>
 
-        <div id="finResultados" class="text-muted text-center d-none">
-            No hay más resultados.
-        </div>
-    </section>
-    </main>
-<footer class="footer-modern text-white mt-5">
-    <div class="container py-5">
+                <div id="finResultados" class="text-muted text-center d-none">
+                    No hay más resultados.
+                </div>
+            </section>
+        </main>
+        <footer class="footer-modern text-white mt-5">
+            <div class="container py-5">
 
-        <div class="row gy-4 text-center text-md-start align-items-center">
+                <div class="row gy-4 text-center text-md-start align-items-center">
 
-            <!-- LOGO Y NOMBRE -->
-            <div class="col-md-4">
-                <h4 class="fw-bold mb-2">
-                    <i class="bi bi-building-fill"></i> Hotel LO PROPIO
-                </h4>
-                <p class="text-white-50 mb-0">
-                    Confort · Elegancia · Ubicación perfecta
-                </p>
+                    <!-- LOGO Y NOMBRE -->
+                    <div class="col-md-4">
+                        <h4 class="fw-bold mb-2">
+                            <i class="bi bi-building-fill"></i> Hotel LO PROPIO
+                        </h4>
+                        <p class="text-white-50 mb-0">
+                            Confort · Elegancia · Ubicación perfecta
+                        </p>
+                    </div>
+
+                    <!-- ENLACES -->
+                    <div class="col-md-4 text-center">
+                        <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
+                            <li>
+                                <a href="{% url 'inicio' %}">Inicio</a>
+                            </li>
+                            <li>
+                                <a href="/habitaciones/">Habitaciones</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- UBICACIÓN -->
+                    <div class="col-md-4 text-md-end text-center">
+                        <p class="mb-1">
+                            <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
+                        </p>
+                        <small class="text-white-50">
+                            A minutos de Malecón · Las Peñas · Aeropuerto
+                        </small>
+                    </div>
+
+                </div>
+
+                <!-- DIVISOR -->
+                <hr class="footer-divider my-4">
+
+                <!-- COPYRIGHT -->
+                <div class="text-center text-white-50">
+                    © 2025 Hotel LO PROPIO · Todos los derechos reservados.
+                </div>
+
             </div>
-
-            <!-- ENLACES -->
-            <div class="col-md-4 text-center">
-                <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
-                    <li>
-                        <a href="{% url 'inicio' %}">Inicio</a>
-                    </li>
-                    <li>
-                        <a href="/habitaciones/">Habitaciones</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- UBICACIÓN -->
-            <div class="col-md-4 text-md-end text-center">
-                <p class="mb-1">
-                    <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
-                </p>
-                <small class="text-white-50">
-                    A minutos de Malecón · Las Peñas · Aeropuerto
-                </small>
-            </div>
-
-        </div>
-
-        <!-- DIVISOR -->
-        <hr class="footer-divider my-4">
-
-        <!-- COPYRIGHT -->
-        <div class="text-center text-white-50">
-            © 2025 Hotel LO PROPIO · Todos los derechos reservados.
-        </div>
-
-    </div>
-</footer>
+        </footer>
 
 
     </div>
@@ -762,10 +915,18 @@
                         return;
                     }
 
+
                     // --- VALIDACIONES DE PRECIOS ---
                     // a) O ambos vacíos, o ambos con valor
                     if ((precioMin && !precioMax) || (!precioMin && precioMax)) {
                         mostrarToast("Debes ingresar tanto el precio mínimo como el precio máximo.", "warning");
+                        return;
+                    }
+                    if (precioMin === precioMax) {
+                        mostrarToast(
+                            "El precio mínimo y el precio máximo no pueden ser iguales.",
+                            "warning"
+                        );
                         return;
                     }
 

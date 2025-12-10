@@ -12,7 +12,7 @@ from webapp.decorators import admin_required, admin_required_ajax
 
 from django.views import View
 from django.http import JsonResponse
-from servicios.soap.gestion.HabxResGestionSoap import HabxResGestionSoap as HabxResGestionRest
+from servicios.rest.gestion.HabxResGestionRest import HabxResGestionRest
 class HabxResSearchAjaxView(View):
     def get(self, request):
         q = request.GET.get("q", "").strip().upper()

@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from requests.exceptions import ConnectionError, Timeout, HTTPError
-from servicios.soap.gestion.HoldGestionSoap import HoldGestionSoap as HoldGestionRest
+from servicios.rest.gestion.HoldGestionRest import HoldGestionRest
 
 
 from webapp.decorators import admin_required, admin_required_ajax

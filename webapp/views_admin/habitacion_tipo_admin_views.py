@@ -11,7 +11,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
 
-from servicios.soap.gestion.TipoHabitacionGestionSoap import TipoHabitacionGestionSoap as TipoHabitacionGestionRest
+from servicios.rest.gestion.TipoHabitacionGestionRest import TipoHabitacionGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

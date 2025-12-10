@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from servicios.soap.gestion.ReservaGestionSoap import ReservaGestionSoap as ReservaGestionRest
+from servicios.rest.gestion.ReservaGestionRest import ReservaGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 # arriba del archivo, por ejemplo debajo de los imports

@@ -3,7 +3,7 @@ from django.views import View
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from servicios.soap.gestion.CiudadGestionSoap import CiudadGestionSoap as CiudadGestionRest
+from servicios.rest.gestion.CiudadGestionRest import CiudadGestionRest
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
 from webapp.decorators import admin_required, admin_required_ajax

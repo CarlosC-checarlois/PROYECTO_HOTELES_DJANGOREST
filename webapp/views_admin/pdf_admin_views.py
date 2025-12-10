@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 from utils.s3_upload import subir_pdf_a_s3
-from servicios.soap.gestion.PdfGestionSoap import PdfGestionSoap as PdfGestionRest
+from servicios.rest.gestion.PdfGestionRest import PdfGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 import os
 import uuid

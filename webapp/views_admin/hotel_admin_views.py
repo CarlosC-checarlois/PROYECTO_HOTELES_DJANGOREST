@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.soap.gestion.HotelGestionSoap import HotelGestionSoap as HotelGestionRest
+from servicios.rest.gestion.HotelGestionRest import HotelGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

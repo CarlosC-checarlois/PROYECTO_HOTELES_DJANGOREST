@@ -27,6 +27,7 @@ from webapp.views_admin.ciudad_admin_ajax_views import (
     CiudadUpdateAjaxView,
     CiudadDeleteAjaxView
 )
+from webapp.views_admin.dashboard_pagos_views import DashboardPagosAjaxView
 from webapp.views_admin.descuento_admin_ajax_views import (
     DescuentoView,
     DescuentoListAjaxView,
@@ -237,6 +238,8 @@ urlpatterns = [
     # PAGOS DEL CLIENTE
     # ===============================
     path("usuario/pagos/", views_webapp.mis_pagos, name="usuario_pagos"),
+    path("api/mis-pagos/", views_webapp.UsuarioPagosAjaxView.as_view(), name="mis_pagos_ajax"),
+
     path("api/generar-pdf-reserva/", views_webapp.generar_pdf_factura, name="generar_pdf_reserva"),
     # ===============================
     # PANEL ADMINISTRATIVO
@@ -495,6 +498,7 @@ urlpatterns = [
     ),
     path("api/hold-tiempo/<str:id_hold>/", views_webapp.tiempo_hold, name="tiempo_hold"),
     path("cuentas-xml/", views_webapp.ListaCuentasXMLView.as_view(), name="cuentas-xml"),
+path("api/dashboard-pagos/<str:uid>/", DashboardPagosAjaxView.as_view())
 
 ]
 

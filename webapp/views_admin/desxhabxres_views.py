@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 
-from servicios.soap.gestion.DesxHabxResGestionSoap import DesxHabxResGestionSoap as DesxHabxResGestionRest
+from servicios.rest.gestion.DesxHabxResGestionRest import DesxHabxResGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

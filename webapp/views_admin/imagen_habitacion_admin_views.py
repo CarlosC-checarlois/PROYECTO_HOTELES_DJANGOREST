@@ -13,7 +13,7 @@ import uuid
 import boto3
 from django.conf import settings
 
-from servicios.soap.gestion.ImagenHabitacionGestionSoap import ImagenHabitacionGestionSoap as ImagenHabitacionGestionRest
+from servicios.rest.gestion.ImagenHabitacionGestionRest import ImagenHabitacionGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 from django.core.files.uploadedfile import UploadedFile
 

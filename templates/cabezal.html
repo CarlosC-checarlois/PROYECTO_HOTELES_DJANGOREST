@@ -12,68 +12,99 @@
     {% endblock %}
     <style>
         .footer-modern {
-    background: linear-gradient(135deg, #3b82f6, #6c5ce7);
-    border-top-left-radius: 2rem;
-    border-top-right-radius: 2rem;
-}
+            background: linear-gradient(135deg, #3b82f6, #6c5ce7);
+            border-top-left-radius: 2rem;
+            border-top-right-radius: 2rem;
+        }
 
-.footer-modern h4 {
-    letter-spacing: .3px;
-}
+        .footer-modern h4 {
+            letter-spacing: .3px;
+        }
 
-.footer-links a {
-    color: rgba(255,255,255,.75);
-    text-decoration: none;
-    font-weight: 500;
-    transition: .2s ease;
-}
+        .footer-links a {
+            color: rgba(255, 255, 255, .75);
+            text-decoration: none;
+            font-weight: 500;
+            transition: .2s ease;
+        }
 
-.footer-links a:hover {
-    color: #fff;
-    text-shadow: 0 0 5px rgba(255,255,255,.4);
-    transform: translateY(-1px);
-}
+        .footer-links a:hover {
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, .4);
+            transform: translateY(-1px);
+        }
 
-.footer-divider {
-    border-color: rgba(255,255,255,.15);
-}
+        .footer-divider {
+            border-color: rgba(255, 255, 255, .15);
+        }
 
     </style>
     <style>
-        /* NAVBAR PERSONALIZADO */
-.navbar-lo-propio {
-    background: linear-gradient(90deg, #004AAD, #0077FF);
-    padding: 0.8rem 0;
-}
+        /* NAVBAR PERSONALIZADO – ESTILO CÁLIDO */
+        .navbar-lo-propio {
+            background: linear-gradient(90deg, #f97316, #f43f5e); /* naranja → coral */
+            padding: 0.8rem 0;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .25);
+        }
 
-/* Texto del navbar */
-.navbar-lo-propio .navbar-brand,
-.navbar-lo-propio .nav-link,
-.navbar-lo-propio .dropdown-toggle {
-    color: #ffffff !important;
-    font-weight: 500;
-}
+        /* Texto del navbar */
+        .navbar-lo-propio .navbar-brand,
+        .navbar-lo-propio .nav-link,
+        .navbar-lo-propio .dropdown-toggle {
+            color: #ffffff !important;
+            font-weight: 500;
+        }
 
-/* hover */
-.navbar-lo-propio .nav-link:hover,
-.navbar-lo-propio .dropdown-item:hover {
-    color: #ffe066 !important;
-}
+        /* Hover links */
+        .navbar-lo-propio .nav-link:hover,
+        .navbar-lo-propio .dropdown-item:hover {
+            color: #fde68a !important; /* dorado suave */
+        }
 
-/* Dropdown */
-.navbar-lo-propio .dropdown-menu {
-    background: #004AAD;
-    border-radius: 8px;
-    border: none;
-}
+        /* Dropdown menú */
+        .navbar-lo-propio .dropdown-menu {
+            background: linear-gradient(180deg, #f97316, #f43f5e);
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .25);
+        }
 
-.navbar-lo-propio .dropdown-item {
-    color: #ffffff;
-}
+        /* Items dropdown */
+        .navbar-lo-propio .dropdown-item {
+            color: #ffffff;
+        }
 
-.navbar-lo-propio .dropdown-item:hover {
-    background: #003680;
-}
+        /* Hover dropdown */
+        .navbar-lo-propio .dropdown-item:hover {
+            background: rgba(0, 0, 0, 0.22);
+        }
+
+    </style>
+    <style>
+        .navbar-lo-propio .btn-primary {
+            background: linear-gradient(130deg, #facc15, #f59e0b); /* dorado */
+            color: #5b2d00;
+            border: none;
+            border-radius: 999px;
+            padding: .5rem 1.25rem;
+            font-weight: 700;
+            letter-spacing: .3px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, .25);
+            transition: all .2s ease;
+        }
+
+        /* Hover */
+        .navbar-lo-propio .btn-primary:hover {
+            background: linear-gradient(130deg, #eab308, #d97706);
+            color: #4a2200;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, .35);
+        }
+
+        /* Quitar foco azul feo */
+        .navbar-lo-propio .btn-primary:focus {
+            box-shadow: none;
+        }
 
     </style>
     {% block sobreescribir_css_archivos %}
@@ -115,7 +146,7 @@
     {% block mensajes_personalizados %}
     {% endblock %}
     <!-- MENU -->
-    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio">
+    <nav class="navbar navbar-expand-lg cabezal_general shadow-sm sticky-top navbar-lo-propio" style="z-index: 1000;">
         <div class="container menu_cabezal_general">
 
             <a class="navbar-brand logo_cabezal_general fw-bold text-primary" href="{% url 'inicio' %}">
@@ -144,55 +175,55 @@
     {% block contenido_pagina %}
     {% endblock %}
     {% block bloquear_footer %}
-<footer class="footer-modern text-white mt-5">
-    <div class="container py-5">
+        <footer class="footer-modern text-white mt-5">
+            <div class="container py-5">
 
-        <div class="row gy-4 text-center text-md-start align-items-center">
+                <div class="row gy-4 text-center text-md-start align-items-center">
 
-            <!-- LOGO Y NOMBRE -->
-            <div class="col-md-4">
-                <h4 class="fw-bold mb-2">
-                    <i class="bi bi-building-fill"></i> Hotel LO PROPIO
-                </h4>
-                <p class="text-white-50 mb-0">
-                    Confort · Elegancia · Ubicación perfecta
-                </p>
+                    <!-- LOGO Y NOMBRE -->
+                    <div class="col-md-4">
+                        <h4 class="fw-bold mb-2">
+                            <i class="bi bi-building-fill"></i> Hotel LO PROPIO
+                        </h4>
+                        <p class="text-white-50 mb-0">
+                            Confort · Elegancia · Ubicación perfecta
+                        </p>
+                    </div>
+
+                    <!-- ENLACES -->
+                    <div class="col-md-4 text-center">
+                        <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
+                            <li>
+                                <a href="{% url 'inicio' %}">Inicio</a>
+                            </li>
+                            <li>
+                                <a href="/habitaciones/">Habitaciones</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- UBICACIÓN -->
+                    <div class="col-md-4 text-md-end text-center">
+                        <p class="mb-1">
+                            <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
+                        </p>
+                        <small class="text-white-50">
+                            A minutos de Malecón · Las Peñas · Aeropuerto
+                        </small>
+                    </div>
+
+                </div>
+
+                <!-- DIVISOR -->
+                <hr class="footer-divider my-4">
+
+                <!-- COPYRIGHT -->
+                <div class="text-center text-white-50">
+                    © 2025 Hotel LO PROPIO · Todos los derechos reservados.
+                </div>
+
             </div>
-
-            <!-- ENLACES -->
-            <div class="col-md-4 text-center">
-                <ul class="footer-links list-unstyled d-flex justify-content-center gap-4 mb-0">
-                    <li>
-                        <a href="{% url 'inicio' %}">Inicio</a>
-                    </li>
-                    <li>
-                        <a href="/habitaciones/">Habitaciones</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- UBICACIÓN -->
-            <div class="col-md-4 text-md-end text-center">
-                <p class="mb-1">
-                    <i class="bi bi-geo-alt-fill"></i> Guayaquil, Ecuador
-                </p>
-                <small class="text-white-50">
-                    A minutos de Malecón · Las Peñas · Aeropuerto
-                </small>
-            </div>
-
-        </div>
-
-        <!-- DIVISOR -->
-        <hr class="footer-divider my-4">
-
-        <!-- COPYRIGHT -->
-        <div class="text-center text-white-50">
-            © 2025 Hotel LO PROPIO · Todos los derechos reservados.
-        </div>
-
-    </div>
-</footer>
+        </footer>
 
 
     {% endblock %}

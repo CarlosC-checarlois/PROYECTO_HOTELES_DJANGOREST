@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from servicios.rest.gestion.FacturasGestionRest import FacturasGestionRest
-from servicios.soap.gestion.FacturaGestionSoap import FacturaGestionSoap as FacturasGestionRest
 
 from webapp.decorators import admin_required, admin_required_ajax
 

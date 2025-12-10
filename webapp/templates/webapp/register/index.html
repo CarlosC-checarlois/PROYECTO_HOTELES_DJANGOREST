@@ -109,7 +109,42 @@
         }
 
     </style>
+    <style>
+        /* BOTÓN CREAR CUENTA - PALETA CÁLIDA */
+        .btn-primary {
+            border-radius: 999px !important;
+            padding: .85rem !important;
+            font-weight: 700;
+            background: linear-gradient(130deg, #facc15, #f59e0b);
+            border: none;
+            color: #5b2d00;
+            transition: all .2s ease;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, .25);
+        }
 
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #fde047, #fbbf24) !important;
+            transform: translateY(-1.5px);
+            box-shadow: 0 14px 28px rgba(251, 191, 36, .75);
+        }
+
+        /* Quitar el azul de Bootstrap */
+        .btn-primary:focus,
+        .btn-primary:active {
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Link "Iniciar sesión" coherente */
+        .text-primary {
+            color: #f97316 !important;
+        }
+
+        .text-primary:hover {
+            color: #fb7185 !important;
+        }
+
+    </style>
 {% endblock %}
 {% block mensajes_personalizados %}
     <div class="messages-wrapper">
@@ -148,7 +183,7 @@
         <div class="container">
             <div class="row justify-content-center">
 
-<div class="col-md-9 col-lg-7 col-xl-6">
+                <div class="col-md-9 col-lg-7 col-xl-6">
                     <div class="card shadow-lg border-0 rounded-4">
                         <div class="card-body p-4 p-md-5">
 
@@ -159,114 +194,117 @@
                             </div>
 
 
-<form action="{% url 'register_post' %}" method="post" id="formRegister">
-    {% csrf_token %}
+                            <form action="{% url 'register_post' %}" method="post" id="formRegister">
+                                {% csrf_token %}
 
-    <div class="row">
+                                <div class="row">
 
-        <!-- NOMBRE -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Nombre</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                <input type="text" name="nombre"
-                       class="form-control"
-                       placeholder="Nombre"
-                       required
-                       pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                       title="El nombre solo debe contener letras">
-            </div>
-        </div>
+                                    <!-- NOMBRE -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Nombre</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                            <input type="text" name="nombre"
+                                                   class="form-control"
+                                                   placeholder="Nombre"
+                                                   required
+                                                   pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                                                   title="El nombre solo debe contener letras">
+                                        </div>
+                                    </div>
 
-        <!-- TIPO DOCUMENTO -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Tipo de documento</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
-                <select name="tipo_documento" class="form-select">
-                    <option value="CEDULA">Cédula</option>
-                    <option value="PASAPORTE">Pasaporte</option>
-                    <option value="OTRO">Otro</option>
-                </select>
-            </div>
-        </div>
+                                    <!-- TIPO DOCUMENTO -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Tipo de documento</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i
+                                                    class="bi bi-card-text"></i></span>
+                                            <select name="tipo_documento" class="form-select">
+                                                <option value="CEDULA">Cédula</option>
+                                                <option value="PASAPORTE">Pasaporte</option>
+                                                <option value="OTRO">Otro</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-        <!-- APELLIDO -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Apellido</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                <input type="text" name="apellido"
-                       class="form-control"
-                       placeholder="Apellido"
-                       required
-                       pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                       title="El apellido solo debe contener letras">
-            </div>
-        </div>
+                                    <!-- APELLIDO -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Apellido</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                            <input type="text" name="apellido"
+                                                   class="form-control"
+                                                   placeholder="Apellido"
+                                                   required
+                                                   pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                                                   title="El apellido solo debe contener letras">
+                                        </div>
+                                    </div>
 
-        <!-- DOCUMENTO -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Número de documento</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-hash"></i></span>
-                <input name="documento"
-                       type="text"
-                       class="form-control"
-                       required
-                       maxlength="10"
-                       pattern="\d{1,10}"
-                       inputmode="numeric"
-                       title="Solo números, máximo 10 dígitos">
-            </div>
-        </div>
+                                    <!-- DOCUMENTO -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Número de documento</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-hash"></i></span>
+                                            <input name="documento"
+                                                   type="text"
+                                                   class="form-control"
+                                                   required
+                                                   maxlength="10"
+                                                   pattern="\d{1,10}"
+                                                   inputmode="numeric"
+                                                   title="Solo números, máximo 10 dígitos">
+                                        </div>
+                                    </div>
 
-        <!-- CORREO -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Correo electrónico</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
-                <input name="correo"
-                       type="email"
-                       class="form-control"
-                       placeholder="usuario@dominio.com"
-                       required
-                       pattern="[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.com"
-                       title="Debe tener el formato usuario@dominio.com">
-            </div>
-        </div>
+                                    <!-- CORREO -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Correo electrónico</label>
+                                        <div class="input-group">
+                <span class="input-group-text bg-white"><i
+                        class="bi bi-envelope"></i></span>
+                                            <input name="correo"
+                                                   type="email"
+                                                   class="form-control"
+                                                   placeholder="usuario@dominio.com"
+                                                   required
+                                                   pattern="[A-Za-z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|live\.com|icloud\.com|puce\.edu\.ec)"
+                                                   title="Correo válido, por ejemplo: usuario@gmail.com o usuario@puce.edu.ec">
+                                        </div>
+                                    </div>
 
-        <!-- CONTRASEÑA -->
-        <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Contraseña</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
-                <input name="clave"
-                       type="password"
-                       class="form-control"
-                       required
-                       maxlength="40"
-                       placeholder="Contraseña">
-            </div>
-        </div>
+                                    <!-- CONTRASEÑA -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Contraseña</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+                                            <input name="clave"
+                                                   type="password"
+                                                   class="form-control"
+                                                   required
+                                                   maxlength="40"
+                                                   placeholder="Contraseña">
+                                        </div>
+                                    </div>
 
-    </div>
+                                </div>
 
-    <!-- BOTÓN -->
-    <div class="d-grid mb-3">
-        <button id="btnCrearCuenta" type="submit" class="btn btn-primary fw-semibold py-2">
-            Crear cuenta
-        </button>
-    </div>
+                                <!-- BOTÓN -->
+                                <div class="d-grid mb-3">
+                                    <button id="btnCrearCuenta" type="submit" class="btn btn-primary fw-semibold py-2">
+                                        Crear cuenta
+                                    </button>
+                                </div>
 
-    <div class="text-center mt-3">
-        <span class="text-muted small">¿Ya tienes una cuenta?</span><br>
-        <a href="{% url 'login' %}" class="text-primary fw-semibold small text-decoration-none">
-            Iniciar sesión
-        </a>
-    </div>
+                                <div class="text-center mt-3">
+                                    <span class="text-muted small">¿Ya tienes una cuenta?</span><br>
+                                    <a href="{% url 'login' %}"
+                                       class="text-primary fw-semibold small text-decoration-none">
+                                        Iniciar sesión
+                                    </a>
+                                </div>
 
-</form>
+                            </form>
 
                         </div>
                     </div>
@@ -362,34 +400,34 @@
                 });
         });
     </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-    const form = document.querySelector("form");
-    const boton = document.getElementById("btnCrearCuenta");
-    const textoOriginal = boton.innerHTML;
+            const form = document.querySelector("form");
+            const boton = document.getElementById("btnCrearCuenta");
+            const textoOriginal = boton.innerHTML;
 
-    form.addEventListener("submit", function () {
-        // Cambiar texto
-        boton.innerHTML = "Creando...";
+            form.addEventListener("submit", function () {
+                // Cambiar texto
+                boton.innerHTML = "Creando...";
 
-        // Bloquear botón
-        boton.disabled = true;
+                // Bloquear botón
+                boton.disabled = true;
 
-        // Cambiar estilo (opcional)
-        boton.classList.add("opacity-75");
-    });
+                // Cambiar estilo (opcional)
+                boton.classList.add("opacity-75");
+            });
 
-    // Se desbloquea SOLO si hubo error (el servidor recarga con mensajes)
-    {% if messages %}
-    window.onload = function () {
-        boton.innerHTML = textoOriginal;
-        boton.disabled = false;
-        boton.classList.remove("opacity-75");
-    }
-    {% endif %}
+            // Se desbloquea SOLO si hubo error (el servidor recarga con mensajes)
+            {% if messages %}
+                window.onload = function () {
+                    boton.innerHTML = textoOriginal;
+                    boton.disabled = false;
+                    boton.classList.remove("opacity-75");
+                }
+            {% endif %}
 
-});
-</script>
+        });
+    </script>
 
 {% endblock %}

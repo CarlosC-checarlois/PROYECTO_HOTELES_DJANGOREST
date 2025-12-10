@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 import requests
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.soap.gestion.PaisGestionSoap import PaisGestionSoap as PaisGestionRest
+from servicios.rest.gestion.PaisGestionRest import PaisGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 

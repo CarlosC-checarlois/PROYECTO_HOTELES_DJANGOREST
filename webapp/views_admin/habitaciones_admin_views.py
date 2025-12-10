@@ -12,7 +12,7 @@ import time
 import logging
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 
-from servicios.soap.gestion.HabitacionGestionSoap import HabitacionesGestionSoap as HabitacionesGestionRest
+from servicios.rest.gestion.HabitacionesGestionRest import HabitacionesGestionRest
 from webapp.decorators import admin_required, admin_required_ajax
 
 logger = logging.getLogger(__name__)

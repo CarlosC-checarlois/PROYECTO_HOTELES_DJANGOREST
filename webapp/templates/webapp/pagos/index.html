@@ -8,9 +8,17 @@
 {% block css_archivos %}
     <style>
         :root {
-            --color-principal: #3b82f6;
-            --color-secundario: #6c5ce7;
+            --color-principal: #f97316; /* naranja */
+            --color-secundario: #f43f5e; /* coral */
+            --color-fondo: #fff7ed; /* fondo cálido */
+            --color-borde: #fed7aa; /* borde suave */
+            --color-texto-suave: #9a3412; /* marrón café */
             --degradado: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
+        }
+
+        /* fondo general */
+        body {
+            background: var(--color-fondo);
         }
 
         body {
@@ -61,15 +69,60 @@
 {% block contenido_pagina %}
 
     <section class="container py-5">
+        <!-- DASHBOARD PAGOS -->
+        <div class="row mb-4 g-3" id="dashboard-pagos" style="display:none;">
+
+            <div class="col-md-3">
+                <div class="pago-card shadow-sm text-center">
+                    <small class="text-muted">Total pagado</small>
+                    <h4 id="total-pagado">$0.00</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="pago-card shadow-sm text-center">
+                    <small class="text-muted">Pagos realizados</small>
+                    <h4 id="contador-pagos">0</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="pago-card shadow-sm text-center">
+                    <small class="text-muted">Cuenta seleccionada</small>
+                    <h4 id="cuenta-actual">Todas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="pago-card shadow-sm">
+                    <label class="small fw-bold">Filtrar por cuenta</label>
+                    <select id="filtro-cuenta" class="form-select">
+                        <option value="all">Todas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-4 g-4">
+                <div class="col-md-6">
+                    <div class="pago-card shadow-sm">
+                        <h6 class="fw-bold text-center">Clasificación por cuenta (Treemap)</h6>
+                        <canvas id="treemapChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="pago-card shadow-sm">
+                        <h6 class="fw-bold text-center">Pagos en el tiempo (Plot)</h6>
+                        <canvas id="chart-line"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
 
         <h2 class="fw-bold mb-4">Mis Pagos</h2>
 
         {% if error %}
             <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-
-        {% if pagos|length == 0 %}
-            <div class="alert alert-info">Cargando tu informacion de pagos</div>
         {% endif %}
 
         <div class="row g-4">
@@ -132,6 +185,9 @@
 {% block bloquear_footer %}
 {% endblock %}
 {% block jvscript_archivos_defer %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.1"></script>
+
     <script>
         // Si el usuario está logeado, agregamos ?uid=ID automáticamente
         document.addEventListener("DOMContentLoaded", function () {
@@ -198,6 +254,237 @@
             if (parts.length === 2) return parts.pop().split(";").shift();
             return null;
         }
+
+    </script>
+    {% comment %}
+    CREAR TREEMAP
+    {% endcomment %}
+    <script>
+        function crearTreemap(lista) {
+
+            const canvas = document.getElementById("treemapChart");
+            if (!canvas || !Array.isArray(lista) || lista.length === 0) return;
+
+            // =============================
+            // FORMATO JERÁRQUICO REAL
+            // Cuenta -> Transacciones
+            // =============================
+            const datos = lista.map((p, index) => ({
+                cuenta: String(p.cuenta_origen || "Desconocida"),
+                transaccion: `Transacción ${index + 1}`,
+                value: Number(p.monto) || 0
+            }));
+
+            if (!datos.length) return;
+
+            // =============================
+            // DESTRUIR INSTANCIA ANTERIOR
+            // =============================
+            const prev = Chart.getChart(canvas);
+            if (prev) prev.destroy();
+
+            // =============================
+            // CREAR TREEMAP
+            // =============================
+            new Chart(canvas, {
+                type: "treemap",
+                data: {
+                    datasets: [{
+                        tree: datos,
+                        key: "value",
+
+                        // ✅ JERARQUÍA CORRECTA
+                        groups: ["cuenta", "transaccion"],
+
+                        spacing: 2,
+                        borderWidth: 2,
+                        borderColor: "#ffffff",
+
+                        // 🎨 COLOR SEGURO
+                        backgroundColor(ctx) {
+                            const v = ctx.raw?.v ?? 0;
+                            const alpha = Math.max(Math.min(v / 120, 1), 0.35);
+                            return `rgba(37, 99, 235, ${alpha})`;
+                        },
+
+                        // ✅ ETIQUETAS
+                        labels: {
+                            display: true,
+                            formatter(ctx) {
+                                const titulo = ctx.raw?.g || "Transacción";
+                                const monto = ctx.raw?.v || 0;
+                                return `${titulo}\n$${monto.toFixed(2)}`;
+                            },
+                            color: "#fff",
+                            font: {size: 11, weight: "bold"}
+                        }
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Distribución de transacciones por cuenta bancaria"
+                        },
+                        legend: {display: false},
+
+                        // ✅ TOOLTIP BLINDADO
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+
+                                    if (!ctx || !ctx.raw) return "";
+
+                                    const transaccion = ctx.raw?.g || "Transacción";
+                                    const cuenta = ctx.raw?.p?.g || "Cuenta";
+                                    const valor = ctx.raw?.v || 0;
+
+                                    return `${cuenta} → ${transaccion}: $${valor.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    {% comment %}
+    CREAR LINE CHART
+    {% endcomment %}
+    <script>
+        let lineChart = null;
+
+        function crearLinea(lista = []) {
+
+            const canvas = document.getElementById("chart-line");
+            if (!canvas) return;
+
+            const datos = lista.filter(p => p.fecha && !isNaN(Date.parse(p.fecha)));
+
+            if (lineChart) lineChart.destroy();
+
+            lineChart = new Chart(canvas, {
+                type: "line",
+                data: {
+                    labels: datos.map(p => p.fecha),
+                    datasets: [{
+                        label: "Pagos en el tiempo",
+                        data: datos.map(p => p.monto),
+                        borderColor: "#2563eb",
+                        backgroundColor: "rgba(37,99,235,.25)",
+                        fill: true,
+                        tension: .4
+                    }]
+                }
+            });
+        }
+
+    </script>
+    {% comment %}
+    fech pagos
+    {% endcomment %}
+    <script>
+        async function fetchPagos(uid) {
+            try {
+                const res = await fetch(`/api/mis-pagos/?uid=${uid}`);
+                if (!res.ok) throw new Error("API offline");
+                const data = await res.json();
+                return Array.isArray(data?.data) ? data.data : [];
+            } catch (e) {
+                console.error("FETCH ERROR:", e);
+                return [];
+            }
+        }
+    </script>
+    {% comment %}
+    Normalizar datos
+    {% endcomment %}
+    <script>
+        function normalizarPagos(pagos = []) {
+            return pagos.map(p => ({
+                cuenta_origen: String(p?.cuenta_origen || "Desconocida"),
+                monto: Number(p?.monto) || 0,
+                fecha: p?.fecha || null,
+                estado: p?.estado === "Pagado" ? "Pagado" : "Pendiente"
+            }));
+        }
+    </script>
+    {% comment %}
+    Render Totales
+    {% endcomment %}
+    <script>
+        function renderTotales(lista = []) {
+
+            const total = lista
+                .filter(p => p.estado === "Pagado")
+                .reduce((s, p) => s + p.monto, 0);
+
+            const totalEl = document.getElementById("total-pagado");
+            const contadorEl = document.getElementById("contador-pagos");
+
+            if (totalEl) totalEl.innerText = `$${total.toFixed(2)}`;
+            if (contadorEl) contadorEl.innerText = lista.length;
+        }
+
+    </script>
+    {% comment %}
+    Filtros robustos
+    {% endcomment %}
+    <script>
+        function cargarFiltro(pagos = []) {
+            const filtro = document.getElementById("filtro-cuenta");
+            const actual = document.getElementById("cuenta-actual");
+
+            const cuentas = [...new Set(pagos.map(p => p.cuenta_origen))];
+
+            cuentas.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c;
+                opt.innerText = c;
+                filtro.appendChild(opt);
+            });
+
+            filtro.addEventListener("change", () => {
+                const val = filtro.value;
+                const lista = val === "all"
+                    ? pagos
+                    : pagos.filter(p => p.cuenta_origen === val);
+
+                actual.innerText = val === "all" ? "Todas" : val;
+                renderTotales(lista);
+                crearTreemap(lista);
+                crearLinea(lista);
+            });
+        }
+
+    </script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            const uid = localStorage.getItem("usuario_id");
+            if (!uid) return;
+
+            let pagos = await fetchPagos(uid);
+            pagos = normalizarPagos(pagos);
+
+            const dashboard = document.getElementById("dashboard-pagos");
+
+            if (!pagos.length) {
+                dashboard.style.display = "none";
+                return;
+            } else {
+                dashboard.style.display = "flex";
+            }
+
+
+            renderTotales(pagos);
+            crearTreemap(pagos);
+            crearLinea(pagos);
+            cargarFiltro(pagos);
+
+        });
 
     </script>
 
